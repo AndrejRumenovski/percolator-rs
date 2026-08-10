@@ -1,0 +1,16 @@
+# Rust build
+/target
+
+# Large datasets & generated reference outputs (regenerate locally; not for VCS)
+/data
+/reference
+/reference_fast
+
+# Scratch
+*.log
+
+# Local working notes (not for VCS)
+/handoff.md
+
+# NOTE: tests/fixtures/sample.pin IS committed on purpose — it is the CI regression anchor.
+!tests/fixtures/sample.pin

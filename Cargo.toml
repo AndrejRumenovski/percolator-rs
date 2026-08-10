@@ -1,0 +1,19 @@
+[package]
+name = "percolator-rs"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "percolator-rs"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+[dependencies]
+fast-float = "0.2.0"
+memmap2 = "0.9.11"
+wide = "1.6.1"
