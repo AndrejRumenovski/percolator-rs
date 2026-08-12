@@ -1,5 +1,8 @@
 # percolator-rs
 
+[![CI](https://github.com/AndrejRumenovski/percolator-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/AndrejRumenovski/percolator-rs/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A from-scratch Rust reimplementation of the [Percolator](https://github.com/percolator/percolator)
 semi-supervised PSM rescoring algorithm, built to benchmark against the reference C++ Percolator 3.09.
 

@@ -1,2 +1,8 @@
+# Portable baseline: x86-64-v3 (AVX2/FMA, Haswell 2013+ and Zen 1+). Keeps the
+# vectorized axpy kernels while producing binaries that run on any modern x86-64 box.
+#
+# For maximum speed on the machine you build on (this is what the published
+# benchmark numbers were measured with), override at build time:
+#     RUSTFLAGS="-C target-cpu=native" cargo build --release
 [build]
-rustflags = ["-C", "target-cpu=native"]
+rustflags = ["-C", "target-cpu=x86-64-v3"]

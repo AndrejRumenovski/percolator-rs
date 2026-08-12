@@ -2,6 +2,12 @@
 name = "percolator-rs"
 version = "0.1.0"
 edition = "2021"
+description = "A from-scratch Rust reimplementation of the Percolator semi-supervised PSM rescoring algorithm"
+repository = "https://github.com/AndrejRumenovski/percolator-rs"
+license = "MIT"
+readme = "README.md"
+keywords = ["proteomics", "mass-spectrometry", "percolator", "fdr", "svm"]
+categories = ["science", "command-line-utilities"]
 
 [[bin]]
 name = "percolator-rs"
