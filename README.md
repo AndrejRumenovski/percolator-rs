@@ -15,6 +15,10 @@ Faithful to the Percolator method:
    targets (q<0.01) as positives, all decoys as negatives → retrain a class-weighted **L2-regularized
    squared-hinge linear SVM** (primal truncated-Newton / Newton-CG solver, the same L2-loss family as the
    reference L2-SVM-MFN).
+   The class weights `Cpos`/`Cneg` are **selected per run by cross-validation** over a small grid
+   (the reference's `Cpos=0` behaviour): each candidate gets an abbreviated 3-fold pass and the one
+   with the highest out-of-fold yield at `q<0.01` wins. Pin them with `--cpos/--cneg`, or skip the
+   search with `--no-select-c`.
 5. **3-fold nested cross-validation** — each PSM scored by a model trained without its fold (no overfitting
    of the FDR estimate).
 6. **Target-decoy q-values** + monotone (PAVA isotonic) PEP; PSM- and peptide-level output in the reference
@@ -30,6 +34,8 @@ cargo build --release
 ```
 Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads` (accepted;
 percolator-rs is single-threaded per file — parallelize across files instead).
+SVM class weights: `--cpos F` / `--cneg F` pin them, `--select-c` / `--no-select-c` force the grid
+search on or off (on for `--canonical` and `--balanced`, off for `--fast`).
 
 ### Execution profiles
 Presets so you don't have to memorize flag combinations. Pass one of `--fast` / `--balanced` /

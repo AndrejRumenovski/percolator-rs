@@ -42,13 +42,14 @@ struct Args {
     profile: &'static str,
 }
 
-/// Execution profiles: preset (subset_max_train, maxiter) tuned for a use case.
-/// Explicit --subset-max-train / --maxiter always override the preset.
-fn preset(name: &str) -> Option<(usize, usize)> {
+/// Execution profiles: preset (subset_max_train, maxiter, select_c) tuned for a use case.
+/// Explicit --subset-max-train / --maxiter / --cpos-scale always override the preset.
+/// `select_c` enables the SVM class-weight grid search (costs time, buys yield stability).
+fn preset(name: &str) -> Option<(usize, usize, bool)> {
     match name {
-        "fast" => Some((20_000, 5)),   // ~quick QA/test pipelines
-        "balanced" => Some((40_000, 10)), // ~5% yield hit, still fast
-        "canonical" => Some((0, 10)),  // full default sensitivity (0 = no subsetting)
+        "fast" => Some((20_000, 5, false)),   // ~quick QA/test pipelines
+        "balanced" => Some((40_000, 10, true)), // ~5% yield hit, still fast
+        "canonical" => Some((0, 10, true)),  // full default sensitivity (0 = no subsetting)
         _ => None,
     }
 }
@@ -73,6 +74,9 @@ fn parse_args() -> Args {
     let mut prof: Option<&'static str> = None;
     let mut maxiter_opt: Option<usize> = None;
     let mut subset_opt: Option<usize> = None;
+    let mut alpha_opt: Option<f64> = None;
+    let mut beta_opt: Option<f64> = None;
+    let mut select_c_opt: Option<bool> = None;
 
     let mut i = 0;
     while i < argv.len() {
@@ -93,6 +97,10 @@ fn parse_args() -> Args {
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
             "--maxiter" => maxiter_opt = take().parse().ok(),
             "--subset-max-train" | "-N" => subset_opt = take().parse().ok(),
+            "--cpos" => alpha_opt = take().parse().ok(),
+            "--cneg" => beta_opt = take().parse().ok(),
+            "--select-c" => select_c_opt = Some(true),
+            "--no-select-c" => select_c_opt = Some(false),
             "--num-threads" => { let _ = take(); } // accepted, single-threaded per file
             "--fast" => prof = Some("fast"),
             "--balanced" => prof = Some("balanced"),
@@ -121,15 +129,33 @@ fn parse_args() -> Args {
     // Resolve: profile sets the baseline, explicit flags override.
     let chosen = prof.unwrap_or("canonical");
     a.profile = chosen;
-    if let Some((subset, maxiter)) = preset(chosen) {
+    let mut select_c = true;
+    if let Some((subset, maxiter, sel)) = preset(chosen) {
         a.params.subset_max_train = subset;
         a.params.maxiter = maxiter;
+        select_c = sel;
     }
     if let Some(m) = maxiter_opt {
         a.params.maxiter = m;
     }
     if let Some(s) = subset_opt {
         a.params.subset_max_train = s;
+    }
+    if let Some(s) = select_c_opt {
+        select_c = s;
+    }
+    // Class weights: pinning either flag pins both (the other defaults to 1.0);
+    // otherwise the profile decides between grid search (None) and the plain
+    // class-balance heuristic (1.0/1.0).
+    if alpha_opt.is_some() || beta_opt.is_some() {
+        a.params.c_alpha = Some(alpha_opt.unwrap_or(percolator::C_POS_DEFAULT));
+        a.params.c_beta = Some(beta_opt.unwrap_or(percolator::C_NEG_DEFAULT));
+    } else if select_c {
+        a.params.c_alpha = None;
+        a.params.c_beta = None;
+    } else {
+        a.params.c_alpha = Some(percolator::C_POS_DEFAULT);
+        a.params.c_beta = Some(percolator::C_NEG_DEFAULT);
     }
     a
 }
@@ -201,6 +227,12 @@ fn main() {
     );
 
     let out = percolator::run(&ds, &args.params);
+    eprintln!(
+        "SVM class weights: Cpos={:.3} Cneg={:.3}{}",
+        out.c_alpha,
+        out.c_beta,
+        if out.c_selected { " (selected by cross-validation)" } else { " (fixed)" }
+    );
 
     // PSM-level output
     let mut targets: Vec<Row> = Vec::new();
