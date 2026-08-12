@@ -4,6 +4,7 @@
 use crate::pin::Dataset;
 use crate::stats;
 use crate::svm::{train, Problem};
+use rayon::prelude::*;
 
 pub struct Params {
     pub maxiter: usize,       // semi-supervised iterations
@@ -18,6 +19,9 @@ pub struct Params {
     /// Budget for each candidate during the C grid search (abbreviated training).
     pub c_select_maxiter: usize,
     pub c_select_subset: usize,
+    /// Worker threads for the grid search. 1 = fully serial (the default, so that
+    /// running many files concurrently does not oversubscribe the machine).
+    pub num_threads: usize,
 }
 
 impl Default for Params {
@@ -32,6 +36,7 @@ impl Default for Params {
             c_beta: None,
             c_select_maxiter: 3,
             c_select_subset: 20_000,
+            num_threads: 1,
         }
     }
 }
@@ -254,15 +259,28 @@ fn cv_scores(
     seed: u64,
 ) -> Vec<f64> {
     let n = labels.len();
-    // Fresh RNG per pass so candidates are compared under identical subsampling.
-    let mut rng = Rng(seed.max(1));
-    let mut final_score = vec![0.0f64; n];
-    for test in 0..3u8 {
+    let all_folds: [u8; 3] = [0, 1, 2];
+
+    let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>) {
         let train_rows: Vec<usize> = (0..n).filter(|&i| fold[i] != test).collect();
         let test_rows: Vec<usize> = (0..n).filter(|&i| fold[i] == test).collect();
+        // Each fold gets its own RNG stream derived from the run seed, so folds never
+        // depend on one another's draws — results are identical serial or parallel.
+        let mut rng = Rng(seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15)));
         let w = train_fold(x, dim, labels, &train_rows, w0, p, &mut rng, hp);
         let mut sc = vec![0.0f64; test_rows.len()];
         score_all(x, dim, &w, &test_rows, &mut sc);
+        (test_rows, sc)
+    };
+
+    let parts: Vec<(Vec<usize>, Vec<f64>)> = if p.num_threads > 1 {
+        all_folds.par_iter().map(per_fold).collect()
+    } else {
+        all_folds.iter().map(per_fold).collect()
+    };
+
+    let mut final_score = vec![0.0f64; n];
+    for (test_rows, sc) in parts {
         for (k, &r) in test_rows.iter().enumerate() {
             final_score[r] = sc[k];
         }
@@ -291,25 +309,34 @@ fn select_c(
     w0: &[f64],
     p: &Params,
 ) -> (f64, f64) {
-    let mut best = (C_POS_DEFAULT, C_NEG_DEFAULT);
-    let mut best_yield = -1i64;
-    for &alpha in C_POS_GRID.iter() {
-        for &beta in C_NEG_GRID.iter() {
-            let hp = Hp {
-                alpha,
-                beta,
-                maxiter: p.c_select_maxiter,
-                subset: if p.c_select_subset == 0 { p.subset_max_train } else { p.c_select_subset },
-            };
-            let sc = cv_scores(x, dim, labels, fold, w0, p, hp, p.seed);
-            let y = yield_at_fdr(&sc, labels, p.test_fdr) as i64;
-            if y > best_yield {
-                best_yield = y;
-                best = (alpha, beta);
-            }
+    let cands: Vec<(f64, f64)> = C_POS_GRID
+        .iter()
+        .flat_map(|&a| C_NEG_GRID.iter().map(move |&b| (a, b)))
+        .collect();
+    let subset = if p.c_select_subset == 0 { p.subset_max_train } else { p.c_select_subset };
+
+    // Every candidate re-seeds from p.seed, so its score is independent of evaluation
+    // order — the parallel and serial paths return bit-identical results.
+    let eval = |&(alpha, beta): &(f64, f64)| -> usize {
+        let hp = Hp { alpha, beta, maxiter: p.c_select_maxiter, subset };
+        let sc = cv_scores(x, dim, labels, fold, w0, p, hp, p.seed);
+        yield_at_fdr(&sc, labels, p.test_fdr)
+    };
+
+    let yields: Vec<usize> = if p.num_threads > 1 {
+        cands.par_iter().map(eval).collect()
+    } else {
+        cands.iter().map(eval).collect()
+    };
+
+    // First maximum wins, so ties resolve by grid order regardless of threading.
+    let mut best_i = 0;
+    for i in 1..cands.len() {
+        if yields[i] > yields[best_i] {
+            best_i = i;
         }
     }
-    best
+    cands.get(best_i).copied().unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT))
 }
 
 pub fn run(ds: &Dataset, p: &Params) -> Output {
@@ -332,7 +359,14 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
 
     let selected = p.c_alpha.is_none() || p.c_beta.is_none();
     let (alpha, beta) = if selected {
-        select_c(&x, dim, &ds.labels, &fold, &w0, p)
+        // A private pool keeps thread count under this run's control, so callers that
+        // already parallelize across files (the benchmark harness) stay single-threaded.
+        match rayon::ThreadPoolBuilder::new().num_threads(p.num_threads).build() {
+            Ok(pool) if p.num_threads > 1 => {
+                pool.install(|| select_c(&x, dim, &ds.labels, &fold, &w0, p))
+            }
+            _ => select_c(&x, dim, &ds.labels, &fold, &w0, p),
+        }
     } else {
         (p.c_alpha.unwrap(), p.c_beta.unwrap())
     };

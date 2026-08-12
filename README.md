@@ -32,8 +32,11 @@ cargo build --release
   --results-peptides t.pep --decoy-results-peptides d.pep \
   input.pin
 ```
-Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads` (accepted;
-percolator-rs is single-threaded per file — parallelize across files instead).
+Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads`.
+`--num-threads` (default 1) parallelizes the class-weight grid search and the 3 CV folds within a
+single file — results are bit-identical at any thread count. It defaults to 1 so that harnesses which
+already run many files concurrently don't oversubscribe; use it to speed up **single-file** runs
+(~2.3x at `--num-threads 9`).
 SVM class weights: `--cpos F` / `--cneg F` pin them, `--select-c` / `--no-select-c` force the grid
 search on or off (on for `--canonical` and `--balanced`, off for `--fast`).
 

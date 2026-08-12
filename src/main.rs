@@ -101,7 +101,7 @@ fn parse_args() -> Args {
             "--cneg" => beta_opt = take().parse().ok(),
             "--select-c" => select_c_opt = Some(true),
             "--no-select-c" => select_c_opt = Some(false),
-            "--num-threads" => { let _ = take(); } // accepted, single-threaded per file
+            "--num-threads" => a.params.num_threads = take().parse().unwrap_or(1).max(1),
             "--fast" => prof = Some("fast"),
             "--balanced" => prof = Some("balanced"),
             "--canonical" => prof = Some("canonical"),
