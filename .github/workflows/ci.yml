@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    name: Build, unit tests, regression gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Build (release)
+        run: cargo build --release
+
+      - name: Unit tests
+        run: cargo test --release
+
+      - name: Regression gate (fixture — yield ±1%, time & memory budgets)
+        run: bash tests/regression.sh
+
+  # Full-dataset performance smoke test. Requires the PXD032157 data (2.3 GB) and the
+  # extracted C++ reference binary, which are not in the repo — so this runs only on a
+  # self-hosted runner that has them, or on manual dispatch. It exercises both the C++
+  # budget smoke test (bench/fastrun.sh) and the percolator-rs full gate (bench/regression.sh).
+  full-benchmark:
+    name: Full-dataset perf + accuracy gate (self-hosted)
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: [self-hosted, percolator-data]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build (release)
+        run: cargo build --release
+      - name: C++ reference budget smoke test (bench/fastrun.sh, <60s)
+        run: |
+          bash bench/fastrun.sh 5 | tee /tmp/cpp.txt
+          awk '/WALL=/{ match($0,/WALL=([0-9.]+)s/,m); if (m[1]+0 > 60){print "FAIL: C++ fastrun exceeded 60s"; exit 1} }' /tmp/cpp.txt
+      - name: percolator-rs full gate (canonical N=4, yield ±1%, <60s, <1.5GiB)
+        run: bash bench/regression.sh
