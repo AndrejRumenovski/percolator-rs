@@ -24,6 +24,13 @@ Faithful to the Percolator method:
 6. **Target-decoy q-values** + monotone (PAVA isotonic) PEP; PSM- and peptide-level output in the reference
    tab format.
 
+## FDR calibration
+`bench/null_calibration.sh` runs a pure-null experiment: keep only the decoy rows of a real `.pin`
+and randomly relabel half as targets, so **every** reported identification is false by construction.
+A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–6 false IDs out of
+22k–60k null targets** (~0.01% against a nominal 1%), and enabling the class-weight grid search
+changes that by at most ±2 — it buys yield without buying optimism.
+
 ## Build & run
 ```
 cargo build --release
