@@ -1,0 +1,338 @@
+//! percolator-rs — a from-scratch Rust reimplementation of the Percolator
+//! semi-supervised PSM rescoring algorithm. CLI mirrors the subset of reference
+//! flags used by our benchmark.
+
+mod percolator;
+mod pin;
+mod protein;
+mod rt;
+mod simd;
+mod stats;
+mod svm;
+
+use percolator::Params;
+use std::fs::File;
+use std::io::{BufWriter, Write};
+
+fn core_peptide(p: &str) -> &str {
+    // strip flanking residues: A.PEPTIDE.B -> PEPTIDE (keep mods)
+    let bytes = p.as_bytes();
+    let first = p.find('.');
+    let last = p.rfind('.');
+    match (first, last) {
+        (Some(a), Some(b)) if b > a => &p[a + 1..b],
+        _ => {
+            let _ = bytes;
+            p
+        }
+    }
+}
+
+struct Args {
+    pins: Vec<String>,
+    results_psms: Option<String>,
+    decoy_psms: Option<String>,
+    results_peptides: Option<String>,
+    decoy_peptides: Option<String>,
+    results_proteins: Option<String>,
+    decoy_proteins: Option<String>,
+    join: bool,
+    rt_features: bool,
+    params: Params,
+    profile: &'static str,
+}
+
+/// Execution profiles: preset (subset_max_train, maxiter) tuned for a use case.
+/// Explicit --subset-max-train / --maxiter always override the preset.
+fn preset(name: &str) -> Option<(usize, usize)> {
+    match name {
+        "fast" => Some((20_000, 5)),   // ~quick QA/test pipelines
+        "balanced" => Some((40_000, 10)), // ~5% yield hit, still fast
+        "canonical" => Some((0, 10)),  // full default sensitivity (0 = no subsetting)
+        _ => None,
+    }
+}
+
+fn parse_args() -> Args {
+    let mut a = Args {
+        pins: Vec::new(),
+        results_psms: None,
+        decoy_psms: None,
+        results_peptides: None,
+        decoy_peptides: None,
+        results_proteins: None,
+        decoy_proteins: None,
+        join: false,
+        rt_features: false,
+        params: Params::default(),
+        profile: "canonical",
+    };
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+
+    // Two-pass so explicit flags win regardless of position relative to the profile flag.
+    let mut prof: Option<&'static str> = None;
+    let mut maxiter_opt: Option<usize> = None;
+    let mut subset_opt: Option<usize> = None;
+
+    let mut i = 0;
+    while i < argv.len() {
+        let s = &argv[i];
+        let mut take = || {
+            i += 1;
+            argv.get(i).cloned().unwrap_or_default()
+        };
+        match s.as_str() {
+            "--results-psms" | "-m" => a.results_psms = Some(take()),
+            "--decoy-results-psms" | "-M" => a.decoy_psms = Some(take()),
+            "--results-peptides" | "-r" => a.results_peptides = Some(take()),
+            "--decoy-results-peptides" | "-B" => a.decoy_peptides = Some(take()),
+            "--results-proteins" | "-l" => a.results_proteins = Some(take()),
+            "--decoy-results-proteins" | "-L" => a.decoy_proteins = Some(take()),
+            "--join" => a.join = true,
+            "--rt-features" => a.rt_features = true,
+            "--seed" => a.params.seed = take().parse().unwrap_or(1),
+            "--maxiter" => maxiter_opt = take().parse().ok(),
+            "--subset-max-train" | "-N" => subset_opt = take().parse().ok(),
+            "--num-threads" => { let _ = take(); } // accepted, single-threaded per file
+            "--fast" => prof = Some("fast"),
+            "--balanced" => prof = Some("balanced"),
+            "--canonical" => prof = Some("canonical"),
+            "--profile" => {
+                let v = take();
+                prof = match v.as_str() {
+                    "fast" => Some("fast"),
+                    "balanced" => Some("balanced"),
+                    "canonical" => Some("canonical"),
+                    _ => {
+                        eprintln!("unknown --profile '{v}' (use fast|balanced|canonical)");
+                        std::process::exit(2);
+                    }
+                };
+            }
+            other => {
+                if !other.starts_with('-') {
+                    a.pins.push(other.to_string());
+                }
+            }
+        }
+        i += 1;
+    }
+
+    // Resolve: profile sets the baseline, explicit flags override.
+    let chosen = prof.unwrap_or("canonical");
+    a.profile = chosen;
+    if let Some((subset, maxiter)) = preset(chosen) {
+        a.params.subset_max_train = subset;
+        a.params.maxiter = maxiter;
+    }
+    if let Some(m) = maxiter_opt {
+        a.params.maxiter = m;
+    }
+    if let Some(s) = subset_opt {
+        a.params.subset_max_train = s;
+    }
+    a
+}
+
+struct Row {
+    id: String,
+    score: f64,
+    q: f64,
+    pep: f64,
+    peptide: String,
+    proteins: String,
+}
+
+fn write_results(path: &str, mut rows: Vec<Row>) -> std::io::Result<()> {
+    rows.sort_unstable_by(|x, y| y.score.partial_cmp(&x.score).unwrap_or(std::cmp::Ordering::Equal));
+    let f = File::create(path)?;
+    let mut w = BufWriter::with_capacity(1 << 20, f);
+    writeln!(w, "PSMId\tscore\tq-value\tposterior_error_prob\tpeptide\tproteinIds")?;
+    for r in rows {
+        writeln!(
+            w,
+            "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
+            r.id, r.score, r.q, r.pep, r.peptide, r.proteins
+        )?;
+    }
+    Ok(())
+}
+
+fn main() {
+    let args = parse_args();
+    if args.pins.is_empty() {
+        eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
+        std::process::exit(2);
+    }
+    if args.pins.len() > 1 && !args.join {
+        eprintln!("error: multiple inputs require --join (pooled cross-run training), or run them separately");
+        std::process::exit(2);
+    }
+    eprintln!(
+        "profile: {} (maxiter={}, subset-max-train={}){}{}",
+        args.profile,
+        args.params.maxiter,
+        if args.params.subset_max_train == 0 { "none".to_string() } else { args.params.subset_max_train.to_string() },
+        if args.join { format!(", join={} files", args.pins.len()) } else { String::new() },
+        if args.rt_features { ", rt-features" } else { "" },
+    );
+    let t0 = std::time::Instant::now();
+    let tp = std::time::Instant::now();
+    let mut parts: Vec<pin::Dataset> = Vec::with_capacity(args.pins.len());
+    for path in &args.pins {
+        let mut d = pin::parse(path).unwrap_or_else(|e| {
+            eprintln!("parse error ({path}): {e}");
+            std::process::exit(1);
+        });
+        if args.rt_features {
+            rt::augment(&mut d); // per-file RT alignment, then pool
+        }
+        parts.push(d);
+    }
+    let ds = if parts.len() == 1 { parts.pop().unwrap() } else { pin::merge(parts) };
+    eprintln!("parse: {:.3}s", tp.elapsed().as_secs_f64());
+    eprintln!(
+        "parsed {} PSMs, {} features ({} targets / {} decoys){}",
+        ds.n_psm,
+        ds.n_feat,
+        ds.labels.iter().filter(|&&l| l > 0).count(),
+        ds.labels.iter().filter(|&&l| l < 0).count(),
+        if args.join { format!(", pooled from {} files", ds.source_names.len()) } else { String::new() },
+    );
+
+    let out = percolator::run(&ds, &args.params);
+
+    // PSM-level output
+    let mut targets: Vec<Row> = Vec::new();
+    let mut decoys: Vec<Row> = Vec::new();
+    for i in 0..ds.n_psm {
+        let r = Row {
+            id: ds.spec_id[i].clone(),
+            score: out.score[i],
+            q: out.qval[i],
+            pep: out.pep[i],
+            peptide: ds.peptide[i].clone(),
+            proteins: ds.proteins[i].clone(),
+        };
+        if ds.labels[i] > 0 {
+            targets.push(r);
+        } else {
+            decoys.push(r);
+        }
+    }
+    let n_psm_q01 = targets.iter().filter(|r| r.q < 0.01).count();
+
+    // Peptide-level: best-scoring PSM per unique (core) peptide, then re-q-value.
+    let mut best: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for i in 0..ds.n_psm {
+        let key = format!("{}\u{1}{}", ds.labels[i], core_peptide(&ds.peptide[i]));
+        match best.get(&key) {
+            Some(&j) if out.score[j] >= out.score[i] => {}
+            _ => {
+                best.insert(key, i);
+            }
+        }
+    }
+    let pep_idx: Vec<usize> = best.values().copied().collect();
+    let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
+    let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
+    let ppi0 = stats::estimate_pi0(&plabel);
+    let pq = stats::qvalues(&pscore, &plabel, ppi0);
+    let ppep = stats::peps(&pscore, &plabel, ppi0);
+
+    let mut ptargets: Vec<Row> = Vec::new();
+    let mut pdecoys: Vec<Row> = Vec::new();
+    for (k, &i) in pep_idx.iter().enumerate() {
+        let r = Row {
+            id: ds.spec_id[i].clone(),
+            score: pscore[k],
+            q: pq[k],
+            pep: ppep[k],
+            peptide: ds.peptide[i].clone(),
+            proteins: ds.proteins[i].clone(),
+        };
+        if ds.labels[i] > 0 {
+            ptargets.push(r);
+        } else {
+            pdecoys.push(r);
+        }
+    }
+    let n_pep_q01 = ptargets.iter().filter(|r| r.q < 0.01).count();
+
+    if let Some(p) = &args.results_psms {
+        write_results(p, targets).unwrap();
+    }
+    if let Some(p) = &args.decoy_psms {
+        write_results(p, decoys).unwrap();
+    }
+    if let Some(p) = &args.results_peptides {
+        write_results(p, ptargets).unwrap();
+    }
+    if let Some(p) = &args.decoy_peptides {
+        write_results(p, pdecoys).unwrap();
+    }
+
+    // Cross-run: per-source yield when pooled (each file's targets scored by the shared model).
+    if args.join {
+        eprintln!("per-file yield (pooled model, target PSMs q<0.01):");
+        for s in 0..ds.source_names.len() as u32 {
+            let c = (0..ds.n_psm)
+                .filter(|&i| ds.source[i] == s && ds.labels[i] > 0 && out.qval[i] < 0.01)
+                .count();
+            eprintln!("  [{}] {}", ds.source_names[s as usize], c);
+        }
+    }
+
+    // Protein inference (graph-based, Fido-style) — uses peptide-level identifications.
+    if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
+        let entries: Vec<(f64, f64, String)> = pep_idx
+            .iter()
+            .enumerate()
+            .map(|(k, &i)| (pscore[k], ppep[k], ds.proteins[i].clone()))
+            .collect();
+        let groups = protein::infer(&entries);
+        let n_prot_q01 = groups.iter().filter(|g| !g.is_decoy && g.picked && g.qval < 0.01).count();
+        let n_prot_classic = protein::classic_target_q01(&groups);
+        if let Some(p) = &args.results_proteins {
+            write_proteins(p, &groups, false).unwrap();
+        }
+        if let Some(p) = &args.decoy_proteins {
+            write_proteins(p, &groups, true).unwrap();
+        }
+        eprintln!(
+            "protein groups: {} ({} target, {} decoy); picked entries: {} | target proteins q<0.01: {} (picked-FDR) vs {} (classic)",
+            groups.len(),
+            groups.iter().filter(|g| !g.is_decoy).count(),
+            groups.iter().filter(|g| g.is_decoy).count(),
+            groups.iter().filter(|g| g.picked).count(),
+            n_prot_q01,
+            n_prot_classic
+        );
+    }
+
+    eprintln!(
+        "target PSMs q<0.01: {} | target peptides q<0.01: {} | {:.2}s",
+        n_psm_q01,
+        n_pep_q01,
+        t0.elapsed().as_secs_f64()
+    );
+}
+
+fn write_proteins(path: &str, groups: &[protein::ProtGroup], want_decoy: bool) -> std::io::Result<()> {
+    let f = File::create(path)?;
+    let mut w = BufWriter::with_capacity(1 << 20, f);
+    writeln!(w, "ProteinGroupId\tq-value\tposterior_error_prob\tscore\tnumPeptides\tproteinIds")?;
+    for g in groups.iter().filter(|g| g.picked && g.is_decoy == want_decoy) {
+        writeln!(
+            w,
+            "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
+            g.proteins.first().map(|s| s.as_str()).unwrap_or(""),
+            g.qval,
+            g.pep,
+            g.score,
+            g.n_peptides,
+            g.proteins.join(",")
+        )?;
+    }
+    Ok(())
+}
