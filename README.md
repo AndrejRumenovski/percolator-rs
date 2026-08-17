@@ -15,8 +15,8 @@ Benchmarked against the reference **C++ Percolator 3.09** on PRIDE dataset PXD03
 |---|---|---|
 | **Wall clock** — 65 files, one process | 542 s | **54.9 s** (9.9x faster) |
 | **Wall clock** — 65 files, 4 processes | 370 s | **19.4 s** (19x faster) |
-| **PSMs** identified at q < 0.01 | 103 038 | **107 046** (+3.9%) |
-| **Peptides** identified at q < 0.01 | 35 852 | **37 469** (+4.5%) |
+| **PSMs** at reported q < 0.01 | 103 038 | **107 046** (+3.9%) |
+| **Peptides** at reported q < 0.01 | 35 852 | **37 469** (+4.5%) |
 | **Peak memory** — 4 processes | 1.56 GiB | **0.85 GiB** |
 
 Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
@@ -24,9 +24,10 @@ bought by doing less work. **One percolator-rs process finishes faster (54.9 s) 
 reference manages using all 12 cores** (~107 s floor); to get under 60 s the reference must enable
 speed flags that cost it 12-15% of its identifications.
 
-Results are bit-deterministic under a fixed seed, guarded by CI regression gates, and the false
-discovery rate is validated against a pure-null control — 0-6 false identifications out of
-22 000-60 000 (see [FDR calibration](#fdr-calibration)).
+Results are bit-deterministic under a fixed seed and guarded by CI regression gates. A pure-null
+control is strongly conservative, but a six-run foreign-proteome entrapment experiment finds that
+signal-present q-values from **both** implementations are anti-conservative on this search; see
+[FDR calibration](#fdr-calibration).
 
 ## Algorithm
 Faithful to the Percolator method:
@@ -53,6 +54,14 @@ and randomly relabel half as targets, so **every** reported identification is fa
 A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–6 false IDs out of
 22k–60k null targets** (~0.01% against a nominal 1%), and turning on the class-weight grid search
 (`--select-c`) shifts that by at most ±2 — neither setting buys yield by loosening the FDR.
+
+The stronger signal-present check is `bench/entrapment/run.sh`: six deposited mzML runs are
+re-searched against the native database plus an equally sized foreign plant proteome. At reported
+q≤0.01, percolator-rs accepts **19,666 PSMs at an entrapment-estimated 2.78% FDP**; C++ 3.09 accepts
+**19,126 at 2.62%**. Thus the +2.82% nominal-q yield lead on these runs is real as a count but is
+*not* validated at an actual 1% FDR. Both implementations share the larger calibration failure,
+with Rust slightly more anti-conservative at this cutoff. Full design, uncertainty intervals, and
+all thresholds: [`bench/ENTRAPMENT.md`](bench/ENTRAPMENT.md).
 
 ## Build & run
 ```
@@ -196,8 +205,10 @@ Recorded references live in `tests/expected.env`; update them intentionally when
 the numbers. percolator-rs is seed-deterministic, so fixture yields are exact run-to-run.
 
 ## Fidelity notes
-percolator-rs identifies **more** than the C++ reference at the same threshold (+3.9 % PSMs, +4.5 %
-peptides), and the pure-null control above indicates this is signal rather than a looser FDR.
+percolator-rs identifies **more** than the C++ reference at the same reported threshold (+3.9 %
+PSMs, +4.5 % peptides). The pure-null control rules out hallucinated signal on pure noise, but the
+signal-present entrapment experiment above shows that it does not establish exact q-value
+calibration: both implementations exceed the nominal FDR on the entrapment search.
 
 Two standard explanations for the original ~1 % deficit were tested and **disproved by measurement**:
 
