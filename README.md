@@ -132,12 +132,17 @@ end-to-end CLI regression (`tests/protein_regression.sh`). The run log prints bo
 `q<0.01 (picked-FDR) vs (classic)` counts. Output columns:
 `ProteinGroupId, q-value, posterior_error_prob, score, numPeptides, proteinIds`.
 
+On a local 105,560-PSM single-organism bacterial search (`data/F_3.pin`), this produces **1,410
+protein groups at q<0.01 vs 1,369 with classic TDA** (+41, +3.0%; seed 1). The optional
+`bench/protein_real.sh` gate reproduces the comparison when that uncommitted dataset is present;
+the synthetic gate remains the portable hosted-CI check.
+
 > **Honest caveat on this dataset:** PXD032157 is *metaproteomics* — a huge protein DB with ≈1
 > peptide per protein, so the decoy:target *protein-group* ratio is ~1:1 and protein-level FDR is
 > inherently near-unachievable at q<0.01 (single files yield 0–4 confident proteins; picked ≈
 > classic because target/decoy protein sets barely overlap, leaving little to pick between). This
-> is a property of the data, not the method — picked FDR shows its benefit on standard
-> single-organism data where a protein has many peptides and its target/decoy versions compete.
+> is a property of that dataset, not the method; the single-organism result above demonstrates the
+> expected picked-FDR benefit when proteins have many peptides and target/decoy versions compete.
 > The score uses the best-peptide SVM discriminant (continuous; avoids −ln(PEP=0) saturation ties
 > that otherwise scramble the ranking). Still not the full Bayesian Fido (α/β/γ marginalization).
 
