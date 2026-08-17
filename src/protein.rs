@@ -62,6 +62,9 @@ impl UnionFind {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::pin;
+    use std::fs;
+    use std::path::PathBuf;
 
     #[test]
     fn groups_proteins_sharing_a_peptide() {
@@ -126,6 +129,113 @@ mod tests {
         let picked = g.iter().filter(|x| !x.is_decoy && x.picked && x.qval < 0.01).count();
         let classic = classic_target_q01(&g);
         assert!(picked >= classic, "picked FDR must be >= classic (got {picked} vs {classic})");
+    }
+
+    #[test]
+    fn synthetic_pin_fixture_shows_picked_gain_on_realistic_groups() {
+        let path = write_synthetic_pin_fixture();
+        let ds = pin::parse(path.to_str().unwrap()).expect("synthetic PIN should parse");
+        fs::remove_file(&path).ok();
+
+        assert_eq!(ds.n_feat, 1, "fixture should expose one score feature");
+        assert_eq!(ds.n_psm, 607, "fixture row count drifted");
+
+        let entries: Vec<(f64, f64, String)> = (0..ds.n_psm)
+            .map(|i| {
+                let score = ds.row(i)[0];
+                let pep = 1.0 / (1.0 + score.max(0.0));
+                (score, pep, ds.proteins[i].clone())
+            })
+            .collect();
+        let groups = infer(&entries);
+
+        let picked = groups.iter().filter(|g| !g.is_decoy && g.picked && g.qval < 0.01).count();
+        let classic = classic_target_q01(&groups);
+        assert_eq!(classic, 81, "classic q<0.01 count drifted");
+        assert_eq!(picked, 121, "picked q<0.01 count drifted");
+        assert!(picked > classic, "synthetic grouped fixture should favor picked FDR ({picked} vs {classic})");
+
+        let shared = groups
+            .iter()
+            .find(|g| g.proteins.iter().any(|p| p == "SHARED_A") && g.proteins.iter().any(|p| p == "SHARED_B"))
+            .expect("shared target group should exist");
+        assert_eq!(shared.n_peptides, 3, "shared target group should aggregate its peptides");
+        assert!(shared.picked, "shared target group should win its picked competition");
+    }
+
+    fn write_synthetic_pin_fixture() -> PathBuf {
+        let path = std::env::temp_dir().join(format!(
+            "percolator-rs-protein-fixture-{}.pin",
+            std::process::id()
+        ));
+        let mut pin = String::from("SpecId\tLabel\tScanNr\tscore\tPeptide\tProteins\n");
+        let mut scan = 1usize;
+
+        for i in 0..120 {
+            let target = format!("T{:03}", i);
+            let target_score = 1000.0 - i as f64;
+            append_group(&mut pin, &mut scan, 1, target_score, &target, &[target.as_str()], 3);
+
+            let decoy = format!("DECOY_{target}");
+            let decoy_score = if i < 40 { 920.5 - i as f64 } else { 100.0 - (i - 40) as f64 };
+            append_group(&mut pin, &mut scan, -1, decoy_score, &target, &[decoy.as_str()], 2);
+        }
+
+        append_group(
+            &mut pin,
+            &mut scan,
+            1,
+            930.25,
+            "SHARED",
+            &["SHARED_A", "SHARED_B"],
+            3,
+        );
+        append_group(
+            &mut pin,
+            &mut scan,
+            -1,
+            910.25,
+            "SHARED",
+            &["DECOY_SHARED_A", "DECOY_SHARED_B"],
+            2,
+        );
+
+        append_group(&mut pin, &mut scan, -1, 40.0, "LONE_DEC", &["DECOY_LONE_A"], 1);
+        append_group(&mut pin, &mut scan, -1, 39.0, "LONE_DEC", &["DECOY_LONE_B"], 1);
+
+        fs::write(&path, pin).expect("synthetic PIN fixture should write");
+        path
+    }
+
+    fn append_group(
+        out: &mut String,
+        scan: &mut usize,
+        label: i8,
+        best_score: f64,
+        tag: &str,
+        proteins: &[&str],
+        n_peptides: usize,
+    ) {
+        for pep_idx in 0..n_peptides {
+            let peptide = format!("K.{}_{:03}.R", tag, pep_idx);
+            let spec_id = format!("{tag}_{label}_{pep_idx}");
+            let score = best_score - pep_idx as f64 * 0.01;
+            out.push_str(&spec_id);
+            out.push('\t');
+            out.push_str(if label > 0 { "1" } else { "-1" });
+            out.push('\t');
+            out.push_str(&scan.to_string());
+            out.push('\t');
+            out.push_str(&format!("{score:.2}"));
+            out.push('\t');
+            out.push_str(&peptide);
+            for protein in proteins {
+                out.push('\t');
+                out.push_str(protein);
+            }
+            out.push('\n');
+            *scan += 1;
+        }
     }
 }
 

@@ -127,8 +127,8 @@ peptide, and computes protein-group q-values / PEPs by **picked-protein FDR** (S
 2015): each target group is paired with its decoy counterpart (matched on decoy-stripped member
 names), only the higher-scoring of the pair is kept, and q-values are computed over that picked
 list. This removes double-counting and is provably ≥ as sensitive as classic protein TDA — an
-invariant enforced by a unit test (`picked_never_less_sensitive_than_classic`). The run log prints
-both `q<0.01 (picked-FDR) vs (classic)` counts. Output columns:
+invariant enforced by both a direct unit test and a parser-backed synthetic `.pin` fixture test in
+`src/protein.rs`. The run log prints both `q<0.01 (picked-FDR) vs (classic)` counts. Output columns:
 `ProteinGroupId, q-value, posterior_error_prob, score, numPeptides, proteinIds`.
 
 > **Honest caveat on this dataset:** PXD032157 is *metaproteomics* — a huge protein DB with ≈1
