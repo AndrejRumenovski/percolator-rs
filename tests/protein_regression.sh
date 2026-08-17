@@ -19,7 +19,10 @@ trap 'rm -rf "$tmpdir"' EXIT
 pin="$tmpdir/synthetic_proteins.pin"
 tprot="$tmpdir/targets.proteins.tsv"
 dprot="$tmpdir/decoys.proteins.tsv"
+bprot="$tmpdir/bayesian.targets.tsv"
+bdprot="$tmpdir/bayesian.decoys.tsv"
 err="$tmpdir/run.err"
+berr="$tmpdir/bayesian.err"
 
 {
   printf 'SpecId\tLabel\tScanNr\tXcorr\tPeptide\tProteins\n'
@@ -45,6 +48,9 @@ err="$tmpdir/run.err"
 
 "$BIN" --canonical --seed 1 --results-proteins "$tprot" --decoy-results-proteins "$dprot" "$pin" \
   >/dev/null 2>"$err" || { echo "FAIL: run errored"; cat "$err"; exit 1; }
+"$BIN" --canonical --seed 1 --protein-inference bayesian \
+  --results-proteins "$bprot" --decoy-results-proteins "$bdprot" "$pin" \
+  >/dev/null 2>"$berr" || { echo "FAIL: Bayesian run errored"; cat "$berr"; exit 1; }
 
 groups=$(grep -oP 'protein groups: \K[0-9]+' "$err")
 picked_entries=$(grep -oP 'picked entries: \K[0-9]+' "$err")
@@ -73,6 +79,27 @@ np1=$(awk 'NR > 1 && $5 == 1 { c++ } END { print c + 0 }' "$tprot")
 np2=$(awk 'NR > 1 && $5 == 2 { c++ } END { print c + 0 }' "$tprot")
 assert_eq "numPeptides=1 rows" "$np1" 260
 assert_eq "numPeptides=2 rows" "$np2" 78
+
+assert_eq "Bayesian converged" "$(grep -oP 'converged: \K(true|false)' "$berr")" true
+assert_eq "Bayesian header" "$(head -1 "$bprot")" \
+  $'ProteinGroupId\tq-value\tposterior_error_prob\tscore\tnumPeptides\tproteinIds'
+if ! awk -F'\t' 'NR > 1 {
+  if ($2 < 0 || $2 > 1 || $3 < 0 || $3 > 1 || $4 < 0 || $4 > 1) {
+    print "out-of-range probability at row " NR > "/dev/stderr"; exit 1
+  }
+  if (($3 + $4 - 1)^2 > 1e-8) {
+    print "PEP + score != 1 at row " NR > "/dev/stderr"; exit 1
+  }
+  if ($2 + 1e-9 < previous) {
+    print "q-value decreased at row " NR ": " previous " -> " $2 > "/dev/stderr"; exit 1
+  }
+  previous=$2
+}' "$bprot"; then
+  echo "  FAIL  Bayesian probabilities invalid or q-values non-monotone"
+  fail=1
+else
+  echo "  PASS  Bayesian probabilities bounded and q-values monotone"
+fi
 
 if [ "${picked_q01:-0}" -le "${classic_q01:-0}" ]; then
   echo "  FAIL  picked>classic          picked-FDR should strictly beat classic on this fixture"

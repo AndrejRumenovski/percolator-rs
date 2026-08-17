@@ -5,6 +5,7 @@
 mod percolator;
 mod pin;
 mod protein;
+mod protein_bayes;
 mod rt;
 mod simd;
 mod stats;
@@ -36,10 +37,18 @@ struct Args {
     decoy_peptides: Option<String>,
     results_proteins: Option<String>,
     decoy_proteins: Option<String>,
+    protein_inference: ProteinInference,
+    protein_bayes: protein_bayes::Params,
     join: bool,
     rt_features: bool,
     params: Params,
     profile: &'static str,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum ProteinInference {
+    Picked,
+    Bayesian,
 }
 
 /// Execution profiles: preset (subset_max_train, maxiter, select_c) tuned for a use case.
@@ -66,6 +75,8 @@ fn parse_args() -> Args {
         decoy_peptides: None,
         results_proteins: None,
         decoy_proteins: None,
+        protein_inference: ProteinInference::Picked,
+        protein_bayes: protein_bayes::Params::default(),
         join: false,
         rt_features: false,
         params: Params::default(),
@@ -95,6 +106,26 @@ fn parse_args() -> Args {
             "--decoy-results-peptides" | "-B" => a.decoy_peptides = Some(take()),
             "--results-proteins" | "-l" => a.results_proteins = Some(take()),
             "--decoy-results-proteins" | "-L" => a.decoy_proteins = Some(take()),
+            "--protein-inference" => {
+                let v = take();
+                a.protein_inference = match v.as_str() {
+                    "picked" => ProteinInference::Picked,
+                    "bayesian" | "fido" => ProteinInference::Bayesian,
+                    _ => {
+                        eprintln!("unknown --protein-inference '{v}' (use picked|bayesian)");
+                        std::process::exit(2);
+                    }
+                };
+            }
+            "--protein-alpha" => a.protein_bayes.alpha = take().parse().unwrap_or(f64::NAN),
+            "--protein-beta" => a.protein_bayes.beta = take().parse().unwrap_or(f64::NAN),
+            "--protein-gamma" => a.protein_bayes.gamma = take().parse().unwrap_or(f64::NAN),
+            "--protein-peptide-prior" => {
+                a.protein_bayes.peptide_prior = take().parse().unwrap_or(f64::NAN)
+            }
+            "--protein-max-iter" => {
+                a.protein_bayes.max_iter = take().parse().unwrap_or(0)
+            }
             "--join" => a.join = true,
             "--rt-features" => a.rt_features = true,
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
@@ -127,6 +158,10 @@ fn parse_args() -> Args {
             }
         }
         i += 1;
+    }
+    if let Err(message) = a.protein_bayes.validate() {
+        eprintln!("invalid Bayesian protein parameter: {message}");
+        std::process::exit(2);
     }
 
     // Resolve: profile sets the baseline, explicit flags override.
@@ -318,31 +353,71 @@ fn main() {
         }
     }
 
-    // Protein inference (graph-based, Fido-style) — uses peptide-level identifications.
+    // Protein inference uses the best PSM for each peptide sequence.
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
         let entries: Vec<(f64, f64, String)> = pep_idx
             .iter()
             .enumerate()
             .map(|(k, &i)| (pscore[k], ppep[k], ds.proteins[i].clone()))
             .collect();
-        let groups = protein::infer(&entries);
-        let n_prot_q01 = groups.iter().filter(|g| !g.is_decoy && g.picked && g.qval < 0.01).count();
-        let n_prot_classic = protein::classic_target_q01(&groups);
+        let picked_groups = protein::infer(&entries);
+        let picked_q01 = picked_groups
+            .iter()
+            .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
+            .count();
+        let n_prot_classic = protein::classic_target_q01(&picked_groups);
+        let (groups, method_label) = match args.protein_inference {
+            ProteinInference::Picked => (picked_groups, "picked-FDR"),
+            ProteinInference::Bayesian => {
+                let result = protein_bayes::infer(&entries, &args.protein_bayes);
+                eprintln!(
+                    "Bayesian protein model: alpha={:.4}, beta={:.4}, gamma={:.4}, peptide-prior={:.4}; components: {} ({} tree-exact, {} loopy); BP iterations: {}, converged: {}",
+                    args.protein_bayes.alpha,
+                    args.protein_bayes.beta,
+                    args.protein_bayes.gamma,
+                    args.protein_bayes.peptide_prior,
+                    result.diagnostics.components,
+                    result.diagnostics.tree_components,
+                    result.diagnostics.loopy_components,
+                    result.diagnostics.iterations,
+                    result.diagnostics.converged,
+                );
+                (result.groups, "Bayesian")
+            }
+        };
+        let n_prot_q01 = groups
+            .iter()
+            .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
+            .count();
         if let Some(p) = &args.results_proteins {
             write_proteins(p, &groups, false).unwrap();
         }
         if let Some(p) = &args.decoy_proteins {
             write_proteins(p, &groups, true).unwrap();
         }
-        eprintln!(
-            "protein groups: {} ({} target, {} decoy); picked entries: {} | target proteins q<0.01: {} (picked-FDR) vs {} (classic)",
-            groups.len(),
-            groups.iter().filter(|g| !g.is_decoy).count(),
-            groups.iter().filter(|g| g.is_decoy).count(),
-            groups.iter().filter(|g| g.picked).count(),
-            n_prot_q01,
-            n_prot_classic
-        );
+        if args.protein_inference == ProteinInference::Picked {
+            eprintln!(
+                "protein groups: {} ({} target, {} decoy); picked entries: {} | target proteins q<0.01: {} (picked-FDR) vs {} (classic)",
+                groups.len(),
+                groups.iter().filter(|g| !g.is_decoy).count(),
+                groups.iter().filter(|g| g.is_decoy).count(),
+                groups.iter().filter(|g| g.picked).count(),
+                n_prot_q01,
+                n_prot_classic
+            );
+        } else {
+            eprintln!(
+                "protein groups: {} ({} target, {} decoy); reported entries: {} | target proteins q<0.01: {} ({}) vs {} (picked-FDR) vs {} (classic)",
+                groups.len(),
+                groups.iter().filter(|g| !g.is_decoy).count(),
+                groups.iter().filter(|g| g.is_decoy).count(),
+                groups.iter().filter(|g| g.picked).count(),
+                n_prot_q01,
+                method_label,
+                picked_q01,
+                n_prot_classic
+            );
+        }
     }
 
     eprintln!(

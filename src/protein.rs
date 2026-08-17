@@ -1,12 +1,11 @@
-//! Graph-based protein inference (Fido-style grouping + target-decoy protein q-values).
+//! Picked-protein target-decoy inference.
 //!
 //! We build the bipartite peptide<->protein graph, collapse proteins that share peptides
 //! into indistinguishable groups (union-find = connected components), score each group by
 //! its best peptide, and compute protein-level q-values / PEPs by target-decoy competition.
 //! Decoy proteins are identified by the `DECOY_` prefix.
 //!
-//! This is not the full Bayesian Fido marginalization (alpha/beta/gamma model); it is a
-//! pragmatic, well-defined graph inference. See README for the distinction.
+//! The separate `protein_bayes` module implements probabilistic noisy-OR inference.
 
 use crate::stats;
 use std::collections::HashMap;
@@ -241,7 +240,7 @@ mod tests {
 
 const DECOY_PREFIXES: [&str; 4] = ["DECOY_", "REV_", "RANDOM_", "RANDOM-"];
 
-fn is_decoy_protein(id: &str) -> bool {
+pub(crate) fn is_decoy_protein(id: &str) -> bool {
     let u = id.to_ascii_uppercase();
     DECOY_PREFIXES.iter().any(|p| u.starts_with(p))
 }
@@ -258,7 +257,7 @@ fn strip_decoy(id: &str) -> &str {
 }
 
 /// Split the raw proteins field (tab- or space-separated protein ids).
-fn split_proteins(s: &str) -> Vec<&str> {
+pub(crate) fn split_proteins(s: &str) -> Vec<&str> {
     s.split(|c: char| c == '\t' || c == ' ' || c == ';')
         .filter(|p| !p.is_empty())
         .collect()

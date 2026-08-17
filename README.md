@@ -136,31 +136,36 @@ See `bench/RS_VS_CPP.md` for the full table.
 
 ## Advanced biological features
 
-### Protein inference — picked-protein FDR (`--results-proteins` / `--decoy-results-proteins`)
-Graph-based inference (`src/protein.rs`): builds the peptide↔protein graph, collapses proteins
-sharing peptides into indistinguishable **groups** (union-find), scores each group by its best
-peptide, and computes protein-group q-values / PEPs by **picked-protein FDR** (Savitski et al.
-2015): each target group is paired with its decoy counterpart (matched on decoy-stripped member
-names), only the higher-scoring of the pair is kept, and q-values are computed over that picked
-list. This removes double-counting and is provably ≥ as sensitive as classic protein TDA — enforced
-by a direct unit test, a parser-backed synthetic fixture test in `src/protein.rs`, and a synthetic
-end-to-end CLI regression (`tests/protein_regression.sh`). The run log prints both
-`q<0.01 (picked-FDR) vs (classic)` counts. Output columns:
+### Protein inference — picked FDR and Bayesian marginalization
+
+`--results-proteins` / `--decoy-results-proteins` now support two inference methods:
+
+- `--protein-inference picked` (default) performs the existing best-peptide picked target-decoy
+  competition.
+- `--protein-inference bayesian` uses peptide PEPs in an α/β/γ noisy-OR model, clusters proteins
+  with identical peptide connectivity, and marginalizes protein presence with sum-product belief
+  propagation. Tree components are exact; cyclic components use deterministic damped loopy BP.
+
+The Bayesian defaults are α=0.1, β=0.01, γ=0.5, and peptide prior 0.1. All are configurable. Its
+q-values are cumulative expected posterior error, whereas picked q-values come from empirical
+target-decoy competition. See the complete model, CLI options, limitations, and five-input
+[picked-versus-Bayesian benchmark](bench/PROTEIN_INFERENCE.md). Output columns remain
 `ProteinGroupId, q-value, posterior_error_prob, score, numPeptides, proteinIds`.
 
-On a local 105,560-PSM single-organism bacterial search (`data/F_3.pin`), this produces **1,410
-protein groups at q<0.01 vs 1,369 with classic TDA** (+41, +3.0%; seed 1). The optional
+On a local 105,560-PSM single-organism bacterial search (`data/F_3.pin`), picked mode produces
+**1,410 protein groups at q<0.01 vs 1,369 with classic TDA** (+41, +3.0%; seed 1). The optional
 `bench/protein_real.sh` gate reproduces the comparison when that uncommitted dataset is present;
 the synthetic gate remains the portable hosted-CI check.
 
 > **Honest caveat on this dataset:** PXD032157 is *metaproteomics* — a huge protein DB with ≈1
 > peptide per protein, so the decoy:target *protein-group* ratio is ~1:1 and protein-level FDR is
 > inherently near-unachievable at q<0.01 (single files yield 0–4 confident proteins; picked ≈
-> classic because target/decoy protein sets barely overlap, leaving little to pick between). This
-> is a property of that dataset, not the method; the single-organism result above demonstrates the
-> expected picked-FDR benefit when proteins have many peptides and target/decoy versions compete.
-> The score uses the best-peptide SVM discriminant (continuous; avoids −ln(PEP=0) saturation ties
-> that otherwise scramble the ranking). Still not the full Bayesian Fido (α/β/γ marginalization).
+> classic because target/decoy protein sets barely overlap, leaving little to pick between). The
+> single-organism result above demonstrates the expected picked-FDR benefit when proteins have many
+> peptides and target/decoy versions compete. Bayesian group posteriors behave very differently on
+> this redundant graph, as the dedicated benchmark documents; neither list is validated there.
+> The picked score uses the best-peptide SVM discriminant. Bayesian mode instead models all distinct
+> peptide evidence and shared-peptide ambiguity; it does not assume the picked grouping or ranking.
 
 ### Retention-time features (`--rt-features`)
 `src/rt.rs` predicts RT from peptide sequence (per-residue coefficient model), aligns it to
