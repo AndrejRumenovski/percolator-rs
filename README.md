@@ -8,8 +8,15 @@ semi-supervised PSM rescoring algorithm, built to benchmark against the referenc
 
 ## Results
 
-Benchmarked against the reference **C++ Percolator 3.09** on PRIDE dataset PXD032157 — 65 Comet
-`.pin` files, 2.3 GB — on a 12-core Ryzen 5 5600G. Identical inputs, identical settings, same machine.
+Benchmarked against **C++ Percolator 3.09** on five search configurations spanning mosquito,
+human, bacterial, and yeast samples; Comet, Tide, MSFragger, and Sage inputs; a timsTOF Pro and
+Orbitrap-family instruments; and search databases from 4,647 to 139,191 target proteins. Across the
+four compact extension cases, percolator-rs is **8.9–17.7x faster**, using **35–63%** of C++ peak
+RSS. Reported-q yield is not uniformly higher: the PSM delta ranges from **−1.8% to +12.0%**.
+See the complete, reproducible [multi-dataset benchmark](bench/MULTI_DATASET.md).
+
+The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB — on a 12-core Ryzen 5
+5600G. Identical inputs, matched settings, same machine.
 
 | | C++ Percolator 3.09 | percolator-rs |
 |---|---|---|

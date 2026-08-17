@@ -1,0 +1,9 @@
+dataset	implementation	wall_seconds	peak_rss_kb	psm_q_le_0.01	peptide_q_le_0.01
+hogrebe_tide	rust	0.48	54256	29264	20614
+hogrebe_tide	cpp	5.89	134320	27617	19722
+PXD020243_msfragger	rust	0.04	11692	1554	1177
+PXD020243_msfragger	cpp	0.50	18904	1388	1062
+PXD060954_sage	rust	0.25	31116	26614	11433
+PXD060954_sage	cpp	4.43	88592	25795	11336
+percolator_yeast	rust	0.10	21560	1126	903
+percolator_yeast	cpp	0.89	34392	1147	928
