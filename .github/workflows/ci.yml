@@ -34,6 +34,9 @@ jobs:
       - name: Regression gate (fixture — yield ±1%, time & memory budgets)
         run: bash tests/regression.sh
 
+      - name: Protein regression gate (synthetic picked-FDR fixture)
+        run: bash tests/protein_regression.sh
+
   # Full-dataset performance smoke test. Requires the PXD032157 data (2.3 GB) and the
   # extracted C++ reference binary, which are not in the repo — so this runs only on a
   # self-hosted runner that has them, or on manual dispatch. It exercises both the C++

@@ -3,7 +3,9 @@
 # fixture and asserts (a) q<0.01 yield within +/-TOL% of recorded reference, and
 # (b) wall time + peak RSS within budget. Exits non-zero on any failure.
 set -u
-cd "$(dirname "$0")/.." || exit 2
+if [ ! -f Cargo.toml ] || [ ! -d tests ]; then
+  cd "$(dirname "$0")/.." || exit 2
+fi
 source tests/expected.env
 
 BIN=target/release/percolator-rs
@@ -24,7 +26,7 @@ $TIMEV "$BIN" --canonical --seed 1 "$FIX" >/dev/null 2>"$err" || { echo "FAIL: r
 
 psm=$(grep -oP 'target PSMs q<0.01: \K[0-9]+' "$err")
 pep=$(grep -oP 'target peptides q<0.01: \K[0-9]+' "$err")
-wall=$(grep -oP 'or \K[0-9.]+(?= seconds)' "$err" | tail -1)   # from tool's own line
+wall=$(grep -oP '\| \K[0-9.]+(?=s$)' "$err" | tail -1)   # from tool's own summary line
 rss=""
 if [ -f /tmp/reg_time.txt ]; then
   rss=$(awk -F': ' '/Maximum resident/{print $2}' /tmp/reg_time.txt)
