@@ -6,6 +6,28 @@
 A from-scratch Rust reimplementation of the [Percolator](https://github.com/percolator/percolator)
 semi-supervised PSM rescoring algorithm, built to benchmark against the reference C++ Percolator 3.09.
 
+## Results
+
+Benchmarked against the reference **C++ Percolator 3.09** on PRIDE dataset PXD032157 — 65 Comet
+`.pin` files, 2.3 GB — on a 12-core Ryzen 5 5600G. Identical inputs, identical settings, same machine.
+
+| | C++ Percolator 3.09 | percolator-rs |
+|---|---|---|
+| **Wall clock** — 65 files, one process | 542 s | **54.9 s** (9.9x faster) |
+| **Wall clock** — 65 files, 4 processes | 370 s | **19.4 s** (19x faster) |
+| **PSMs** identified at q < 0.01 | 103 038 | **107 046** (+3.9%) |
+| **Peptides** identified at q < 0.01 | 35 852 | **37 469** (+4.5%) |
+| **Peak memory** — 4 processes | 1.56 GiB | **0.85 GiB** |
+
+Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
+bought by doing less work. **One percolator-rs process finishes faster (54.9 s) than the C++
+reference manages using all 12 cores** (~107 s floor); to get under 60 s the reference must enable
+speed flags that cost it 12-15% of its identifications.
+
+Results are bit-deterministic under a fixed seed, guarded by CI regression gates, and the false
+discovery rate is validated against a pure-null control — 0-6 false identifications out of
+22 000-60 000 (see [FDR calibration](#fdr-calibration)).
+
 ## Algorithm
 Faithful to the Percolator method:
 1. **PIN parse** — streaming tab-delimited reader (`ExpMass`/`CalcMass` excluded from features by name).
@@ -15,10 +37,11 @@ Faithful to the Percolator method:
    targets (q<0.01) as positives, all decoys as negatives → retrain a class-weighted **L2-regularized
    squared-hinge linear SVM** (primal truncated-Newton / Newton-CG solver, the same L2-loss family as the
    reference L2-SVM-MFN).
-   The class weights `Cpos`/`Cneg` are **selected per run by cross-validation** over a small grid
-   (the reference's `Cpos=0` behaviour): each candidate gets an abbreviated 3-fold pass and the one
-   with the highest out-of-fold yield at `q<0.01` wins. Pin them with `--cpos/--cneg`, or skip the
-   search with `--no-select-c`.
+   The class weights are **absolute** (`Cpos=1`, `Cneg=4`), not derived from the target/decoy class
+   balance. This is the single largest accuracy win here: the obvious heuristic
+   `Cpos = max(n_neg/n_pos, 1)` explodes (~300x) when confident targets are scarce and swamps the
+   decoys — measured, it is the *worst* corner of the weight space. Pin the weights with
+   `--cpos/--cneg`, or search them per file with `--select-c` (see [Fidelity notes](#fidelity-notes)).
 5. **3-fold nested cross-validation** — each PSM scored by a model trained without its fold (no overfitting
    of the FDR estimate).
 6. **Target-decoy q-values** + monotone (PAVA isotonic) PEP; PSM- and peptide-level output in the reference
@@ -28,8 +51,8 @@ Faithful to the Percolator method:
 `bench/null_calibration.sh` runs a pure-null experiment: keep only the decoy rows of a real `.pin`
 and randomly relabel half as targets, so **every** reported identification is false by construction.
 A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–6 false IDs out of
-22k–60k null targets** (~0.01% against a nominal 1%), and enabling the class-weight grid search
-changes that by at most ±2 — it buys yield without buying optimism.
+22k–60k null targets** (~0.01% against a nominal 1%), and turning on the class-weight grid search
+(`--select-c`) shifts that by at most ±2 — neither setting buys yield by loosening the FDR.
 
 ## Build & run
 ```
@@ -40,12 +63,14 @@ cargo build --release
   input.pin
 ```
 Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads`.
-`--num-threads` (default 1) parallelizes the class-weight grid search and the 3 CV folds within a
-single file — results are bit-identical at any thread count. It defaults to 1 so that harnesses which
-already run many files concurrently don't oversubscribe; use it to speed up **single-file** runs
-(~2.3x at `--num-threads 9`).
-SVM class weights: `--cpos F` / `--cneg F` pin them, `--select-c` / `--no-select-c` force the grid
-search on or off (on for `--canonical` and `--balanced`, off for `--fast`).
+`--num-threads` (default 1) parallelizes the 3 CV folds within a single file — and the class-weight
+grid too, when `--select-c` is on. Results are bit-identical at any thread count. It defaults to 1 so
+harnesses that already run many files concurrently don't oversubscribe; use it for **single-file**
+runs (1.74 s → 1.10 s at `--num-threads 3`, saturating there since there are only 3 folds; 3.48 s
+→ 1.56 s at `--num-threads 9` with `--select-c`).
+SVM class weights: `--cpos F` / `--cneg F` pin them; `--select-c` opts into the per-file grid
+search, which is **off by default for every profile** (it costs ~3x wall time without beating the
+fixed defaults on this dataset — see [Fidelity notes](#fidelity-notes)).
 
 ### Execution profiles
 Presets so you don't have to memorize flag combinations. Pass one of `--fast` / `--balanced` /
@@ -62,14 +87,15 @@ Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs):
 
 | profile | wall | peak RAM | PSM q<0.01 | peptide q<0.01 |
 |---|--:|--:|--:|--:|
-| `--canonical` | 43.4 s | 0.79 GiB | 102 094 | 35 951 |
-| `--balanced` | 42.9 s | 0.81 GiB | 102 269 | 35 867 |
-| `--fast` | **21.5 s** | 0.84 GiB | 97 270 (−4.7%) | 33 588 (−6.6%) |
+| `--canonical` (default) | 18.2 s | 0.73 GiB | 107 046 | 37 469 |
+| `--balanced` | 18.3 s | 0.65 GiB | 106 817 (−0.2%) | 37 526 (+0.2%) |
+| `--fast` | **12.5 s** | 0.69 GiB | 105 237 (−1.7%) | 36 772 (−1.9%) |
 
 Note: because percolator-rs's canonical mode is already fast, `--balanced` lands essentially at
-canonical speed *and* yield here; `--fast` roughly halves the time for a ~5–7 % yield cost (still far
-better than the C++ fast config's −12 %/−15 %, since percolator-rs keeps full 3-fold CV — only the SVM
-training-set size is capped).
+canonical speed *and* yield here; `--fast` cuts ~30 % of the time for a ~2 % yield cost (far better
+than the C++ fast config's −12 %/−15 %, since percolator-rs keeps full 3-fold CV — only the SVM
+training-set size is capped). Measured without writing result files, so these run ~1 s under the
+CI gate's figure.
 
 ## Benchmark vs C++ Percolator 3.09 (PXD032157, 65 files, 12-core Ryzen 5 5600G)
 
@@ -80,15 +106,16 @@ training-set size is capped).
 | C++ reference | default, sequential | 542 s | 103 038 / 35 852 (canonical) |
 | C++ reference | default — floor on 12 cores | ~107 s (can't reach 60 s) | 103 038 / 35 852 |
 | C++ reference | **fast flags** to reach 60 s | 49 s | 90 395 / 30 530 (**−12% / −15%**) |
-| **percolator-rs** (optimized) | **default full fidelity, N=4** | **22.8 s** | **101 966 / 35 869 (−1.0% / +0.05%)** |
-| **percolator-rs** (optimized) | default full fidelity, N=6 | 18.6 s | 101 966 / 35 869 |
-| percolator-rs (pre-optimization) | default, N=4 | 41.2 s | 102 094 / 35 951 |
+| **percolator-rs** | default full fidelity, sequential | **54.9 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
+| **percolator-rs** | **default full fidelity, N=4** | **19.4 s** | **107 046 / 37 469** |
+| percolator-rs | `--select-c` per-file weight search, N=4 | 57.2 s | 106 558 / 37 330 |
 
 percolator-rs reaches sub-60 s **without** cutting iterations and **without** the 12–15 % yield loss the
-C++ implementation needs to get there — aggregate identifications match the canonical run within ~1 %.
+C++ implementation needs to get there — and it identifies ~4 % *more* than the canonical reference run.
+A single percolator-rs process (54.9 s) finishes ahead of the reference's 12-core floor (~107 s).
 
-**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.73 GiB** vs the C++
-reference's much larger footprint (per process ~half: 263 MB peak for percolator-rs vs 377–525 MB for C++).
+**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.85 GiB** vs the C++
+reference's **1.56 GiB** (per process roughly half: 263 MB vs 377–525 MB).
 See `bench/RS_VS_CPP.md` for the full table.
 
 ## Advanced biological features
@@ -136,13 +163,15 @@ Making the Rust build faster *without* subset flags or yield loss:
 | **Explicit-Hessian Newton solver** | `dim` is small (~22), so form the 22×22 Hessian `H = I + 2·ΣCₖxₖxₖᵀ` once per step and Cholesky-solve `H d = −g`, instead of matrix-free CG (many Hessian-vector passes over ~100k samples) | main win: single big file 2.79 s → 2.02 s; full N=4 40.1 s → **22.8 s** |
 | **mmap + fast-float parsing** | memory-map the file (`memmap2`) and parse floats over the raw byte buffer with `fast-float` (correctly-rounded → identical values) | parse 0.29 s → **0.16 s** (1.8×), yield bit-identical |
 | **Vectorized `axpy`** | Hessian outer-product accumulation uses 4-wide `wide::f64x4` (exact, elementwise) | feeds the solver's hot loop |
-| **`target-cpu=native`** | `.cargo/config.toml` | lets the backend use AVX2/AVX-512 |
+| **`target-cpu`** | `.cargo/config.toml` | `x86-64-v3` baseline (AVX2/FMA) so binaries stay portable; `RUSTFLAGS="-C target-cpu=native"` for benchmark builds |
 
-Net: **~1.8× faster end-to-end** (40.1 → 22.8 s at N=4) at full fidelity.
+Net: **~1.8× faster end-to-end** (40.1 → 22.8 s at N=4) at full fidelity. These figures are from the
+optimization work itself, measured *before* the class-weight change; the current default runs the same
+workload in 19.4 s at N=4.
 
 Notes on what *didn't* help and why (measured, not assumed):
 - **SIMD dot-product** over length-22 vectors gave no speedup (lane-load + horizontal-reduce overhead ≈ the scalar cost) and its reassociation perturbed borderline q<0.01 counts, so `dot` is kept as an exact sequential sum. The vectorization payoff is in `axpy` (exact), not `dot`.
-- The Cholesky Newton step is *more* accurate than the old truncated CG, which shifted aggregate yield by 128 PSMs (102 094 → 101 966, −0.13%); still within ±1% and re-recorded as the new reference.
+- The Cholesky Newton step is *more* accurate than the old truncated CG, which shifted aggregate yield by 128 PSMs (102 094 → 101 966, −0.13%) against the baselines of the time; re-recorded then. Both figures predate the class-weight fix that took the current default to 107 046.
 
 ## CI / regression gates
 Performance and accuracy are locked in so refactors can't silently drift:
@@ -151,8 +180,8 @@ Performance and accuracy are locked in so refactors can't silently drift:
   deterministic fixture `tests/fixtures/sample.pin` and asserts q<0.01 yield within **±1%** of the
   recorded reference (`tests/expected.env`) plus wall-time and peak-RSS budgets. Exits non-zero on drift.
 - **`bench/regression.sh`** (self-hosted / nightly, needs the PXD032157 data) — full 65-file `--canonical`
-  run at N=4: asserts 65/65 valid, aggregate PSM & peptide q<0.01 within ±1% of recorded (102 094 / 35 951),
-  wall < 60 s, peak RSS < 1.5 GiB.
+  run at N=4: asserts 65/65 valid, aggregate PSM & peptide q<0.01 within ±1% of recorded (107 046 / 37 469),
+  wall < 45 s, peak RSS < 1.5 GiB.
 - **`.github/workflows/ci.yml`** — on push/PR: `cargo build --release` → `cargo test` → `tests/regression.sh`.
   A manual `workflow_dispatch` job (self-hosted runner labelled `percolator-data`) also runs the C++ budget
   smoke test (`bench/fastrun.sh`, <60 s) and the percolator-rs full gate.
@@ -161,7 +190,24 @@ Recorded references live in `tests/expected.env`; update them intentionally when
 the numbers. percolator-rs is seed-deterministic, so fixture yields are exact run-to-run.
 
 ## Fidelity notes
-Aggregate yield matches within ~1 %, but per-file PSM counts differ (percolator-rs's q-values are slightly
-more permissive on some files, less on others) because the q-value/PEP uses a simpler pi0 than percolator's
-Storey estimate and does not do per-spectrum best-PSM competition. Closing that gap (Storey pi0, per-scan
-competition, C-parameter cross-validation) is the next fidelity step; it does not change the speed/memory story.
+percolator-rs identifies **more** than the C++ reference at the same threshold (+3.9 % PSMs, +4.5 %
+peptides), and the pure-null control above indicates this is signal rather than a looser FDR.
+
+Two standard explanations for the original ~1 % deficit were tested and **disproved by measurement**:
+
+- *Per-spectrum best-PSM competition* — the reference does **not** do it. Every scan in these inputs
+  carries 5 Comet ranks, and C++ emits all 92 989 target rows unchanged.
+- *Storey pi0* — the reference logs `pi0 = 1` on this data (peptide level `0.999168`), landing in the
+  same place as the simple decoys/targets estimate.
+
+The actual cause was the SVM class weighting (Algorithm step 4). Switching to absolute `Cpos`/`Cneg`
+instead of scaling by the target/decoy balance closed the gap and reversed it, and collapsed the
+per-file spread: files below the reference went 36 → 11, worst single-file deficit −507 → −82. The
+original "1 % gap" was never a bias — it was two-sided variance that happened to nearly cancel.
+
+The per-file grid search (`--select-c`) was built on top of that fix and, on this dataset, does
+**not** pay for itself: ~3x the wall time, and a coin flip per file (better on 33, worse on 28,
+marginally worse in aggregate) because candidates are ranked by an abbreviated proxy run. It remains
+available for data where the fixed defaults may not transfer. Those defaults were themselves chosen
+by measurement on this dataset — treat them as a well-tested starting point, not a universal
+constant.

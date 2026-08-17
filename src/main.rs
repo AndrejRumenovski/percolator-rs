@@ -43,13 +43,16 @@ struct Args {
 }
 
 /// Execution profiles: preset (subset_max_train, maxiter, select_c) tuned for a use case.
-/// Explicit --subset-max-train / --maxiter / --cpos-scale always override the preset.
-/// `select_c` enables the SVM class-weight grid search (costs time, buys yield stability).
+/// Explicit --subset-max-train / --maxiter / --cpos / --cneg always override the preset.
+/// `select_c` enables the per-file SVM class-weight grid search. It is OFF for every profile:
+/// measured on PXD032157 it costs ~3x wall time and does not beat the fixed default weights
+/// (33 files better, 28 worse, aggregate slightly worse). Opt in with --select-c on data where
+/// the default Cpos/Cneg may not transfer.
 fn preset(name: &str) -> Option<(usize, usize, bool)> {
     match name {
         "fast" => Some((20_000, 5, false)),   // ~quick QA/test pipelines
-        "balanced" => Some((40_000, 10, true)), // ~5% yield hit, still fast
-        "canonical" => Some((0, 10, true)),  // full default sensitivity (0 = no subsetting)
+        "balanced" => Some((40_000, 10, false)), // ~5% yield hit, still fast
+        "canonical" => Some((0, 10, false)), // full default sensitivity (0 = no subsetting)
         _ => None,
     }
 }
@@ -129,7 +132,7 @@ fn parse_args() -> Args {
     // Resolve: profile sets the baseline, explicit flags override.
     let chosen = prof.unwrap_or("canonical");
     a.profile = chosen;
-    let mut select_c = true;
+    let mut select_c = false;
     if let Some((subset, maxiter, sel)) = preset(chosen) {
         a.params.subset_max_train = subset;
         a.params.maxiter = maxiter;
@@ -144,9 +147,9 @@ fn parse_args() -> Args {
     if let Some(s) = select_c_opt {
         select_c = s;
     }
-    // Class weights: pinning either flag pins both (the other defaults to 1.0);
-    // otherwise the profile decides between grid search (None) and the plain
-    // class-balance heuristic (1.0/1.0).
+    // Class weights: pinning either flag pins both (the other takes its default);
+    // otherwise --select-c chooses between the per-file grid search (None) and the
+    // fixed defaults, which are what every profile uses unless asked otherwise.
     if alpha_opt.is_some() || beta_opt.is_some() {
         a.params.c_alpha = Some(alpha_opt.unwrap_or(percolator::C_POS_DEFAULT));
         a.params.c_beta = Some(beta_opt.unwrap_or(percolator::C_NEG_DEFAULT));
