@@ -13,6 +13,8 @@ pub struct Problem<'a> {
     pub rows: &'a [usize], // indices of samples to train on
     pub y: &'a [f64],   // +1 / -1, aligned with rows
     pub c: &'a [f64],   // per-sample penalty, aligned with rows
+    /// Optional active-feature mask. Excluded weights remain zero.
+    pub feature_mask: Option<&'a [bool]>,
 }
 
 impl<'a> Problem<'a> {
@@ -23,7 +25,16 @@ impl<'a> Problem<'a> {
     }
 
     fn wx(&self, w: &[f64], k: usize) -> f64 {
-        crate::simd::dot(w, self.xi(k))
+        match self.feature_mask {
+            None => crate::simd::dot(w, self.xi(k)),
+            Some(mask) => w
+                .iter()
+                .zip(self.xi(k))
+                .zip(mask)
+                .filter(|(_, active)| **active)
+                .map(|((weight, value), _)| weight * value)
+                .sum(),
+        }
     }
 
     // value, and cache of (1 - y*wx) for active samples
@@ -49,7 +60,16 @@ impl<'a> Problem<'a> {
         g[..self.dim].copy_from_slice(&w[..self.dim]);
         for &k in active {
             let coef = -2.0 * self.c[k] * z[k] * self.y[k];
-            crate::simd::axpy(&mut g[..self.dim], coef, self.xi(k));
+            match self.feature_mask {
+                None => crate::simd::axpy(&mut g[..self.dim], coef, self.xi(k)),
+                Some(mask) => {
+                    for j in 0..self.dim {
+                        if mask[j] {
+                            g[j] += coef * self.xi(k)[j];
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -64,9 +84,27 @@ impl<'a> Problem<'a> {
             let xi = self.xi(k);
             let w = 2.0 * self.c[k];
             for a in 0..dim {
+                if self.feature_mask.is_some_and(|mask| !mask[a]) {
+                    continue;
+                }
                 let xa = w * xi[a];
-                // H[a, a..dim] += xa * xi[a..dim]  (upper triangle)
-                crate::simd::axpy(&mut h[a * dim + a..a * dim + dim], xa, &xi[a..dim]);
+                match self.feature_mask {
+                    None => {
+                        // H[a, a..dim] += xa * xi[a..dim]  (upper triangle)
+                        crate::simd::axpy(
+                            &mut h[a * dim + a..a * dim + dim],
+                            xa,
+                            &xi[a..dim],
+                        );
+                    }
+                    Some(mask) => {
+                        for b in a..dim {
+                            if mask[b] {
+                                h[a * dim + b] += xa * xi[b];
+                            }
+                        }
+                    }
+                }
             }
         }
         // add I and mirror upper -> lower
@@ -120,7 +158,7 @@ fn cholesky_solve(h: &mut [f64], rhs: &[f64], d: &mut [f64], dim: usize) -> bool
 }
 
 /// Train, warm-started from `w`. `max_newton` outer Newton steps.
-pub fn train(p: &Problem, w: &mut [f64], max_newton: usize) {
+pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
     let dim = p.dim;
     let n = p.rows.len();
     let mut z = vec![0.0f64; n];
@@ -135,7 +173,7 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize) {
     for _ in 0..max_newton {
         p.grad(w, &z, &active, &mut g);
         let gnorm2: f64 = g.iter().map(|v| v * v).sum();
-        if gnorm2.sqrt() < 1e-5 {
+        if gnorm2.sqrt() < tolerance {
             break;
         }
         // Newton step: form the (small) Hessian explicitly and Cholesky-solve H d = -g.

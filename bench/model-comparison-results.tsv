@@ -1,0 +1,13 @@
+benchmark	case	model	psm_reported_q_0.01	peptide_reported_q_0.01	adjusted_fdp	wall_seconds
+PXD032157	65-file Comet aggregate	svm	107046	37469	NA	27.068
+PXD032157	65-file Comet aggregate	mlp	105521	36447	NA	120.762
+multi-dataset	PXD020243 MSFragger	svm	1554	1177	NA	NA
+multi-dataset	PXD020243 MSFragger	mlp	1525	1179	NA	NA
+multi-dataset	PXD060954 Sage	svm	26614	11433	NA	NA
+multi-dataset	PXD060954 Sage	mlp	26642	11408	NA	NA
+multi-dataset	Hogrebe Tide	svm	29264	20614	NA	NA
+multi-dataset	Hogrebe Tide	mlp	29264	20562	NA	NA
+multi-dataset	Percolator yeast	svm	1126	903	NA	NA
+multi-dataset	Percolator yeast	mlp	1079	871	NA	NA
+entrapment	6-run aggregate	svm	19666	NA	0.027840	NA
+entrapment	6-run aggregate	mlp	19149	NA	0.024503	NA

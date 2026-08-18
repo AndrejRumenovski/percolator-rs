@@ -2,6 +2,7 @@
 //! semi-supervised PSM rescoring algorithm. CLI mirrors the subset of reference
 //! flags used by our benchmark.
 
+mod mlp;
 mod percolator;
 mod pin;
 mod protein;
@@ -11,7 +12,7 @@ mod simd;
 mod stats;
 mod svm;
 
-use percolator::Params;
+use percolator::{Model, Params};
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
@@ -126,6 +127,28 @@ fn parse_args() -> Args {
             "--protein-max-iter" => {
                 a.protein_bayes.max_iter = take().parse().unwrap_or(0)
             }
+            "--rescore-model" | "--model" => {
+                let value = take();
+                a.params.model = match value.as_str() {
+                    "svm" | "linear" => Model::Svm,
+                    "mlp" | "neural" => Model::Mlp,
+                    _ => {
+                        eprintln!("unknown --rescore-model '{value}' (use svm|mlp)");
+                        std::process::exit(2);
+                    }
+                };
+            }
+            "--mlp-hidden" => a.params.mlp_hidden = take().parse().unwrap_or(0),
+            "--mlp-epochs" => a.params.mlp_epochs = take().parse().unwrap_or(0),
+            "--mlp-learning-rate" => {
+                a.params.mlp_learning_rate = take().parse().unwrap_or(f64::NAN)
+            }
+            "--mlp-l2" => a.params.mlp_l2 = take().parse().unwrap_or(f64::NAN),
+            "--auto-model" | "--nested-select" => a.params.nested_selection = true,
+            "--no-auto-model" => a.params.nested_selection = false,
+            "--svm-tolerance" => {
+                a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN)
+            }
             "--join" => a.join = true,
             "--rt-features" => a.rt_features = true,
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
@@ -194,6 +217,26 @@ fn parse_args() -> Args {
     } else {
         a.params.c_alpha = Some(percolator::C_POS_DEFAULT);
         a.params.c_beta = Some(percolator::C_NEG_DEFAULT);
+    }
+    if a.params.mlp_hidden == 0 || a.params.mlp_hidden > 256 {
+        eprintln!("invalid --mlp-hidden (use 1..256)");
+        std::process::exit(2);
+    }
+    if a.params.mlp_epochs == 0 || a.params.mlp_epochs > 1000 {
+        eprintln!("invalid --mlp-epochs (use 1..1000)");
+        std::process::exit(2);
+    }
+    if !a.params.mlp_learning_rate.is_finite() || a.params.mlp_learning_rate <= 0.0 {
+        eprintln!("invalid --mlp-learning-rate (must be finite and >0)");
+        std::process::exit(2);
+    }
+    if !a.params.mlp_l2.is_finite() || a.params.mlp_l2 < 0.0 {
+        eprintln!("invalid --mlp-l2 (must be finite and >=0)");
+        std::process::exit(2);
+    }
+    if !a.params.svm_tolerance.is_finite() || a.params.svm_tolerance <= 0.0 {
+        eprintln!("invalid --svm-tolerance (must be finite and >0)");
+        std::process::exit(2);
     }
     a
 }

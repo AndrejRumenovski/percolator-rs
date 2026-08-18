@@ -1,10 +1,12 @@
 //! Semi-supervised Percolator training: 3-fold nested cross-validation around an
-//! iterative linear SVM that separates confident targets from decoys.
+//! iterative fold-local learner that separates confident targets from decoys.
 
+use crate::mlp;
 use crate::pin::Dataset;
 use crate::stats;
 use crate::svm::{train, Problem};
 use rayon::prelude::*;
+use std::collections::BTreeMap;
 
 pub struct Params {
     pub maxiter: usize,       // semi-supervised iterations
@@ -12,6 +14,7 @@ pub struct Params {
     pub subset_max_train: usize, // 0 = use all
     pub seed: u64,
     pub max_newton: usize,
+    pub svm_tolerance: f64,
     /// Absolute SVM class weights (`C_pos`, `C_neg`), as in the reference.
     /// `None` selects them by cross-validation (the reference's `Cpos=0` behaviour).
     pub c_alpha: Option<f64>,
@@ -22,6 +25,31 @@ pub struct Params {
     /// Worker threads for the grid search. 1 = fully serial (the default, so that
     /// running many files concurrently does not oversubscribe the machine).
     pub num_threads: usize,
+    /// Leakage-free per-outer-fold selection of SVM scale, class weights,
+    /// feature count, and solver tolerance.
+    pub nested_selection: bool,
+    /// Fold-local learner. Both models use the same normalization, folds,
+    /// semi-supervised labels, out-of-fold scoring, q-values, and PEPs.
+    pub model: Model,
+    pub mlp_hidden: usize,
+    pub mlp_epochs: usize,
+    pub mlp_learning_rate: f64,
+    pub mlp_l2: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Model {
+    Svm,
+    Mlp,
+}
+
+impl Model {
+    pub fn label(self) -> &'static str {
+        match self {
+            Model::Svm => "svm",
+            Model::Mlp => "mlp",
+        }
+    }
 }
 
 impl Default for Params {
@@ -32,11 +60,18 @@ impl Default for Params {
             subset_max_train: 0,
             seed: 1,
             max_newton: 30,
+            svm_tolerance: 1e-5,
             c_alpha: None,
             c_beta: None,
             c_select_maxiter: 3,
             c_select_subset: 20_000,
             num_threads: 1,
+            nested_selection: false,
+            model: Model::Svm,
+            mlp_hidden: 8,
+            mlp_epochs: 10,
+            mlp_learning_rate: 0.02,
+            mlp_l2: 0.0,
         }
     }
 }
@@ -48,6 +83,7 @@ struct Hp {
     beta: f64,
     maxiter: usize,
     subset: usize,
+    tolerance: f64,
 }
 
 /// Grid searched when the class weights are not pinned (absolute `C_pos` / `C_neg`).
@@ -82,48 +118,129 @@ impl Rng {
 /// Build the normalized design matrix with an appended bias column (=1.0).
 /// Returns (matrix row-major, dim) where dim = n_feat + 1.
 fn build_matrix(ds: &Dataset) -> (Vec<f64>, usize) {
+    let rows: Vec<usize> = (0..ds.n_psm).collect();
+    build_matrix_fit(ds, &rows)
+}
+
+/// Per-feature centering and scaling learned from a training partition.
+/// Kept separately so explanatory reports can convert SVM coefficients back to
+/// the original PIN units.
+struct Normalization {
+    mean: Vec<f64>,
+    std: Vec<f64>,
+}
+
+fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
+    assert!(!fit_rows.is_empty());
     let nf = ds.n_feat;
-    let n = ds.n_psm;
     let mut mean = vec![0.0f64; nf];
     let mut var = vec![0.0f64; nf];
-    for i in 0..n {
+    for &i in fit_rows {
         let row = ds.row(i);
         for j in 0..nf {
             mean[j] += row[j];
         }
     }
-    for m in mean.iter_mut() {
-        *m /= n as f64;
+    for m in &mut mean {
+        *m /= fit_rows.len() as f64;
     }
-    for i in 0..n {
+    for &i in fit_rows {
         let row = ds.row(i);
         for j in 0..nf {
-            let d = row[j] - mean[j];
-            var[j] += d * d;
+            let difference = row[j] - mean[j];
+            var[j] += difference * difference;
         }
     }
     let mut std = vec![1.0f64; nf];
     for j in 0..nf {
-        let v = (var[j] / n as f64).sqrt();
-        std[j] = if v > 1e-12 { v } else { 1.0 };
+        let value = (var[j] / fit_rows.len() as f64).sqrt();
+        std[j] = if value > 1e-12 { value } else { 1.0 };
     }
+    Normalization { mean, std }
+}
+
+fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, usize) {
+    let nf = ds.n_feat;
     let dim = nf + 1;
-    let mut x = vec![0.0f64; n * dim];
-    for i in 0..n {
+    let mut x = vec![0.0f64; ds.n_psm * dim];
+    for i in 0..ds.n_psm {
         let row = ds.row(i);
         let base = i * dim;
         for j in 0..nf {
-            x[base + j] = (row[j] - mean[j]) / std[j];
+            x[base + j] = (row[j] - normalization.mean[j]) / normalization.std[j];
         }
-        x[base + nf] = 1.0; // bias
+        x[base + nf] = 1.0;
     }
     (x, dim)
+}
+
+/// Normalize from `fit_rows` only, then transform every row. Nested selection
+/// uses this to keep outer-test and inner-validation features out of fitting.
+fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize]) -> (Vec<f64>, usize) {
+    let normalization = fit_normalization(ds, fit_rows);
+    transform_matrix(ds, &normalization)
 }
 
 fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) {
     for (k, &r) in rows.iter().enumerate() {
         out[k] = crate::simd::dot(&w[..dim], &x[r * dim..(r + 1) * dim]);
     }
+}
+
+enum FoldModel {
+    Svm(Vec<f64>),
+    Mlp(mlp::Network),
+}
+
+impl FoldModel {
+    fn score_rows(&self, x: &[f64], dim: usize, rows: &[usize], out: &mut [f64]) {
+        match self {
+            FoldModel::Svm(weights) => score_all(x, dim, weights, rows, out),
+            FoldModel::Mlp(network) => {
+                for (k, &row) in rows.iter().enumerate() {
+                    out[k] = network.score(&x[row * dim..(row + 1) * dim]);
+                }
+            }
+        }
+    }
+}
+
+/// Score held-out rows on a fold-comparable scale fitted from training decoys.
+/// This is needed when nested selection chooses different C values per fold.
+fn standardized_heldout_scores(
+    model: &FoldModel,
+    x: &[f64],
+    dim: usize,
+    labels: &[i8],
+    train_rows: &[usize],
+    heldout_rows: &[usize],
+) -> Vec<f64> {
+    let mut reference_rows: Vec<usize> = train_rows
+        .iter()
+        .copied()
+        .filter(|&row| labels[row] < 0)
+        .collect();
+    if reference_rows.len() < 2 {
+        reference_rows = train_rows.to_vec();
+    }
+    let mut reference_scores = vec![0.0; reference_rows.len()];
+    model.score_rows(x, dim, &reference_rows, &mut reference_scores);
+    let mean = reference_scores.iter().sum::<f64>() / reference_scores.len() as f64;
+    let variance = reference_scores
+        .iter()
+        .map(|score| {
+            let difference = score - mean;
+            difference * difference
+        })
+        .sum::<f64>()
+        / reference_scores.len() as f64;
+    let standard_deviation = variance.sqrt().max(1e-12);
+    let mut heldout_scores = vec![0.0; heldout_rows.len()];
+    model.score_rows(x, dim, heldout_rows, &mut heldout_scores);
+    for score in &mut heldout_scores {
+        *score = (*score - mean) / standard_deviation;
+    }
+    heldout_scores
 }
 
 /// Pick the single best-separating feature (either orientation) as the initial direction.
@@ -159,7 +276,8 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
     best_w
 }
 
-/// Train the semi-supervised SVM on `train_rows`, warm-started from `w0`.
+/// Train the selected semi-supervised learner on `train_rows`, initialized from `w0`.
+#[allow(clippy::too_many_arguments)]
 fn train_fold(
     x: &[f64],
     dim: usize,
@@ -169,14 +287,19 @@ fn train_fold(
     p: &Params,
     rng: &mut Rng,
     hp: Hp,
-) -> Vec<f64> {
-    let mut w = w0.to_vec();
+    model_seed: u64,
+    feature_mask: Option<&[bool]>,
+) -> FoldModel {
+    let mut model = match p.model {
+        Model::Svm => FoldModel::Svm(w0.to_vec()),
+        Model::Mlp => FoldModel::Mlp(mlp::Network::new(dim, p.mlp_hidden, w0, model_seed)),
+    };
     let mut scores = vec![0.0f64; train_rows.len()];
     let sub_labels: Vec<i8> = train_rows.iter().map(|&r| labels[r]).collect();
     let pi0 = stats::estimate_pi0(&sub_labels);
 
     for _iter in 0..hp.maxiter {
-        score_all(x, dim, &w, train_rows, &mut scores);
+        model.score_rows(x, dim, train_rows, &mut scores);
         let q = stats::qvalues(&scores, &sub_labels, pi0);
 
         // positives: targets under test_fdr ; negatives: all decoys
@@ -218,10 +341,30 @@ fn train_fold(
             y.push(-1.0);
             c.push(c_neg);
         }
-        let prob = Problem { x, dim, rows: &rows, y: &y, c: &c };
-        train(&prob, &mut w, p.max_newton);
+        match &mut model {
+            FoldModel::Svm(weights) => {
+                let prob = Problem {
+                    x,
+                    dim,
+                    rows: &rows,
+                    y: &y,
+                    c: &c,
+                    feature_mask,
+                };
+                train(&prob, weights, p.max_newton, hp.tolerance);
+            }
+            FoldModel::Mlp(network) => network.train(
+                x,
+                &rows,
+                &y,
+                &c,
+                p.mlp_epochs,
+                p.mlp_learning_rate,
+                p.mlp_l2,
+            ),
+        }
     }
-    w
+    model
 }
 
 fn subsample(v: &mut Vec<usize>, cap: usize, rng: &mut Rng) {
@@ -244,10 +387,23 @@ pub struct Output {
     pub c_alpha: f64,
     pub c_beta: f64,
     pub c_selected: bool,
+    pub nested_folds: Vec<FoldSelection>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FoldSelection {
+    pub outer_fold: u8,
+    pub c: f64,
+    pub positive_weight: f64,
+    pub negative_weight: f64,
+    pub feature_count: usize,
+    pub tolerance: f64,
+    pub inner_yield: usize,
 }
 
 /// Full 3-fold pass with the given hyperparameters; returns out-of-fold scores
 /// for every PSM (each scored by a model that never saw its fold).
+#[allow(clippy::too_many_arguments)]
 fn cv_scores(
     x: &[f64],
     dim: usize,
@@ -266,10 +422,22 @@ fn cv_scores(
         let test_rows: Vec<usize> = (0..n).filter(|&i| fold[i] == test).collect();
         // Each fold gets its own RNG stream derived from the run seed, so folds never
         // depend on one another's draws — results are identical serial or parallel.
-        let mut rng = Rng(seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15)));
-        let w = train_fold(x, dim, labels, &train_rows, w0, p, &mut rng, hp);
+        let fold_seed = seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+        let mut rng = Rng(fold_seed);
+        let model = train_fold(
+            x,
+            dim,
+            labels,
+            &train_rows,
+            w0,
+            p,
+            &mut rng,
+            hp,
+            fold_seed ^ 0xD1B5_4A32_D192_ED03,
+            None,
+        );
         let mut sc = vec![0.0f64; test_rows.len()];
-        score_all(x, dim, &w, &test_rows, &mut sc);
+        model.score_rows(x, dim, &test_rows, &mut sc);
         (test_rows, sc)
     };
 
@@ -318,7 +486,13 @@ fn select_c(
     // Every candidate re-seeds from p.seed, so its score is independent of evaluation
     // order — the parallel and serial paths return bit-identical results.
     let eval = |&(alpha, beta): &(f64, f64)| -> usize {
-        let hp = Hp { alpha, beta, maxiter: p.c_select_maxiter, subset };
+        let hp = Hp {
+            alpha,
+            beta,
+            maxiter: p.c_select_maxiter,
+            subset,
+            tolerance: p.svm_tolerance,
+        };
         let sc = cv_scores(x, dim, labels, fold, w0, p, hp, p.seed);
         yield_at_fdr(&sc, labels, p.test_fdr)
     };
@@ -371,7 +545,13 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
         (p.c_alpha.unwrap(), p.c_beta.unwrap())
     };
 
-    let hp = Hp { alpha, beta, maxiter: p.maxiter, subset: p.subset_max_train };
+    let hp = Hp {
+        alpha,
+        beta,
+        maxiter: p.maxiter,
+        subset: p.subset_max_train,
+        tolerance: p.svm_tolerance,
+    };
     let final_score = cv_scores(&x, dim, &ds.labels, &fold, &w0, p, hp, p.seed);
 
     let pi0 = stats::estimate_pi0(&ds.labels);
