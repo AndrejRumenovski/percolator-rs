@@ -15,6 +15,12 @@ four compact extension cases, percolator-rs is **8.9–17.7x faster**, using **3
 RSS. Reported-q yield is not uniformly higher: the PSM delta ranges from **−1.8% to +12.0%**.
 See the complete, reproducible [multi-dataset benchmark](bench/MULTI_DATASET.md).
 
+An experimental `--rescore-model mlp` path runs a deterministic one-hidden-layer neural model
+through the same folds and FDR procedures as the default SVM. It does **not** improve aggregate
+yield: on PXD032157 it reports 1.42% fewer PSMs and 2.73% fewer peptides while taking 4.46x longer;
+four independent extension cases are also slightly lower in aggregate. The SVM remains the default.
+See the [small-MLP benchmark](bench/DEEP_LEARNING.md).
+
 The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB — on a 12-core Ryzen 5
 5600G. Identical inputs, matched settings, same machine.
 
@@ -42,14 +48,17 @@ Faithful to the Percolator method:
 2. **Feature normalization** — per-feature z-score, bias column appended.
 3. **Initial direction** — best single feature (either orientation) by target-decoy yield at q<0.01.
 4. **Semi-supervised training** — iterate (default 10×): score → target-decoy q-values → pick confident
-   targets (q<0.01) as positives, all decoys as negatives → retrain a class-weighted **L2-regularized
-   squared-hinge linear SVM** (primal truncated-Newton / Newton-CG solver, the same L2-loss family as the
-   reference L2-SVM-MFN).
+   targets (q<0.01) as positives, all decoys as negatives → retrain the fold-local learner. The
+   default is a class-weighted **L2-regularized squared-hinge linear SVM** (primal truncated-Newton /
+   Newton-CG solver, the same L2-loss family as the reference L2-SVM-MFN). An experimental small MLP
+   is available with `--rescore-model mlp`.
    The class weights are **absolute** (`Cpos=1`, `Cneg=4`), not derived from the target/decoy class
    balance. This is the single largest accuracy win here: the obvious heuristic
    `Cpos = max(n_neg/n_pos, 1)` explodes (~300x) when confident targets are scarce and swamps the
    decoys — measured, it is the *worst* corner of the weight space. Pin the weights with
    `--cpos/--cneg`, or search them per file with `--select-c` (see [Fidelity notes](#fidelity-notes)).
+   For leakage-free selection of C, class ratio, feature count, and solver tolerance, use the
+   experimental nested `--auto-model` path.
 5. **3-fold nested cross-validation** — each PSM scored by a model trained without its fold (no overfitting
    of the FDR estimate).
 6. **Target-decoy q-values** + monotone (PAVA isotonic) PEP; PSM- and peptide-level output in the reference
@@ -79,14 +88,35 @@ cargo build --release
   input.pin
 ```
 Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads`.
+`--rescore-model svm|mlp` selects the fold-local learner; SVM is the default. The MLP architecture
+and negative yield result are documented in [`bench/DEEP_LEARNING.md`](bench/DEEP_LEARNING.md).
 `--num-threads` (default 1) parallelizes the 3 CV folds within a single file — and the class-weight
 grid too, when `--select-c` is on. Results are bit-identical at any thread count. It defaults to 1 so
 harnesses that already run many files concurrently don't oversubscribe; use it for **single-file**
 runs (1.74 s → 1.10 s at `--num-threads 3`, saturating there since there are only 3 folds; 3.48 s
 → 1.56 s at `--num-threads 9` with `--select-c`).
-SVM class weights: `--cpos F` / `--cneg F` pin them; `--select-c` opts into the per-file grid
+Learner class weights: `--cpos F` / `--cneg F` pin them; `--select-c` opts into the per-file grid
 search, which is **off by default for every profile** (it costs ~3x wall time without beating the
 fixed defaults on this dataset — see [Fidelity notes](#fidelity-notes)).
+`--auto-model` instead performs true per-outer-fold nested validation of SVM C, class ratio,
+training-only feature subsets, and Newton tolerance. It avoids test-fold contamination but is 10.2x
+slower, with 0.37% fewer PSMs and 0.45% more peptides on PXD032157; see the complete
+[automatic-selection evaluation](bench/AUTOMATIC_SELECTION.md).
+
+### Feature importance report
+
+For a scientifically inspectable linear-SVM run, add `--feature-report features.tsv`. The report
+contains each PIN feature's mean out-of-fold coefficient in raw units, its signed standardized
+effect, across-fold coefficient standard deviation, raw feature/target-decoy correlation, and a
+deterministic permutation importance: the change in accepted target PSMs at the configured FDR when
+that feature is shuffled within each held-out fold. `selected_folds` shows how often a feature was
+kept by `--auto-model` feature selection.
+
+The report describes the actual three out-of-fold SVMs: normalization, feature masks, and score
+scaling are reconstructed from each model's training partition, and no held-out PSM is used to fit a
+coefficient. Permutation importance holds those fitted models fixed, so it measures model reliance,
+not the gain from retraining without a feature. It is deterministic for a fixed `--seed` and is
+currently intentionally unavailable for the nonlinear MLP.
 
 ### Execution profiles
 Presets so you don't have to memorize flag combinations. Pass one of `--fast` / `--balanced` /
@@ -125,6 +155,7 @@ CI gate's figure.
 | **percolator-rs** | default full fidelity, sequential | **54.9 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
 | **percolator-rs** | **default full fidelity, N=4** | **19.4 s** | **107 046 / 37 469** |
 | percolator-rs | `--select-c` per-file weight search, N=4 | 57.2 s | 106 558 / 37 330 |
+| percolator-rs | `--auto-model` nested selection, N=4 | 213.5 s | 106 652 / 37 636 |
 
 percolator-rs reaches sub-60 s **without** cutting iterations and **without** the 12–15 % yield loss the
 C++ implementation needs to get there — and it identifies ~4 % *more* than the canonical reference run.
@@ -135,6 +166,15 @@ reference's **1.56 GiB** (per process roughly half: 263 MB vs 377–525 MB).
 See `bench/RS_VS_CPP.md` for the full table.
 
 ## Advanced biological features
+
+### Experimental neural rescoring
+
+`--rescore-model mlp` uses an eight-unit tanh hidden layer with a linear residual initialized to
+the same best feature as the SVM. Fold assignment, semi-supervised labels, out-of-fold scoring,
+q-values, PEPs, and peptide rollup are shared with the SVM path. On the current 65-file and
+multi-dataset benchmarks the added nonlinearity is slower and slightly reduces aggregate yield, so
+it remains experimental and peptide-sequence embeddings are deferred. See the full
+[SVM-versus-MLP evaluation](bench/DEEP_LEARNING.md).
 
 ### Protein inference — picked FDR and Bayesian marginalization
 
@@ -182,6 +222,33 @@ scores each run — small files borrow statistical power from the group. Prints 
 **Measured:** 4 small files, 1400 → 1426 target PSMs at q<0.01 (+1.9 %), 3 of 4 improved
 (the strongest run gives a little back — the expected shared-model regularization trade).
 
+### Experimental search-engine ensemble (`--ensemble ENGINE=PIN …`)
+
+For results from multiple search engines on the **same raw run**, use one named PIN per engine:
+
+```bash
+./target/release/percolator-rs --seed 1 --ensemble \
+  comet=comet.pin msfragger=msfragger.pin tide=tide.pin \
+  --results-psms ensemble.target.psms --decoy-results-psms ensemble.decoy.psms
+```
+
+This is not a cosmetic concatenation. Engine feature spaces are namespaced, so `xcorr` and an
+MSFragger score never get treated as interchangeable merely because their columns happen to share a
+name. The pooled model also receives an engine indicator, the number of engines that returned each
+`ScanNr`, and the number that returned that exact `(ScanNr, label, modified peptide)` PSM. Thus a
+model can learn from engine-specific error patterns and reproducible cross-engine agreement while
+every PSM is still scored out of fold. Reports of the same exact candidate are kept in the same CV
+fold; only the best-scoring report is emitted, and q-values are recalculated over those unique
+candidates, so agreement cannot manufacture extra discoveries.
+
+Inputs must use compatible target/decoy databases and refer to the same run: the agreement features
+key spectra by `ScanNr`. Do not mix separate raw files in one ensemble invocation, because scan
+numbers can collide. Output PSM IDs are prefixed with the engine name to remain unique. Protein
+inference is intentionally unavailable in ensemble mode until duplicate engine evidence has a
+separately calibrated protein-level treatment. As with every new scoring regime, assess target-decoy
+and entrapment calibration on an independent dataset before interpreting increased q-value yield as
+an accuracy gain.
+
 ## Native optimizations
 Making the Rust build faster *without* subset flags or yield loss:
 
@@ -206,6 +273,11 @@ Performance and accuracy are locked in so refactors can't silently drift:
 - **`tests/regression.sh`** (hosted CI, no data needed) — runs percolator-rs on the committed
   deterministic fixture `tests/fixtures/sample.pin` and asserts q<0.01 yield within **±1%** of the
   recorded reference (`tests/expected.env`) plus wall-time and peak-RSS budgets. Exits non-zero on drift.
+- **`tests/model_regression.sh`** — exercises the optional MLP and requires serial and three-thread
+  output to be byte-identical, with its development-fixture yield recorded explicitly.
+- **`tests/selection_regression.sh`** — requires nested SVM choices and outputs to be byte-identical
+  across serial and three-thread execution; a unit test separately proves outer-test mutations
+  cannot change that fold's selected hyperparameters.
 - **`bench/regression.sh`** (self-hosted / nightly, needs the PXD032157 data) — full 65-file `--canonical`
   run at N=4: asserts 65/65 valid, aggregate PSM & peptide q<0.01 within ±1% of recorded (107 046 / 37 469),
   wall < 45 s, peak RSS < 1.5 GiB.
@@ -240,3 +312,11 @@ marginally worse in aggregate) because candidates are ranked by an abbreviated p
 available for data where the fixed defaults may not transfer. Those defaults were themselves chosen
 by measurement on this dataset — treat them as a well-tested starting point, not a universal
 constant.
+
+The newer `--auto-model` path removes the legacy selector's evaluation leakage: normalization,
+initialization, feature ranking, hyperparameter choice, and fitting all occur inside each outer
+training partition, and fold-specific margins are standardized from training decoys before pooling.
+It finishes 394 PSMs below but 167 peptides above fixed defaults while costing 10.2x more, then loses
+both metrics on independent extension cases. All 195 outer models keep the existing solver tolerance
+and 194 keep all features, so the added flexibility is not justified as a default here. Full design
+and held-out results: [`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md).
