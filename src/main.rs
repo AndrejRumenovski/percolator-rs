@@ -38,9 +38,11 @@ struct Args {
     decoy_peptides: Option<String>,
     results_proteins: Option<String>,
     decoy_proteins: Option<String>,
+    feature_report: Option<String>,
     protein_inference: ProteinInference,
     protein_bayes: protein_bayes::Params,
     join: bool,
+    ensemble: bool,
     rt_features: bool,
     params: Params,
     profile: &'static str,
@@ -76,9 +78,11 @@ fn parse_args() -> Args {
         decoy_peptides: None,
         results_proteins: None,
         decoy_proteins: None,
+        feature_report: None,
         protein_inference: ProteinInference::Picked,
         protein_bayes: protein_bayes::Params::default(),
         join: false,
+        ensemble: false,
         rt_features: false,
         params: Params::default(),
         profile: "canonical",
@@ -107,6 +111,7 @@ fn parse_args() -> Args {
             "--decoy-results-peptides" | "-B" => a.decoy_peptides = Some(take()),
             "--results-proteins" | "-l" => a.results_proteins = Some(take()),
             "--decoy-results-proteins" | "-L" => a.decoy_proteins = Some(take()),
+            "--feature-report" => a.feature_report = Some(take()),
             "--protein-inference" => {
                 let v = take();
                 a.protein_inference = match v.as_str() {
@@ -150,6 +155,7 @@ fn parse_args() -> Args {
                 a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN)
             }
             "--join" => a.join = true,
+            "--ensemble" => a.ensemble = true,
             "--rt-features" => a.rt_features = true,
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
             "--maxiter" => maxiter_opt = take().parse().ok(),
@@ -205,6 +211,26 @@ fn parse_args() -> Args {
     if let Some(s) = select_c_opt {
         select_c = s;
     }
+    if a.params.nested_selection && a.params.model != Model::Svm {
+        eprintln!("--auto-model currently supports only --rescore-model svm");
+        std::process::exit(2);
+    }
+    if a.ensemble && a.join {
+        eprintln!("--ensemble and --join are mutually exclusive");
+        std::process::exit(2);
+    }
+    if a.feature_report.is_some() && a.params.model != Model::Svm {
+        eprintln!("--feature-report currently supports only --rescore-model svm");
+        std::process::exit(2);
+    }
+    if a.params.nested_selection && select_c {
+        eprintln!("--auto-model and legacy --select-c are mutually exclusive");
+        std::process::exit(2);
+    }
+    if a.params.nested_selection && (alpha_opt.is_some() || beta_opt.is_some()) {
+        eprintln!("--auto-model selects class weights; do not combine it with --cpos/--cneg");
+        std::process::exit(2);
+    }
     // Class weights: pinning either flag pins both (the other takes its default);
     // otherwise --select-c chooses between the per-file grid search (None) and the
     // fixed defaults, which are what every profile uses unless asked otherwise.
@@ -241,6 +267,16 @@ fn parse_args() -> Args {
     a
 }
 
+fn ensemble_input(value: &str) -> Result<(String, String), String> {
+    let (engine, path) = value
+        .split_once('=')
+        .ok_or_else(|| format!("invalid ensemble input '{value}'; use ENGINE=PIN"))?;
+    if engine.is_empty() || path.is_empty() {
+        return Err(format!("invalid ensemble input '{value}'; use ENGINE=PIN"));
+    }
+    Ok((engine.to_string(), path.to_string()))
+}
+
 struct Row {
     id: String,
     score: f64,
@@ -265,28 +301,80 @@ fn write_results(path: &str, mut rows: Vec<Row>) -> std::io::Result<()> {
     Ok(())
 }
 
+fn write_feature_report(path: &str, report: &percolator::FeatureReport) -> std::io::Result<()> {
+    let file = File::create(path)?;
+    let mut writer = BufWriter::with_capacity(1 << 16, file);
+    writeln!(writer, "# feature_report_version=1")?;
+    writeln!(writer, "# model=linear_svm; coefficients are means across the three out-of-fold models")?;
+    writeln!(writer, "# baseline_target_psms_q<0.01={}", report.baseline_q01)?;
+    writeln!(writer, "# permutation=deterministic within each held-out fold; models held fixed (no retraining)")?;
+    writeln!(
+        writer,
+        "feature_index\tfeature\traw_weight\traw_weight_fold_sd\tstandardized_effect\tstandardized_effect_fold_sd\tlabel_correlation\tfeature_mean\tfeature_std\tselected_folds\tpermutation_q01_drop\tpermuted_target_psms_q<0.01"
+    )?;
+    for feature in &report.features {
+        writeln!(
+            writer,
+            "{}\t{}\t{:.8}\t{:.8}\t{:.8}\t{:.8}\t{:.8}\t{:.8}\t{:.8}\t{}\t{}\t{}",
+            feature.index,
+            feature.name,
+            feature.raw_weight,
+            feature.raw_weight_sd,
+            feature.standardized_effect,
+            feature.standardized_effect_sd,
+            feature.label_correlation,
+            feature.mean,
+            feature.std,
+            feature.selected_folds,
+            feature.permutation_q01_drop,
+            feature.permuted_q01,
+        )?;
+    }
+    Ok(())
+}
+
 fn main() {
     let args = parse_args();
     if args.pins.is_empty() {
         eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
         std::process::exit(2);
     }
-    if args.pins.len() > 1 && !args.join {
-        eprintln!("error: multiple inputs require --join (pooled cross-run training), or run them separately");
+    if args.pins.len() > 1 && !args.join && !args.ensemble {
+        eprintln!("error: multiple inputs require --join (pooled cross-run training), --ensemble (same-run ENGINE=PIN inputs), or separate runs");
+        std::process::exit(2);
+    }
+    if args.ensemble && args.pins.len() < 2 {
+        eprintln!("error: --ensemble requires at least two ENGINE=PIN inputs");
+        std::process::exit(2);
+    }
+    if args.ensemble && (args.results_proteins.is_some() || args.decoy_proteins.is_some()) {
+        eprintln!("error: protein inference is unavailable with --ensemble; engine-level duplicate evidence needs a dedicated protein model");
         std::process::exit(2);
     }
     eprintln!(
-        "profile: {} (maxiter={}, subset-max-train={}){}{}",
+        "profile: {} (model={}, maxiter={}, subset-max-train={}){}{}{}",
         args.profile,
+        args.params.model.label(),
         args.params.maxiter,
         if args.params.subset_max_train == 0 { "none".to_string() } else { args.params.subset_max_train.to_string() },
-        if args.join { format!(", join={} files", args.pins.len()) } else { String::new() },
+        if args.join { format!(", join={} files", args.pins.len()) }
+        else if args.ensemble { format!(", ensemble={} engines", args.pins.len()) }
+        else { String::new() },
         if args.rt_features { ", rt-features" } else { "" },
+        if args.params.nested_selection { ", nested-selection" } else { "" },
     );
     let t0 = std::time::Instant::now();
     let tp = std::time::Instant::now();
-    let mut parts: Vec<pin::Dataset> = Vec::with_capacity(args.pins.len());
-    for path in &args.pins {
+    let ensemble_inputs: Vec<(String, String)> = if args.ensemble {
+        args.pins.iter().map(|input| ensemble_input(input)).collect::<Result<_, _>>().unwrap_or_else(|message| {
+            eprintln!("error: {message}");
+            std::process::exit(2);
+        })
+    } else {
+        args.pins.iter().map(|path| (String::new(), path.clone())).collect()
+    };
+    let mut parts: Vec<pin::Dataset> = Vec::with_capacity(ensemble_inputs.len());
+    for (_, path) in &ensemble_inputs {
         let mut d = pin::parse(path).unwrap_or_else(|e| {
             eprintln!("parse error ({path}): {e}");
             std::process::exit(1);
@@ -296,7 +384,17 @@ fn main() {
         }
         parts.push(d);
     }
-    let ds = if parts.len() == 1 { parts.pop().unwrap() } else { pin::merge(parts) };
+    let ds = if args.ensemble {
+        pin::merge_ensemble(parts, ensemble_inputs.into_iter().map(|(engine, _)| engine).collect())
+            .unwrap_or_else(|message| {
+                eprintln!("ensemble error: {message}");
+                std::process::exit(2);
+            })
+    } else if parts.len() == 1 {
+        parts.pop().unwrap()
+    } else {
+        pin::merge(parts)
+    };
     eprintln!("parse: {:.3}s", tp.elapsed().as_secs_f64());
     eprintln!(
         "parsed {} PSMs, {} features ({} targets / {} decoys){}",
@@ -304,26 +402,110 @@ fn main() {
         ds.n_feat,
         ds.labels.iter().filter(|&&l| l > 0).count(),
         ds.labels.iter().filter(|&&l| l < 0).count(),
-        if args.join { format!(", pooled from {} files", ds.source_names.len()) } else { String::new() },
+        if args.join { format!(", pooled from {} files", ds.source_names.len()) }
+        else if args.ensemble { format!(", ensemble from {} engines", ds.source_names.len()) }
+        else { String::new() },
     );
 
     let out = percolator::run(&ds, &args.params);
-    eprintln!(
-        "SVM class weights: Cpos={:.3} Cneg={:.3}{}",
-        out.c_alpha,
-        out.c_beta,
-        if out.c_selected { " (selected by cross-validation)" } else { " (fixed)" }
-    );
+    if out.nested_folds.is_empty() {
+        eprintln!(
+            "{} class weights: Cpos={:.3} Cneg={:.3}{}{}",
+            if args.params.model == Model::Svm { "SVM" } else { "MLP" },
+            out.c_alpha,
+            out.c_beta,
+            if out.c_selected {
+                " (selected by cross-validation)"
+            } else {
+                " (fixed)"
+            },
+            if args.params.model == Model::Mlp {
+                format!(
+                    "; hidden={}, epochs/iteration={}, learning-rate={}, l2={}",
+                    args.params.mlp_hidden,
+                    args.params.mlp_epochs,
+                    args.params.mlp_learning_rate,
+                    args.params.mlp_l2
+                )
+            } else {
+                String::new()
+            }
+        );
+    } else {
+        eprintln!("nested SVM selection (outer test folds isolated):");
+        for selected in &out.nested_folds {
+            eprintln!(
+                "  fold {}: C={:.3}, class-weights={:.1}:{:.1}, features={}, tolerance={:.0e}, inner-q01-yield={}",
+                selected.outer_fold,
+                selected.c,
+                selected.positive_weight,
+                selected.negative_weight,
+                selected.feature_count,
+                selected.tolerance,
+                selected.inner_yield,
+            );
+        }
+    }
+
+    if let Some(path) = &args.feature_report {
+        let report_start = std::time::Instant::now();
+        let report = percolator::feature_report(&ds, &args.params, &out);
+        write_feature_report(path, &report).unwrap_or_else(|error| {
+            eprintln!("feature report error ({path}): {error}");
+            std::process::exit(1);
+        });
+        eprintln!(
+            "feature report: {} features, baseline target PSMs q<0.01={}, {:.3}s",
+            report.features.len(),
+            report.baseline_q01,
+            report_start.elapsed().as_secs_f64()
+        );
+    }
+
+    // Engine reports of the same candidate are training observations, not separate
+    // discoveries. Retain the best out-of-fold score per exact candidate and
+    // recalibrate q-values on that deduplicated candidate set for ensemble output.
+    let reported_indices: Vec<usize> = if args.ensemble {
+        let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
+            std::collections::BTreeMap::new();
+        for i in 0..ds.n_psm {
+            let key = (ds.scan[i], ds.labels[i], ds.peptide[i].clone());
+            match best.get(&key) {
+                Some(&previous) if out.score[previous] >= out.score[i] => {}
+                _ => {
+                    best.insert(key, i);
+                }
+            }
+        }
+        best.into_values().collect()
+    } else {
+        (0..ds.n_psm).collect()
+    };
+    let (reported_qvals, reported_peps) = if args.ensemble {
+        let reported_scores: Vec<f64> = reported_indices.iter().map(|&i| out.score[i]).collect();
+        let reported_labels: Vec<i8> = reported_indices.iter().map(|&i| ds.labels[i]).collect();
+        let reported_pi0 = stats::estimate_pi0(&reported_labels);
+        (
+            stats::qvalues(&reported_scores, &reported_labels, reported_pi0),
+            stats::peps(&reported_scores, &reported_labels, reported_pi0),
+        )
+    } else {
+        (out.qval.clone(), out.pep.clone())
+    };
 
     // PSM-level output
     let mut targets: Vec<Row> = Vec::new();
     let mut decoys: Vec<Row> = Vec::new();
-    for i in 0..ds.n_psm {
+    for (output_index, &i) in reported_indices.iter().enumerate() {
         let r = Row {
-            id: ds.spec_id[i].clone(),
+            id: if args.ensemble {
+                format!("{}:{}", ds.source_names[ds.source[i] as usize], ds.spec_id[i])
+            } else {
+                ds.spec_id[i].clone()
+            },
             score: out.score[i],
-            q: out.qval[i],
-            pep: out.pep[i],
+            q: reported_qvals[output_index],
+            pep: reported_peps[output_index],
             peptide: ds.peptide[i].clone(),
             proteins: ds.proteins[i].clone(),
         };
@@ -337,7 +519,7 @@ fn main() {
 
     // Peptide-level: best-scoring PSM per unique (core) peptide, then re-q-value.
     let mut best: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    for i in 0..ds.n_psm {
+    for &i in &reported_indices {
         let key = format!("{}\u{1}{}", ds.labels[i], core_peptide(&ds.peptide[i]));
         match best.get(&key) {
             Some(&j) if out.score[j] >= out.score[i] => {}
@@ -346,7 +528,10 @@ fn main() {
             }
         }
     }
-    let pep_idx: Vec<usize> = best.values().copied().collect();
+    // HashMap iteration is process-randomized. Preserve input order so tied
+    // peptide statistics and the loopy-BP message schedule are reproducible.
+    let mut pep_idx: Vec<usize> = best.values().copied().collect();
+    pep_idx.sort_unstable();
     let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
     let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
     let ppi0 = stats::estimate_pi0(&plabel);
