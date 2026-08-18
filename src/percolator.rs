@@ -513,21 +513,416 @@ fn select_c(
     cands.get(best_i).copied().unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT))
 }
 
+#[derive(Clone)]
+struct RankedFeature {
+    index: usize,
+    sign: f64,
+    yield_count: usize,
+}
+
+#[derive(Clone, Copy)]
+struct NestedCandidate {
+    c: f64,
+    positive_weight: f64,
+    negative_weight: f64,
+    feature_count: usize,
+    tolerance: f64,
+}
+
+struct InnerSplit {
+    x: Vec<f64>,
+    train_rows: Vec<usize>,
+    validation_rows: Vec<usize>,
+    ranking: Vec<RankedFeature>,
+}
+
+fn rank_features(
+    x: &[f64],
+    dim: usize,
+    labels: &[i8],
+    rows: &[usize],
+    test_fdr: f64,
+) -> Vec<RankedFeature> {
+    let subset_labels: Vec<i8> = rows.iter().map(|&row| labels[row]).collect();
+    let pi0 = stats::estimate_pi0(&subset_labels);
+    let mut scores = vec![0.0; rows.len()];
+    let mut ranking = Vec::with_capacity(dim.saturating_sub(1));
+    for feature in 0..dim - 1 {
+        let mut best = RankedFeature { index: feature, sign: 1.0, yield_count: 0 };
+        for &sign in &[1.0, -1.0] {
+            for (k, &row) in rows.iter().enumerate() {
+                scores[k] = sign * x[row * dim + feature];
+            }
+            let qvalues = stats::qvalues(&scores, &subset_labels, pi0);
+            let count = qvalues
+                .iter()
+                .zip(&subset_labels)
+                .filter(|(qvalue, label)| **label > 0 && **qvalue < test_fdr)
+                .count();
+            if count > best.yield_count {
+                best.sign = sign;
+                best.yield_count = count;
+            }
+        }
+        ranking.push(best);
+    }
+    ranking.sort_by(|left, right| {
+        right
+            .yield_count
+            .cmp(&left.yield_count)
+            .then_with(|| left.index.cmp(&right.index))
+    });
+    ranking
+}
+
+fn feature_mask(dim: usize, ranking: &[RankedFeature], feature_count: usize) -> Vec<bool> {
+    let mut mask = vec![false; dim];
+    for feature in ranking.iter().take(feature_count) {
+        mask[feature.index] = true;
+    }
+    mask[dim - 1] = true; // bias
+    mask
+}
+
+fn ranked_initial_direction(dim: usize, ranking: &[RankedFeature]) -> Vec<f64> {
+    let mut initial = vec![0.0; dim];
+    if let Some(best) = ranking.first() {
+        initial[best.index] = best.sign;
+    }
+    initial
+}
+
+fn assign_folds(rows: &[usize], fold_count: u8, seed: u64, total_rows: usize) -> Vec<u8> {
+    let mut shuffled = rows.to_vec();
+    let mut rng = Rng(seed.max(1));
+    for i in (1..shuffled.len()).rev() {
+        let j = rng.below(i + 1);
+        shuffled.swap(i, j);
+    }
+    let mut fold = vec![u8::MAX; total_rows];
+    for (rank, &row) in shuffled.iter().enumerate() {
+        fold[row] = (rank % fold_count as usize) as u8;
+    }
+    fold
+}
+
+/// Keep reports of the same candidate from different engines together.  Otherwise
+/// an engine-A report could appear in training while its engine-B counterpart is
+/// scored in the held-out fold, which would leak the candidate's label and agreement
+/// signal into cross validation.
+fn assign_dataset_folds(ds: &Dataset, rows: &[usize], fold_count: u8, seed: u64) -> Vec<u8> {
+    if !ds.ensemble {
+        return assign_folds(rows, fold_count, seed, ds.n_psm);
+    }
+    let mut by_candidate: BTreeMap<(i64, i8, String), Vec<usize>> = BTreeMap::new();
+    for &row in rows {
+        by_candidate
+            .entry((ds.scan[row], ds.labels[row], ds.peptide[row].clone()))
+            .or_default()
+            .push(row);
+    }
+    let mut candidates: Vec<Vec<usize>> = by_candidate.into_values().collect();
+    let mut rng = Rng(seed.max(1));
+    for index in (1..candidates.len()).rev() {
+        candidates.swap(index, rng.below(index + 1));
+    }
+    let mut fold = vec![u8::MAX; ds.n_psm];
+    for (rank, candidate) in candidates.into_iter().enumerate() {
+        for row in candidate {
+            fold[row] = (rank % fold_count as usize) as u8;
+        }
+    }
+    fold
+}
+
+fn inner_splits(
+    ds: &Dataset,
+    outer_train: &[usize],
+    outer_fold: u8,
+    p: &Params,
+) -> Vec<InnerSplit> {
+    const INNER_FOLDS: u8 = 2;
+    let inner_seed = p.seed
+        ^ ((outer_fold as u64 + 1).wrapping_mul(0xA24B_AED4_963E_E407))
+        ^ 0x9FB2_1C65_1E98_DF25;
+    let assignments = assign_dataset_folds(ds, outer_train, INNER_FOLDS, inner_seed);
+    (0..INNER_FOLDS)
+        .map(|validation_fold| {
+            let train_rows: Vec<usize> = outer_train
+                .iter()
+                .copied()
+                .filter(|&row| assignments[row] != validation_fold)
+                .collect();
+            let validation_rows: Vec<usize> = outer_train
+                .iter()
+                .copied()
+                .filter(|&row| assignments[row] == validation_fold)
+                .collect();
+            let (x, dim) = build_matrix_fit(ds, &train_rows);
+            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+            InnerSplit { x, train_rows, validation_rows, ranking }
+        })
+        .collect()
+}
+
+fn evaluate_nested_candidate(
+    splits: &[InnerSplit],
+    dim: usize,
+    labels: &[i8],
+    outer_fold: u8,
+    candidate: NestedCandidate,
+    p: &Params,
+) -> usize {
+    let mut validation_scores = Vec::new();
+    let mut validation_labels = Vec::new();
+    for (inner_fold, split) in splits.iter().enumerate() {
+        let mask = feature_mask(dim, &split.ranking, candidate.feature_count);
+        let initial = ranked_initial_direction(dim, &split.ranking);
+        let hp = Hp {
+            alpha: candidate.c * candidate.positive_weight,
+            beta: candidate.c * candidate.negative_weight,
+            // Nested validation evaluates the same training budget used by the
+            // final outer model; abbreviated proxy training caused the legacy
+            // selector's choices not to transfer.
+            maxiter: p.maxiter,
+            subset: p.subset_max_train,
+            tolerance: candidate.tolerance,
+        };
+        let fold_seed = p.seed
+            ^ ((outer_fold as u64 + 1).wrapping_mul(0xD6E8_FD50_1A4B_8C27))
+            ^ ((inner_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+        let mut rng = Rng(fold_seed.max(1));
+        let model = train_fold(
+            &split.x,
+            dim,
+            labels,
+            &split.train_rows,
+            &initial,
+            p,
+            &mut rng,
+            hp,
+            fold_seed ^ 0x94D0_49BB_1331_11EB,
+            Some(&mask),
+        );
+        let scores = standardized_heldout_scores(
+            &model,
+            &split.x,
+            dim,
+            labels,
+            &split.train_rows,
+            &split.validation_rows,
+        );
+        validation_scores.extend(scores);
+        validation_labels.extend(split.validation_rows.iter().map(|&row| labels[row]));
+    }
+    yield_at_fdr(&validation_scores, &validation_labels, p.test_fdr)
+}
+
+fn select_stage(
+    splits: &[InnerSplit],
+    dim: usize,
+    labels: &[i8],
+    outer_fold: u8,
+    candidates: &[NestedCandidate],
+    p: &Params,
+) -> (NestedCandidate, usize) {
+    let mut best = candidates[0];
+    let mut best_yield = evaluate_nested_candidate(splits, dim, labels, outer_fold, best, p);
+    for &candidate in &candidates[1..] {
+        let candidate_yield =
+            evaluate_nested_candidate(splits, dim, labels, outer_fold, candidate, p);
+        if candidate_yield > best_yield {
+            best = candidate;
+            best_yield = candidate_yield;
+        }
+    }
+    (best, best_yield)
+}
+
+fn select_outer_hyperparameters(
+    ds: &Dataset,
+    outer_train: &[usize],
+    outer_fold: u8,
+    p: &Params,
+) -> FoldSelection {
+    let dim = ds.n_feat + 1;
+    let splits = inner_splits(ds, outer_train, outer_fold, p);
+    let mut selected = NestedCandidate {
+        c: 1.0,
+        positive_weight: 1.0,
+        negative_weight: 4.0,
+        feature_count: ds.n_feat,
+        tolerance: p.svm_tolerance,
+    };
+
+    // Stage 1 jointly selects identifiable SVM scale and the negative:positive
+    // class-weight ratio. Keeping positive weight at one avoids redundant
+    // parameterizations where C and both weights can rescale one another.
+    let mut scale_weight_candidates = Vec::new();
+    for c in [1.0, 0.25, 4.0] {
+        for negative_weight in [4.0, 1.0, 16.0] {
+            scale_weight_candidates.push(NestedCandidate {
+                c,
+                negative_weight,
+                ..selected
+            });
+        }
+    }
+    (selected, _) = select_stage(
+        &splits,
+        dim,
+        &ds.labels,
+        outer_fold,
+        &scale_weight_candidates,
+        p,
+    );
+
+    // Stage 2 chooses a training-only univariate ranking cutoff. Ties retain
+    // all features because the existing full model is the conservative choice.
+    let mut feature_counts = vec![ds.n_feat, ds.n_feat.min(8), ds.n_feat.min(4)];
+    feature_counts.dedup();
+    let feature_candidates: Vec<NestedCandidate> = feature_counts
+        .into_iter()
+        .map(|feature_count| NestedCandidate { feature_count, ..selected })
+        .collect();
+    (selected, _) = select_stage(
+        &splits,
+        dim,
+        &ds.labels,
+        outer_fold,
+        &feature_candidates,
+        p,
+    );
+
+    // Stage 3 selects the Newton gradient-norm stopping tolerance.
+    let mut tolerances = vec![p.svm_tolerance];
+    for tolerance in [1e-3, 1e-5, 1e-7] {
+        if !tolerances.contains(&tolerance) {
+            tolerances.push(tolerance);
+        }
+    }
+    let tolerance_candidates: Vec<NestedCandidate> = tolerances
+        .into_iter()
+        .map(|tolerance| NestedCandidate { tolerance, ..selected })
+        .collect();
+    let (selected, inner_yield) = select_stage(
+        &splits,
+        dim,
+        &ds.labels,
+        outer_fold,
+        &tolerance_candidates,
+        p,
+    );
+
+    FoldSelection {
+        outer_fold,
+        c: selected.c,
+        positive_weight: selected.positive_weight,
+        negative_weight: selected.negative_weight,
+        feature_count: selected.feature_count,
+        tolerance: selected.tolerance,
+        inner_yield,
+    }
+}
+
+fn nested_cv_scores(
+    ds: &Dataset,
+    outer_fold: &[u8],
+    p: &Params,
+) -> (Vec<f64>, Vec<FoldSelection>) {
+    let outer_folds = [0u8, 1, 2];
+    let evaluate_outer = |&test_fold: &u8| {
+        let train_rows: Vec<usize> = (0..ds.n_psm)
+            .filter(|&row| outer_fold[row] != test_fold)
+            .collect();
+        let test_rows: Vec<usize> = (0..ds.n_psm)
+            .filter(|&row| outer_fold[row] == test_fold)
+            .collect();
+        let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
+        let (x, dim) = build_matrix_fit(ds, &train_rows);
+        let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+        let mask = feature_mask(dim, &ranking, selected.feature_count);
+        let initial = ranked_initial_direction(dim, &ranking);
+        let hp = Hp {
+            alpha: selected.c * selected.positive_weight,
+            beta: selected.c * selected.negative_weight,
+            maxiter: p.maxiter,
+            subset: p.subset_max_train,
+            tolerance: selected.tolerance,
+        };
+        let fold_seed = p.seed
+            ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+        let mut rng = Rng(fold_seed.max(1));
+        let model = train_fold(
+            &x,
+            dim,
+            &ds.labels,
+            &train_rows,
+            &initial,
+            p,
+            &mut rng,
+            hp,
+            fold_seed ^ 0xD1B5_4A32_D192_ED03,
+            Some(&mask),
+        );
+        let scores = standardized_heldout_scores(
+            &model,
+            &x,
+            dim,
+            &ds.labels,
+            &train_rows,
+            &test_rows,
+        );
+        (test_rows, scores, selected)
+    };
+
+    let parts: Vec<_> = if p.num_threads > 1 {
+        outer_folds.par_iter().map(evaluate_outer).collect()
+    } else {
+        outer_folds.iter().map(evaluate_outer).collect()
+    };
+    let mut scores = vec![0.0; ds.n_psm];
+    let mut selections = Vec::with_capacity(3);
+    for (test_rows, fold_scores, selection) in parts {
+        for (k, &row) in test_rows.iter().enumerate() {
+            scores[row] = fold_scores[k];
+        }
+        selections.push(selection);
+    }
+    selections.sort_by_key(|selection| selection.outer_fold);
+    (scores, selections)
+}
+
 pub fn run(ds: &Dataset, p: &Params) -> Output {
     let n = ds.n_psm;
-    let (x, dim) = build_matrix(ds);
 
-    // deterministic 3-fold assignment via seeded shuffle
-    let mut rng = Rng(p.seed.max(1));
-    let mut idx: Vec<usize> = (0..n).collect();
-    for i in (1..n).rev() {
-        let j = rng.below(i + 1);
-        idx.swap(i, j);
+    // Deterministic 3-fold assignment; ensemble candidate duplicates stay together.
+    let all_rows: Vec<usize> = (0..n).collect();
+    let fold = assign_dataset_folds(ds, &all_rows, 3, p.seed);
+
+    if p.nested_selection {
+        assert_eq!(p.model, Model::Svm, "nested selection currently supports only SVM");
+        let nested = || nested_cv_scores(ds, &fold, p);
+        let (final_score, nested_folds) =
+            match rayon::ThreadPoolBuilder::new().num_threads(p.num_threads).build() {
+                Ok(pool) if p.num_threads > 1 => pool.install(nested),
+                _ => nested(),
+            };
+        let pi0 = stats::estimate_pi0(&ds.labels);
+        let qval = stats::qvalues(&final_score, &ds.labels, pi0);
+        let pep = stats::peps(&final_score, &ds.labels, pi0);
+        return Output {
+            score: final_score,
+            qval,
+            pep,
+            c_alpha: f64::NAN,
+            c_beta: f64::NAN,
+            c_selected: true,
+            nested_folds,
+        };
     }
-    let mut fold = vec![0u8; n];
-    for (rank, &i) in idx.iter().enumerate() {
-        fold[i] = (rank % 3) as u8;
-    }
+
+    let (x, dim) = build_matrix(ds);
 
     let w0 = initial_direction(&x, dim, &ds.labels, p.test_fdr);
 
@@ -557,5 +952,384 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     let pi0 = stats::estimate_pi0(&ds.labels);
     let qval = stats::qvalues(&final_score, &ds.labels, pi0);
     let pep = stats::peps(&final_score, &ds.labels, pi0);
-    Output { score: final_score, qval, pep, c_alpha: alpha, c_beta: beta, c_selected: selected }
+    Output {
+        score: final_score,
+        qval,
+        pep,
+        c_alpha: alpha,
+        c_beta: beta,
+        c_selected: selected,
+        nested_folds: Vec::new(),
+    }
+}
+
+/// One fold-local linear model retained only while producing an explanation.
+/// It is deliberately reconstructed from the same seeded folds as `run`, so
+/// the report describes the out-of-fold scorer rather than a leaky refit.
+struct ExplanationFold {
+    weights: Vec<f64>,
+    normalization: Normalization,
+    test_rows: Vec<usize>,
+    active_features: Vec<bool>,
+    score_mean: f64,
+    score_std: f64,
+}
+
+pub struct FeatureStat {
+    pub index: usize,
+    pub name: String,
+    /// Mean coefficient in the original PIN units across the three CV models.
+    pub raw_weight: f64,
+    pub raw_weight_sd: f64,
+    /// Mean signed coefficient after one within-fold standard deviation change.
+    pub standardized_effect: f64,
+    pub standardized_effect_sd: f64,
+    /// Pearson correlation of the raw feature with target=+1 / decoy=-1.
+    pub label_correlation: f64,
+    pub mean: f64,
+    pub std: f64,
+    pub selected_folds: usize,
+    /// Decrease in accepted target PSMs after deterministic, within-test-fold
+    /// permutation. This is conditional on the fitted models (no retraining).
+    pub permutation_q01_drop: isize,
+    pub permuted_q01: usize,
+}
+
+pub struct FeatureReport {
+    pub baseline_q01: usize,
+    pub features: Vec<FeatureStat>,
+}
+
+fn mean_and_sd(values: &[f64]) -> (f64, f64) {
+    let mean = values.iter().sum::<f64>() / values.len() as f64;
+    let variance = values
+        .iter()
+        .map(|value| {
+            let difference = value - mean;
+            difference * difference
+        })
+        .sum::<f64>()
+        / values.len() as f64;
+    (mean, variance.sqrt())
+}
+
+fn training_score_calibration(
+    model: &FoldModel,
+    x: &[f64],
+    dim: usize,
+    labels: &[i8],
+    train_rows: &[usize],
+) -> (f64, f64) {
+    let mut reference_rows: Vec<usize> = train_rows
+        .iter()
+        .copied()
+        .filter(|&row| labels[row] < 0)
+        .collect();
+    if reference_rows.len() < 2 {
+        reference_rows = train_rows.to_vec();
+    }
+    let mut scores = vec![0.0; reference_rows.len()];
+    model.score_rows(x, dim, &reference_rows, &mut scores);
+    let (mean, std) = mean_and_sd(&scores);
+    (mean, std.max(1e-12))
+}
+
+fn outer_fold_assignments(ds: &Dataset, seed: u64) -> Vec<u8> {
+    let rows: Vec<usize> = (0..ds.n_psm).collect();
+    assign_dataset_folds(ds, &rows, 3, seed)
+}
+
+fn explain_fixed_models(ds: &Dataset, p: &Params, output: &Output, fold: &[u8]) -> Vec<ExplanationFold> {
+    let all_rows: Vec<usize> = (0..ds.n_psm).collect();
+    let normalization = fit_normalization(ds, &all_rows);
+    let (x, dim) = transform_matrix(ds, &normalization);
+    let initial = initial_direction(&x, dim, &ds.labels, p.test_fdr);
+    let hp = Hp {
+        alpha: output.c_alpha,
+        beta: output.c_beta,
+        maxiter: p.maxiter,
+        subset: p.subset_max_train,
+        tolerance: p.svm_tolerance,
+    };
+    [0u8, 1, 2]
+        .iter()
+        .map(|&test_fold| {
+            let train_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] != test_fold).collect();
+            let test_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] == test_fold).collect();
+            let fold_seed = p.seed
+                ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let mut rng = Rng(fold_seed.max(1));
+            let model = train_fold(
+                &x,
+                dim,
+                &ds.labels,
+                &train_rows,
+                &initial,
+                p,
+                &mut rng,
+                hp,
+                fold_seed ^ 0xD1B5_4A32_D192_ED03,
+                None,
+            );
+            let weights = match model {
+                FoldModel::Svm(weights) => weights,
+                FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
+            };
+            ExplanationFold {
+                weights,
+                normalization: Normalization {
+                    mean: normalization.mean.clone(),
+                    std: normalization.std.clone(),
+                },
+                test_rows,
+                active_features: vec![true; dim],
+                score_mean: 0.0,
+                score_std: 1.0,
+            }
+        })
+        .collect()
+}
+
+fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<ExplanationFold> {
+    [0u8, 1, 2]
+        .iter()
+        .map(|&test_fold| {
+            let train_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] != test_fold).collect();
+            let test_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] == test_fold).collect();
+            let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
+            let normalization = fit_normalization(ds, &train_rows);
+            let (x, dim) = transform_matrix(ds, &normalization);
+            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+            let active_features = feature_mask(dim, &ranking, selected.feature_count);
+            let initial = ranked_initial_direction(dim, &ranking);
+            let hp = Hp {
+                alpha: selected.c * selected.positive_weight,
+                beta: selected.c * selected.negative_weight,
+                maxiter: p.maxiter,
+                subset: p.subset_max_train,
+                tolerance: selected.tolerance,
+            };
+            let fold_seed = p.seed
+                ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let mut rng = Rng(fold_seed.max(1));
+            let model = train_fold(
+                &x,
+                dim,
+                &ds.labels,
+                &train_rows,
+                &initial,
+                p,
+                &mut rng,
+                hp,
+                fold_seed ^ 0xD1B5_4A32_D192_ED03,
+                Some(&active_features),
+            );
+            let (score_mean, score_std) =
+                training_score_calibration(&model, &x, dim, &ds.labels, &train_rows);
+            let weights = match model {
+                FoldModel::Svm(weights) => weights,
+                FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
+            };
+            ExplanationFold {
+                weights,
+                normalization,
+                test_rows,
+                active_features,
+                score_mean,
+                score_std,
+            }
+        })
+        .collect()
+}
+
+fn score_explanation_fold(
+    ds: &Dataset,
+    fold: &ExplanationFold,
+    permuted_feature: Option<usize>,
+    seed: u64,
+    out: &mut [f64],
+) {
+    let mut source_rows = fold.test_rows.clone();
+    if permuted_feature.is_some() {
+        let mut rng = Rng(seed.max(1));
+        for i in (1..source_rows.len()).rev() {
+            let j = rng.below(i + 1);
+            source_rows.swap(i, j);
+        }
+    }
+    for (k, &row) in fold.test_rows.iter().enumerate() {
+        let mut score = fold.weights[ds.n_feat];
+        for feature in 0..ds.n_feat {
+            let value_row = if permuted_feature == Some(feature) {
+                source_rows[k]
+            } else {
+                row
+            };
+            let value = (ds.row(value_row)[feature] - fold.normalization.mean[feature])
+                / fold.normalization.std[feature];
+            score += fold.weights[feature] * value;
+        }
+        out[row] = (score - fold.score_mean) / fold.score_std;
+    }
+}
+
+fn target_q01(scores: &[f64], labels: &[i8], test_fdr: f64) -> usize {
+    let qvalues = stats::qvalues(scores, labels, stats::estimate_pi0(labels));
+    qvalues
+        .iter()
+        .zip(labels)
+        .filter(|(qvalue, label)| **label > 0 && **qvalue < test_fdr)
+        .count()
+}
+
+/// Compute out-of-fold linear-model explanations. The report is intentionally
+/// post hoc: it never changes rescoring or model selection, and permutation
+/// importance holds the trained models fixed rather than retraining them.
+pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureReport {
+    assert_eq!(p.model, Model::Svm, "feature reports currently support only SVM");
+    let fold = outer_fold_assignments(ds, p.seed);
+    let models = if p.nested_selection {
+        explain_nested_models(ds, p, &fold)
+    } else {
+        explain_fixed_models(ds, p, output, &fold)
+    };
+    let baseline_q01 = target_q01(&output.score, &ds.labels, p.test_fdr);
+    let global_normalization = fit_normalization(ds, &(0..ds.n_psm).collect::<Vec<_>>());
+    let label_values: Vec<f64> = ds.labels.iter().map(|&label| label as f64).collect();
+    let (label_mean, label_std) = mean_and_sd(&label_values);
+    let mut features = Vec::with_capacity(ds.n_feat);
+
+    for feature in 0..ds.n_feat {
+        let raw_weights: Vec<f64> = models
+            .iter()
+            .map(|model| model.weights[feature] / model.normalization.std[feature])
+            .collect();
+        let standardized: Vec<f64> = models.iter().map(|model| model.weights[feature]).collect();
+        let (raw_weight, raw_weight_sd) = mean_and_sd(&raw_weights);
+        let (standardized_effect, standardized_effect_sd) = mean_and_sd(&standardized);
+        let mut covariance = 0.0;
+        for row in 0..ds.n_psm {
+            covariance += (ds.row(row)[feature] - global_normalization.mean[feature])
+                * (ds.labels[row] as f64 - label_mean);
+        }
+        covariance /= ds.n_psm as f64;
+        let label_correlation = covariance
+            / (global_normalization.std[feature] * label_std).max(1e-12);
+
+        let mut permuted_scores = vec![0.0; ds.n_psm];
+        for (fold_index, model) in models.iter().enumerate() {
+            let permutation_seed = p.seed
+                ^ ((feature as u64 + 1).wrapping_mul(0xD6E8_FEB8_6659_FD93))
+                ^ ((fold_index as u64 + 1).wrapping_mul(0xA24B_AED4_963E_E407));
+            score_explanation_fold(
+                ds,
+                model,
+                Some(feature),
+                permutation_seed,
+                &mut permuted_scores,
+            );
+        }
+        let permuted_q01 = target_q01(&permuted_scores, &ds.labels, p.test_fdr);
+        features.push(FeatureStat {
+            index: feature,
+            name: ds.feature_names[feature].clone(),
+            raw_weight,
+            raw_weight_sd,
+            standardized_effect,
+            standardized_effect_sd,
+            label_correlation,
+            mean: global_normalization.mean[feature],
+            std: global_normalization.std[feature],
+            selected_folds: models
+                .iter()
+                .filter(|model| model.active_features[feature])
+                .count(),
+            permutation_q01_drop: baseline_q01 as isize - permuted_q01 as isize,
+            permuted_q01,
+        });
+    }
+    FeatureReport {
+        baseline_q01,
+        features,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn selection_fixture() -> Dataset {
+        let n_psm = 120;
+        let n_feat = 4;
+        let mut features = Vec::with_capacity(n_psm * n_feat);
+        let mut labels = Vec::with_capacity(n_psm);
+        for row in 0..n_psm {
+            let label = if row % 3 == 0 { -1 } else { 1 };
+            labels.push(label);
+            let jitter = (row % 11) as f64 / 20.0;
+            features.extend_from_slice(&[
+                label as f64 * 2.0 + jitter,
+                (row % 7) as f64 - 3.0,
+                label as f64 * ((row % 5) as f64),
+                (row % 13) as f64 / 13.0,
+            ]);
+        }
+        Dataset {
+            feature_names: (0..n_feat).map(|index| format!("f{index}")).collect(),
+            n_feat,
+            n_psm,
+            features,
+            labels,
+            spec_id: (0..n_psm).map(|row| format!("psm{row}")).collect(),
+            scan: (0..n_psm as i64).collect(),
+            peptide: (0..n_psm).map(|row| format!("K.PEP{row}.R")).collect(),
+            proteins: (0..n_psm).map(|row| format!("P{row}")).collect(),
+            source: vec![0; n_psm],
+            source_names: vec!["selection-fixture.pin".to_string()],
+            ensemble: false,
+        }
+    }
+
+    #[test]
+    fn outer_test_changes_cannot_change_nested_selection() {
+        let dataset = selection_fixture();
+        let params = Params {
+            maxiter: 2,
+            c_select_maxiter: 2,
+            num_threads: 1,
+            ..Params::default()
+        };
+        let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let outer_fold = assign_folds(&all_rows, 3, params.seed, dataset.n_psm);
+        let outer_train: Vec<usize> = all_rows
+            .iter()
+            .copied()
+            .filter(|&row| outer_fold[row] != 0)
+            .collect();
+        let expected = select_outer_hyperparameters(&dataset, &outer_train, 0, &params);
+
+        let mut changed_test = selection_fixture();
+        for row in all_rows.into_iter().filter(|&row| outer_fold[row] == 0) {
+            changed_test.labels[row] *= -1;
+            for feature in 0..changed_test.n_feat {
+                changed_test.features[row * changed_test.n_feat + feature] +=
+                    1_000_000.0 * (feature + 1) as f64;
+            }
+        }
+        let actual = select_outer_hyperparameters(&changed_test, &outer_train, 0, &params);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn ensemble_candidate_duplicates_stay_in_the_same_fold() {
+        let mut dataset = selection_fixture();
+        dataset.ensemble = true;
+        // Rows 0 and 1 represent the same target candidate reported by two engines.
+        dataset.scan[1] = dataset.scan[0];
+        dataset.labels[1] = dataset.labels[0];
+        dataset.peptide[1] = dataset.peptide[0].clone();
+        let rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &rows, 3, 1);
+        assert_eq!(fold[0], fold[1]);
+    }
 }
