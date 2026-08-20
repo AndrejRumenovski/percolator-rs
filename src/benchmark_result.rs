@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub const RESULT_SCHEMA_VERSION: u32 = 1;
 
 /// Complete result for one implementation on one dataset.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct BenchmarkResult {
     pub schema_version: u32,
     pub benchmark_timestamp_unix_seconds: u64,
@@ -35,7 +35,7 @@ pub struct BenchmarkResult {
 }
 
 /// A failed process or unreadable expected result file.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct FailedFile {
     pub input: String,
     pub exit_status: Option<i32>,
@@ -45,7 +45,7 @@ pub struct FailedFile {
 }
 
 /// Metrics and provenance for one attempted input file.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct PerFileResult {
     pub input: String,
     pub output_dir: String,

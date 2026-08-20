@@ -64,3 +64,23 @@ or creating outputs. The runner uses seed 1 for both tools, Rust's `--canonical`
 are not forced to match beyond those public settings; the generated command preview is the
 authoritative record of remaining CLI differences. Legacy PXD032157 scripts remain unchanged: use
 `bench/regression.sh` for its existing parallel Rust-only performance gate.
+
+## Comparing result artifacts
+
+Compare the two JSON artifacts from a completed single-dataset run:
+
+```bash
+cargo run --release --bin compare-benchmark-results -- \
+  --rust /local/benchmark-results/PXD032157/rust-result.json \
+  --cpp /local/benchmark-results/PXD032157/cpp-result.json \
+  --output /local/benchmark-results/PXD032157/comparison.json
+```
+
+`comparison.json` is a versioned JSON artifact containing speedup, peak-memory ratio, aggregate and
+per-file identification/yield differences, and median/worst/best per-file PSM statistics. It rejects
+different datasets, accessions, seeds, concurrency, recorded software/environment values, failed
+runs, missing PSM/peptide counts, and mismatched input-file sets. Protein differences are `null`
+when either run did not produce protein counts. Percentages are `null` when C++ has a zero count.
+
+The comparison intentionally describes count changes as identification/yield differences. Higher
+counts do not establish accuracy or FDR calibration; that requires separate calibration evidence.
