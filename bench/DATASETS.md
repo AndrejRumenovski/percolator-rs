@@ -51,6 +51,12 @@ counts use the named `q-value` column and the strict threshold `q < 0.01`.
 For safety, `OUTPUT/DATASET_ID` must not already exist; choose a fresh output directory per run so
 stale result files cannot be reported as fresh output.
 
+`rust-result.json` and `cpp-result.json` are the canonical, versioned machine-readable artifacts
+(`schema_version: 1`). They include dataset and environment provenance, exact per-file command-line
+arguments, aggregate and per-file metrics, explicit `null` values for unavailable measurements, and
+all failed files. The TSV files are retained as convenient human-readable exports; compare or ingest
+the JSON artifacts instead of scraping terminal output.
+
 Use `--dry-run` with the same arguments to print the exact `/usr/bin/time` commands without running
 or creating outputs. The runner uses seed 1 for both tools, Rust's `--canonical` profile, and
 `--num-threads 1` for each implementation. It enables protein outputs only when

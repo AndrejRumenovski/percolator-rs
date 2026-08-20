@@ -5,6 +5,8 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use percolator_rs::benchmark_result::BenchmarkResult;
+
 struct TempDir(PathBuf);
 
 impl TempDir {
@@ -151,4 +153,26 @@ fn previews_commands_and_records_mock_failure_without_discarding_it() {
     assert!(failures.contains("\t7\t"));
     assert!(result.join("rust/0001/target.psms.tsv").exists());
     assert!(result.join("cpp/0002/target.psms.tsv").exists());
+
+    let rust_result: BenchmarkResult =
+        serde_json::from_str(&fs::read_to_string(result.join("rust-result.json")).unwrap())
+            .unwrap();
+    assert_eq!(rust_result.schema_version, 1);
+    assert_eq!(rust_result.dataset_id, "mock");
+    assert_eq!(rust_result.implementation, "rust");
+    assert!(rust_result.benchmark_timestamp_unix_seconds > 0);
+    assert_eq!(rust_result.files_attempted, 2);
+    assert_eq!(rust_result.files_successful, 2);
+    assert_eq!(rust_result.psms_q_lt_0_01, Some(2));
+    assert_eq!(rust_result.peptides_q_lt_0_01, Some(2));
+    assert_eq!(rust_result.proteins_q_lt_0_01, Some(2));
+    assert_eq!(rust_result.command_line_arguments.len(), 2);
+    assert_eq!(rust_result.per_file_results[0].psms_q_lt_0_01, Some(1));
+
+    let cpp_result: BenchmarkResult =
+        serde_json::from_str(&fs::read_to_string(result.join("cpp-result.json")).unwrap()).unwrap();
+    assert_eq!(cpp_result.files_successful, 1);
+    assert_eq!(cpp_result.failed_files.len(), 1);
+    assert_eq!(cpp_result.failed_files[0].exit_status, Some(7));
+    assert_eq!(cpp_result.psms_q_lt_0_01, None);
 }

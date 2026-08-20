@@ -2,11 +2,14 @@
 
 use glob::glob;
 use percolator_rs::benchmark_manifest::{expand_environment_templates, Dataset, DatasetRegistry};
+use percolator_rs::benchmark_result::{
+    BenchmarkResult, FailedFile, PerFileResult, RESULT_SCHEMA_VERSION,
+};
 use std::fs::{self, File};
 use std::io::{self, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitStatus, Stdio};
-use std::time::Instant;
+use std::process::{Command, Stdio};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 const SEED: &str = "1";
 
@@ -29,13 +32,24 @@ struct FileResult {
     implementation: String,
     input: PathBuf,
     output_dir: PathBuf,
-    exit_status: String,
+    command_line_arguments: Vec<String>,
+    exit_status: Option<i32>,
+    termination: Option<String>,
     wall_seconds: Option<f64>,
     peak_rss_kb: Option<u64>,
     psms: Option<u64>,
     peptides: Option<u64>,
     proteins: Option<u64>,
     failure: Option<String>,
+}
+
+struct SystemInfo {
+    percolator_rs_git_commit: Option<String>,
+    rust_compiler_version: Option<String>,
+    cpp_percolator_version: Option<String>,
+    os: Option<String>,
+    cpu: Option<String>,
+    available_threads: Option<usize>,
 }
 
 fn usage() -> ! {
@@ -167,7 +181,12 @@ fn run(args: Args) -> Result<(), String> {
         ));
     }
     fs::create_dir_all(&root).map_err(io_error)?;
+    let benchmark_timestamp_unix_seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| format!("system clock is before the Unix epoch: {error}"))?
+        .as_secs();
     let mut all_results = Vec::new();
+    let mut implementation_walls = Vec::new();
     for implementation in &implementations {
         let start = Instant::now();
         for (index, input) in inputs.iter().enumerate() {
@@ -179,9 +198,22 @@ fn run(args: Args) -> Result<(), String> {
         }
         let wall = start.elapsed().as_secs_f64();
         write_summary(&root, implementation.name, wall, &all_results)?;
+        implementation_walls.push((implementation.name, wall));
     }
     write_per_file(&root, &all_results)?;
     write_failures(&root, &all_results)?;
+    let system = system_info(&args.reference);
+    for (implementation, wall) in implementation_walls {
+        write_result_json(
+            &root,
+            dataset,
+            implementation,
+            wall,
+            benchmark_timestamp_unix_seconds,
+            &system,
+            &all_results,
+        )?;
+    }
 
     let failed = all_results
         .iter()
@@ -293,7 +325,9 @@ fn execute_one(
         implementation: implementation.name.to_owned(),
         input: input.to_path_buf(),
         output_dir: output_dir.clone(),
-        exit_status: status_label(&status),
+        command_line_arguments: command,
+        exit_status: status.code(),
+        termination: (!status.success() && status.code().is_none()).then(|| "signal".to_owned()),
         wall_seconds: None,
         peak_rss_kb: None,
         psms: None,
@@ -309,9 +343,12 @@ fn execute_one(
         Err(error) => result.failure = Some(error),
     }
     if !status.success() {
-        result
-            .failure
-            .get_or_insert_with(|| format!("process exited with {}", result.exit_status));
+        result.failure.get_or_insert_with(|| {
+            format!(
+                "process exited with {}",
+                exit_status_label(result.exit_status, result.termination.as_deref())
+            )
+        });
         return Ok(result);
     }
     match count_q_lt_001(&output_dir.join("target.psms.tsv")) {
@@ -386,6 +423,137 @@ fn count_q_lt_001(path: &Path) -> Result<u64, String> {
     Ok(count)
 }
 
+fn write_result_json(
+    root: &Path,
+    dataset: &Dataset,
+    implementation: &str,
+    wall_seconds: f64,
+    benchmark_timestamp_unix_seconds: u64,
+    system: &SystemInfo,
+    results: &[FileResult],
+) -> Result<(), String> {
+    let matching: Vec<_> = results
+        .iter()
+        .filter(|result| result.implementation == implementation)
+        .collect();
+    let successful: Vec<_> = matching
+        .iter()
+        .copied()
+        .filter(|result| result.failure.is_none())
+        .collect();
+    let counts = |selector: fn(&FileResult) -> Option<u64>| {
+        if successful.len() == matching.len()
+            && successful.iter().any(|result| selector(result).is_some())
+        {
+            Some(
+                successful
+                    .iter()
+                    .filter_map(|result| selector(result))
+                    .sum(),
+            )
+        } else {
+            None
+        }
+    };
+    let result = BenchmarkResult {
+        schema_version: RESULT_SCHEMA_VERSION,
+        benchmark_timestamp_unix_seconds,
+        dataset_id: dataset.id.clone(),
+        dataset_accession: dataset.pride_accession.clone(),
+        implementation: implementation.to_owned(),
+        percolator_rs_git_commit: system.percolator_rs_git_commit.clone(),
+        rust_compiler_version: system.rust_compiler_version.clone(),
+        cpp_percolator_version: system.cpp_percolator_version.clone(),
+        os: system.os.clone(),
+        cpu: system.cpu.clone(),
+        available_threads: system.available_threads,
+        configured_concurrency: 1,
+        random_seed: SEED.parse().expect("constant seed is numeric"),
+        command_line_arguments: matching
+            .iter()
+            .map(|result| result.command_line_arguments.clone())
+            .collect(),
+        wall_seconds: Some(wall_seconds),
+        peak_rss_kb: matching
+            .iter()
+            .filter_map(|result| result.peak_rss_kb)
+            .max(),
+        files_attempted: matching.len(),
+        files_successful: successful.len(),
+        failed_files: matching
+            .iter()
+            .filter_map(|result| {
+                result.failure.as_ref().map(|reason| FailedFile {
+                    input: result.input.display().to_string(),
+                    exit_status: result.exit_status,
+                    termination: result.termination.clone(),
+                    stderr_log: result.output_dir.join("stderr.log").display().to_string(),
+                    reason: reason.clone(),
+                })
+            })
+            .collect(),
+        psms_q_lt_0_01: counts(|result| result.psms),
+        peptides_q_lt_0_01: counts(|result| result.peptides),
+        proteins_q_lt_0_01: counts(|result| result.proteins),
+        per_file_results: matching
+            .iter()
+            .map(|result| PerFileResult {
+                input: result.input.display().to_string(),
+                output_dir: result.output_dir.display().to_string(),
+                command_line_arguments: result.command_line_arguments.clone(),
+                exit_status: result.exit_status,
+                termination: result.termination.clone(),
+                wall_seconds: result.wall_seconds,
+                peak_rss_kb: result.peak_rss_kb,
+                psms_q_lt_0_01: result.psms,
+                peptides_q_lt_0_01: result.peptides,
+                proteins_q_lt_0_01: result.proteins,
+                failure: result.failure.clone(),
+            })
+            .collect(),
+    };
+    let path = root.join(format!("{implementation}-result.json"));
+    let file = File::create(path).map_err(io_error)?;
+    serde_json::to_writer_pretty(file, &result).map_err(|error| error.to_string())
+}
+
+fn system_info(reference: &Path) -> SystemInfo {
+    SystemInfo {
+        percolator_rs_git_commit: command_first_line("git", &["rev-parse", "HEAD"]),
+        rust_compiler_version: command_first_line("rustc", &["--version"]),
+        cpp_percolator_version: command_first_line(&reference.display().to_string(), &["-h"]),
+        os: command_first_line("uname", &["-srmo"]),
+        cpu: cpu_name(),
+        available_threads: std::thread::available_parallelism().ok().map(usize::from),
+    }
+}
+
+fn command_first_line(program: &str, arguments: &[&str]) -> Option<String> {
+    let output = Command::new(program).args(arguments).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    text.lines()
+        .chain(String::from_utf8_lossy(&output.stderr).lines())
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .map(str::to_owned)
+}
+
+fn cpu_name() -> Option<String> {
+    fs::read_to_string("/proc/cpuinfo")
+        .ok()
+        .and_then(|cpuinfo| {
+            cpuinfo.lines().find_map(|line| {
+                line.split_once(':').and_then(|(key, value)| {
+                    (key.trim() == "model name").then(|| value.trim().to_owned())
+                })
+            })
+        })
+        .or_else(|| command_first_line("uname", &["-m"]))
+}
+
 fn write_summary(
     root: &Path,
     implementation: &str,
@@ -442,7 +610,7 @@ fn write_per_file(root: &Path, results: &[FileResult]) -> Result<(), String> {
             result.implementation,
             result.input.display(),
             result.output_dir.display(),
-            result.exit_status,
+            exit_status_label(result.exit_status, result.termination.as_deref()),
             optional_display(result.wall_seconds),
             optional_display(result.peak_rss_kb),
             optional_display(result.psms),
@@ -468,7 +636,7 @@ fn write_failures(root: &Path, results: &[FileResult]) -> Result<(), String> {
             "{}\t{}\t{}\t{}\t{}",
             result.implementation,
             result.input.display(),
-            result.exit_status,
+            exit_status_label(result.exit_status, result.termination.as_deref()),
             result.output_dir.join("stderr.log").display(),
             result.failure.as_deref().unwrap()
         )
@@ -483,11 +651,11 @@ fn optional_display<T: std::fmt::Display>(value: Option<T>) -> String {
         .unwrap_or_else(|| "NA".to_owned())
 }
 
-fn status_label(status: &ExitStatus) -> String {
-    status
-        .code()
-        .map(|code| code.to_string())
-        .unwrap_or_else(|| "signal".to_owned())
+fn exit_status_label(exit_status: Option<i32>, termination: Option<&str>) -> String {
+    exit_status
+        .map(|status| status.to_string())
+        .or_else(|| termination.map(str::to_owned))
+        .unwrap_or_else(|| "NA".to_owned())
 }
 
 fn display_command(command: &[String], time_path: &Path) -> String {
