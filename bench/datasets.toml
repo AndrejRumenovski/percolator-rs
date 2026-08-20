@@ -1,0 +1,21 @@
+# Benchmark dataset registry, schema version 1.
+#
+# `pin_path` is a local file or glob ending in `.pin`. It may use `${UPPERCASE_ENV}`
+# templates so machine-specific storage is supplied by the caller rather than committed.
+# This registry is metadata only; it does not download data or run a benchmark.
+version = 1
+
+[[datasets]]
+id = "PXD032157"
+pride_accession = "PXD032157"
+source = "PRIDE Archive"
+organism = "Anopheles gambiae metaproteome"
+experiment_type = "Shotgun metaproteomics (DDA)"
+instrument = "Q Exactive HF"
+search_engine = "Comet"
+pin_path = "${PERCOLATOR_BENCH_DATA}/PXD032157/**/*.pin"
+file_count = 65
+approximate_input_size = "2.30 GiB"
+protein_level_evaluation = false
+notes = "Large-scale Comet PIN benchmark with 8,639,746 PSMs. Protein-level evaluation is not appropriate because the metaproteomic search database has roughly one peptide per protein and little target/decoy competition."
+preparation = "Download or generate the 65 Comet PIN files outside the repository, set PERCOLATOR_BENCH_DATA to their parent directory, and retain the PXD032157/PIN layout. The existing bench/regression.sh gate continues to use its legacy default of data/PXD032157."
