@@ -19,3 +19,4 @@ approximate_input_size = "2.30 GiB"
 protein_level_evaluation = false
 notes = "Large-scale Comet PIN benchmark with 8,639,746 PSMs. Protein-level evaluation is not appropriate because the metaproteomic search database has roughly one peptide per protein and little target/decoy competition."
 preparation = "Download or generate the 65 Comet PIN files outside the repository, set PERCOLATOR_BENCH_DATA to their parent directory, and retain the PXD032157/PIN layout. The existing bench/regression.sh gate continues to use its legacy default of data/PXD032157."
+reference_search_input = "concatenated"

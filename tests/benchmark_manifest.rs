@@ -1,4 +1,6 @@
-use percolator_rs::benchmark_manifest::{DatasetRegistry, ManifestError};
+use percolator_rs::benchmark_manifest::{
+    expand_environment_templates, DatasetRegistry, ManifestError, SearchInput,
+};
 
 const VALID: &str = r#"
 version = 1
@@ -17,6 +19,7 @@ approximate_input_size = "2.30 GiB"
 protein_level_evaluation = false
 notes = "Protein evaluation is unsuitable for this metaproteomic search."
 preparation = "Place data outside the repository."
+reference_search_input = "concatenated"
 "#;
 
 #[test]
@@ -41,6 +44,17 @@ fn parses_all_supported_metadata() {
         registry.datasets[0].instrument.as_deref(),
         Some("Q Exactive HF")
     );
+    assert_eq!(
+        registry.datasets[0].reference_search_input,
+        Some(SearchInput::Concatenated)
+    );
+}
+
+#[test]
+fn reports_an_unset_path_environment_variable() {
+    let error = expand_environment_templates("${PERCOLATOR_RS_TEST_UNSET_PATH}/input.pin")
+        .expect_err("unset template variable should fail");
+    assert!(error.contains("PERCOLATOR_RS_TEST_UNSET_PATH"));
 }
 
 #[test]

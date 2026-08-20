@@ -38,6 +38,28 @@ pub struct Dataset {
     pub notes: String,
     #[serde(default)]
     pub preparation: Option<String>,
+    /// C++ Percolator's explicit target/decoy input interpretation, when the
+    /// dataset requires one. This is deliberately dataset metadata rather
+    /// than a runner default because it changes the statistical methodology.
+    #[serde(default)]
+    pub reference_search_input: Option<SearchInput>,
+}
+
+/// Supported values for C++ Percolator's `--search-input` option.
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchInput {
+    Concatenated,
+    Separate,
+}
+
+impl SearchInput {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Concatenated => "concatenated",
+            Self::Separate => "separate",
+        }
+    }
 }
 
 /// An actionable problem found while loading a benchmark manifest.
@@ -188,4 +210,29 @@ fn validate_environment_templates(value: &str) -> Result<(), &'static str> {
         remainder = &after_start[end + 1..];
     }
     Ok(())
+}
+
+/// Expand `${UPPERCASE_ENV}` path templates using the process environment.
+///
+/// The manifest validates template syntax on load; this function reports a
+/// useful runtime error if a required machine-specific location is unset.
+pub fn expand_environment_templates(value: &str) -> Result<String, String> {
+    validate_environment_templates(value).map_err(str::to_owned)?;
+    let mut expanded = String::with_capacity(value.len());
+    let mut remainder = value;
+    while let Some(start) = remainder.find("${") {
+        expanded.push_str(&remainder[..start]);
+        let after_start = &remainder[start + 2..];
+        // Safe after validate_environment_templates above.
+        let end = after_start
+            .find('}')
+            .expect("validated environment template");
+        let name = &after_start[..end];
+        let value = std::env::var(name)
+            .map_err(|_| format!("required environment variable {name} is not set"))?;
+        expanded.push_str(&value);
+        remainder = &after_start[end + 1..];
+    }
+    expanded.push_str(remainder);
+    Ok(expanded)
 }
