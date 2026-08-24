@@ -19,6 +19,39 @@ pub fn dot(a: &[f64], b: &[f64]) -> f64 {
     s
 }
 
+/// The canonical PIN matrix has 21 features plus bias. Keeping this fixed-size
+/// dot product separate lets LLVM remove the loop without reassociating any
+/// floating-point additions.
+#[inline]
+pub fn dot_22(a: &[f64], b: &[f64]) -> f64 {
+    debug_assert_eq!(a.len(), 22);
+    debug_assert_eq!(b.len(), 22);
+    let mut s = 0.0;
+    s += a[0] * b[0];
+    s += a[1] * b[1];
+    s += a[2] * b[2];
+    s += a[3] * b[3];
+    s += a[4] * b[4];
+    s += a[5] * b[5];
+    s += a[6] * b[6];
+    s += a[7] * b[7];
+    s += a[8] * b[8];
+    s += a[9] * b[9];
+    s += a[10] * b[10];
+    s += a[11] * b[11];
+    s += a[12] * b[12];
+    s += a[13] * b[13];
+    s += a[14] * b[14];
+    s += a[15] * b[15];
+    s += a[16] * b[16];
+    s += a[17] * b[17];
+    s += a[18] * b[18];
+    s += a[19] * b[19];
+    s += a[20] * b[20];
+    s += a[21] * b[21];
+    s
+}
+
 /// y += alpha * x  (elementwise, exact).
 #[inline]
 pub fn axpy(y: &mut [f64], alpha: f64, x: &[f64]) {
@@ -39,5 +72,21 @@ pub fn axpy(y: &mut [f64], alpha: f64, x: &[f64]) {
     while i < n {
         y[i] += alpha * x[i];
         i += 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fixed_dot_preserves_sequential_result() {
+        let mut a = [0.0; 22];
+        let mut b = [0.0; 22];
+        for i in 0..22 {
+            a[i] = (i as f64 - 9.0) / 7.0;
+            b[i] = ((i * 17 % 23) as f64 - 11.0) * 1e-3;
+        }
+        assert_eq!(dot_22(&a, &b).to_bits(), dot(&a, &b).to_bits());
     }
 }

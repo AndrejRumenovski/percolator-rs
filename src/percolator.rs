@@ -4,7 +4,7 @@
 use crate::mlp;
 use crate::pin::Dataset;
 use crate::stats;
-use crate::svm::{train, Problem};
+use crate::svm::{train, Problem, Workspace as SvmWorkspace};
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 
@@ -230,6 +230,12 @@ fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize]) -> (Vec<f64>, usize) {
 }
 
 fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) {
+    if dim == 22 {
+        for (k, &r) in rows.iter().enumerate() {
+            out[k] = crate::simd::dot_22(&w[..22], &x[r * 22..(r + 1) * 22]);
+        }
+        return;
+    }
     for (k, &r) in rows.iter().enumerate() {
         out[k] = crate::simd::dot(&w[..dim], &x[r * dim..(r + 1) * dim]);
     }
@@ -303,43 +309,72 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
         crate::profile::Scope::with_elements("stage", "initial_direction_selection", labels.len());
     let n = labels.len();
     let pi0 = stats::estimate_pi0(labels);
-    let all: Vec<usize> = (0..n).collect();
+    let mut order = Vec::new();
     let mut best_w = vec![0.0f64; dim];
     best_w[dim - 1] = 0.0;
     let mut best_count = -1i64;
     let mut scores = vec![0.0f64; n];
+    let mut ranks = vec![0u32; n];
     #[cfg(feature = "profiling")]
     crate::profile::allocation_site(
         "percolator::initial_direction buffers",
-        3,
-        ((dim + n) * std::mem::size_of::<f64>() + n * std::mem::size_of::<usize>()) as u64,
+        4,
+        ((dim + n) * std::mem::size_of::<f64>()
+            + n * (std::mem::size_of::<usize>() + std::mem::size_of::<u32>())) as u64,
     );
     #[cfg(feature = "profiling")]
     let mut scoring_time = std::time::Duration::ZERO;
     for j in 0..dim - 1 {
-        for &sign in &[1.0f64, -1.0f64] {
+        #[cfg(feature = "profiling")]
+        let scoring_start = std::time::Instant::now();
+        for i in 0..n {
+            scores[i] = x[i * dim + j];
+        }
+        #[cfg(feature = "profiling")]
+        {
+            scoring_time += scoring_start.elapsed();
+        }
+        let count =
+            stats::target_count_at_fdr_into(&scores, labels, pi0, test_fdr, &mut order) as i64;
+        if count > best_count {
+            best_count = count;
+            for v in best_w.iter_mut() {
+                *v = 0.0;
+            }
+            best_w[j] = 1.0;
+        }
+
+        let count = if n <= u32::MAX as usize && !scores.iter().any(|score| score.is_nan()) {
+            let mut rank = 0u32;
+            for position in 0..order.len() {
+                if position > 0
+                    && scores[order[position]].partial_cmp(&scores[order[position - 1]])
+                        != Some(std::cmp::Ordering::Equal)
+                {
+                    rank += 1;
+                }
+                ranks[order[position]] = rank;
+            }
+            stats::target_count_at_reversed_ranks_into(&ranks, labels, pi0, test_fdr, &mut order)
+                as i64
+        } else {
             #[cfg(feature = "profiling")]
             let scoring_start = std::time::Instant::now();
             for i in 0..n {
-                scores[i] = sign * x[i * dim + j];
+                scores[i] = -x[i * dim + j];
             }
             #[cfg(feature = "profiling")]
             {
                 scoring_time += scoring_start.elapsed();
             }
-            let q = stats::qvalues(&scores, labels, pi0);
-            let count = q
-                .iter()
-                .zip(labels.iter())
-                .filter(|(qi, &l)| l > 0 && **qi < test_fdr)
-                .count() as i64;
-            if count > best_count {
-                best_count = count;
-                for v in best_w.iter_mut() {
-                    *v = 0.0;
-                }
-                best_w[j] = sign;
+            stats::target_count_at_fdr_into(&scores, labels, pi0, test_fdr, &mut order) as i64
+        };
+        if count > best_count {
+            best_count = count;
+            for v in best_w.iter_mut() {
+                *v = 0.0;
             }
+            best_w[j] = -1.0;
         }
     }
     #[cfg(feature = "profiling")]
@@ -350,7 +385,6 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
         Some(((dim - 1) * 2 * n) as u64),
         None,
     );
-    let _ = all;
     best_w
 }
 
@@ -383,6 +417,10 @@ fn train_fold(
     let mut scores = vec![0.0f64; train_rows.len()];
     let sub_labels: Vec<i8> = train_rows.iter().map(|&r| labels[r]).collect();
     let pi0 = stats::estimate_pi0(&sub_labels);
+    let mut qvalue_workspace = stats::QValueWorkspace::default();
+    let mut accepted = Vec::new();
+    let mut svm_workspace = SvmWorkspace::default();
+    let mut packed_x = Vec::new();
     #[cfg(feature = "profiling")]
     {
         crate::profile::record(
@@ -414,7 +452,14 @@ fn train_fold(
         #[cfg(feature = "profiling")]
         let _iteration = crate::profile::Scope::new("semi_supervised_iteration", "iteration_total");
         model.score_rows(x, dim, train_rows, &mut scores);
-        let q = stats::qvalues(&scores, &sub_labels, pi0);
+        stats::target_mask_at_fdr_into(
+            &scores,
+            &sub_labels,
+            pi0,
+            p.test_fdr,
+            &mut qvalue_workspace,
+            &mut accepted,
+        );
 
         // positives: targets under test_fdr ; negatives: all decoys
         #[cfg(feature = "profiling")]
@@ -423,11 +468,11 @@ fn train_fold(
         let mut neg: Vec<usize> = Vec::new();
         for (k, &r) in train_rows.iter().enumerate() {
             if labels[r] > 0 {
-                if q[k] < p.test_fdr {
-                    pos.push(r);
+                if accepted[k] != 0 {
+                    pos.push(k);
                 }
             } else {
-                neg.push(r);
+                neg.push(k);
             }
         }
         #[cfg(feature = "profiling")]
@@ -464,15 +509,18 @@ fn train_fold(
         let mut rows: Vec<usize> = Vec::with_capacity(pos.len() + neg.len());
         let mut y: Vec<f64> = Vec::with_capacity(pos.len() + neg.len());
         let mut c: Vec<f64> = Vec::with_capacity(pos.len() + neg.len());
-        for &r in &pos {
-            rows.push(r);
+        let mut initial_scores: Vec<f64> = Vec::with_capacity(pos.len() + neg.len());
+        for &k in &pos {
+            rows.push(train_rows[k]);
             y.push(1.0);
             c.push(c_pos);
+            initial_scores.push(scores[k]);
         }
-        for &r in &neg {
-            rows.push(r);
+        for &k in &neg {
+            rows.push(train_rows[k]);
             y.push(-1.0);
             c.push(c_neg);
+            initial_scores.push(scores[k]);
         }
         #[cfg(feature = "profiling")]
         {
@@ -485,23 +533,36 @@ fn train_fold(
             );
             crate::profile::allocation_site(
                 "percolator::train_fold iteration training buffers",
-                3,
+                4,
                 (rows.capacity() * std::mem::size_of::<usize>()
-                    + (y.capacity() + c.capacity()) * std::mem::size_of::<f64>())
-                    as u64,
+                    + (y.capacity() + c.capacity() + initial_scores.capacity())
+                        * std::mem::size_of::<f64>()) as u64,
             );
         }
         match &mut model {
             FoldModel::Svm(weights) => {
+                packed_x.clear();
+                packed_x.reserve(rows.len() * dim);
+                for &row in &rows {
+                    packed_x.extend_from_slice(&x[row * dim..(row + 1) * dim]);
+                }
                 let prob = Problem {
-                    x,
+                    x: &packed_x,
                     dim,
                     rows: &rows,
                     y: &y,
                     c: &c,
+                    packed_rows: true,
                     feature_mask,
                 };
-                train(&prob, weights, p.max_newton, hp.tolerance);
+                train(
+                    &prob,
+                    weights,
+                    &initial_scores,
+                    p.max_newton,
+                    hp.tolerance,
+                    &mut svm_workspace,
+                );
             }
             FoldModel::Mlp(network) => network.train(
                 x,
@@ -1148,8 +1209,7 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
             _ => nested(),
         };
         let pi0 = stats::estimate_pi0(&ds.labels);
-        let qval = stats::qvalues(&final_score, &ds.labels, pi0);
-        let pep = stats::peps(&final_score, &ds.labels, pi0);
+        let (qval, pep) = stats::qvalues_and_peps(&final_score, &ds.labels, pi0);
         return Output {
             score: final_score,
             qval,
@@ -1194,8 +1254,7 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     let pi0 = stats::estimate_pi0(&ds.labels);
     #[cfg(feature = "profiling")]
     let _final_context = crate::profile::context(Some("final_psm_statistics"), None, None, None);
-    let qval = stats::qvalues(&final_score, &ds.labels, pi0);
-    let pep = stats::peps(&final_score, &ds.labels, pi0);
+    let (qval, pep) = stats::qvalues_and_peps(&final_score, &ds.labels, pi0);
     Output {
         score: final_score,
         qval,

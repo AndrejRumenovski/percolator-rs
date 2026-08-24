@@ -28,10 +28,10 @@ The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB —
 
 | | C++ Percolator 3.09 | percolator-rs |
 |---|---|---|
-| **Wall clock** — 65 files, 4 processes | 376.2 s | **20.8 s** (18.1x faster) |
+| **Wall clock** — 65 files, 4 processes | 376.2 s | **12.1 s** (31.2x faster) |
 | **PSMs** at reported q < 0.01 | 103 038 | **107 046** (+3.9%) |
 | **Peptides** at reported q < 0.01 | 35 852 | **37 469** (+4.5%) |
-| **Peak memory** — 4 processes | 1.49 GiB | **0.87 GiB** |
+| **Peak memory** — 4 processes | 1.49 GiB | **0.76 GiB** |
 
 Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
 bought by doing less work. A sequential percolator-rs run takes 62.0 s, while the reference takes
@@ -133,18 +133,21 @@ Presets so you don't have to memorize flag combinations. Pass one of `--fast` / 
 | `--balanced` | `--subset-max-train 40000 --maxiter 10` | fast with near-full yield |
 | `--canonical` (default) | full defaults (maxiter 10, no subsetting) | max sensitivity for publication/production |
 
-Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs):
+Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs). The canonical row is the
+median of three portable `x86-64-v3` runs from the 2026-08-24 optimization campaign; the noncanonical
+profiles have not yet been rerun with these common-path optimizations.
 
 | profile | wall | peak RAM | PSM q<0.01 | peptide q<0.01 |
 |---|--:|--:|--:|--:|
-| `--canonical` (default) | 20.4 s | 0.87 GiB | 107 046 | 37 469 |
+| `--canonical` (default) | **12.1 s** | **0.76 GiB** | 107 046 | 37 469 |
 | `--balanced` | 20.4 s | 0.87 GiB | 106 817 (−0.2%) | 37 526 (+0.2%) |
 | `--fast` | **14.6 s** | 0.88 GiB | 105 237 (−1.7%) | 36 772 (−1.9%) |
 
-Note: because percolator-rs's canonical mode is already fast, `--balanced` lands essentially at
-canonical speed *and* yield here; `--fast` cuts ~30 % of the time for a ~2 % yield cost (far better
-than the C++ fast config's −12 %/−15 %, since percolator-rs keeps full 3-fold CV — only the SVM
-training-set size is capped). These measurements include writing the result files to local ext4.
+The balanced and fast rows are earlier measurements and remain useful for their yield tradeoffs, but
+their absolute wall times should not be compared with the newly optimized canonical row until they
+are rerun. These measurements include writing the result files to local ext4. See
+[`bench/OPTIMIZATION.md`](bench/OPTIMIZATION.md) for the complete candidate ledger, exact-output
+checks, and final runtime profile.
 
 ## Benchmark vs C++ Percolator 3.09 (PXD032157, 65 files, 12-core Ryzen 5 5600G)
 
@@ -155,7 +158,7 @@ training-set size is capped). These measurements include writing the result file
 | C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 (canonical) |
 | C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%**) |
 | **percolator-rs** | default full fidelity, sequential | **62.0 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
-| **percolator-rs** | **default full fidelity, N=4** | **20.8 s** | **107 046 / 37 469** |
+| **percolator-rs** | **default full fidelity, N=4** | **12.1 s** | **107 046 / 37 469** |
 | percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | 106 558 / 37 330 |
 | percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | 106 652 / 37 636 |
 

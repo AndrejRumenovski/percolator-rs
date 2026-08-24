@@ -13,14 +13,27 @@ pub struct Problem<'a> {
     pub rows: &'a [usize], // indices of samples to train on
     pub y: &'a [f64],      // +1 / -1, aligned with rows
     pub c: &'a [f64],      // per-sample penalty, aligned with rows
+    /// Rows have been copied into `x` in training order.
+    pub packed_rows: bool,
     /// Optional active-feature mask. Excluded weights remain zero.
     pub feature_mask: Option<&'a [bool]>,
+}
+
+#[derive(Default)]
+pub struct Workspace {
+    z: Vec<f64>,
+    active: Vec<usize>,
+    g: Vec<f64>,
+    d: Vec<f64>,
+    neg_g: Vec<f64>,
+    h: Vec<f64>,
+    w_new: Vec<f64>,
 }
 
 impl<'a> Problem<'a> {
     #[inline]
     fn xi(&self, k: usize) -> &[f64] {
-        let r = self.rows[k];
+        let r = if self.packed_rows { k } else { self.rows[k] };
         &self.x[r * self.dim..(r + 1) * self.dim]
     }
 
@@ -47,6 +60,25 @@ impl<'a> Problem<'a> {
             f += 0.5 * w[j] * w[j];
         }
         active.clear();
+        if self.feature_mask.is_none() && self.dim == 22 {
+            for k in 0..self.rows.len() {
+                let d = 1.0 - self.y[k] * crate::simd::dot_22(w, self.xi(k));
+                z[k] = d;
+                if d > 0.0 {
+                    f += self.c[k] * d * d;
+                    active.push(k);
+                }
+            }
+            #[cfg(feature = "profiling")]
+            crate::profile::record(
+                "svm",
+                "active_set_and_margin_scoring",
+                active_start.elapsed(),
+                Some(self.rows.len() as u64),
+                Some(active.len() as u64),
+            );
+            return f;
+        }
         for k in 0..self.rows.len() {
             let d = 1.0 - self.y[k] * self.wx(w, k);
             z[k] = d;
@@ -205,7 +237,14 @@ fn cholesky_solve(h: &mut [f64], rhs: &[f64], d: &mut [f64], dim: usize) -> bool
 }
 
 /// Train, warm-started from `w`. `max_newton` outer Newton steps.
-pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
+pub fn train(
+    p: &Problem,
+    w: &mut [f64],
+    initial_scores: &[f64],
+    max_newton: usize,
+    tolerance: f64,
+    workspace: &mut Workspace,
+) {
     #[cfg(feature = "profiling")]
     let _svm_training =
         crate::profile::Scope::with_elements("svm", "svm_training_total", p.rows.len());
@@ -213,13 +252,35 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
     let n = p.rows.len();
     #[cfg(feature = "profiling")]
     let allocation_start = std::time::Instant::now();
-    let mut z = vec![0.0f64; n];
-    let mut active: Vec<usize> = Vec::with_capacity(n);
-    let mut g = vec![0.0f64; dim];
-    let mut d = vec![0.0f64; dim]; // newton direction
-    let mut neg_g = vec![0.0f64; dim];
-    let mut h = vec![0.0f64; dim * dim];
-    let mut w_new = vec![0.0f64; dim];
+    #[cfg(feature = "profiling")]
+    let old_capacities = [
+        workspace.z.capacity(),
+        workspace.active.capacity(),
+        workspace.g.capacity(),
+        workspace.d.capacity(),
+        workspace.neg_g.capacity(),
+        workspace.h.capacity(),
+        workspace.w_new.capacity(),
+    ];
+    workspace.z.resize(n, 0.0);
+    workspace.active.clear();
+    if workspace.active.capacity() < n {
+        workspace.active.reserve(n);
+    }
+    workspace.g.resize(dim, 0.0);
+    workspace.d.resize(dim, 0.0);
+    workspace.neg_g.resize(dim, 0.0);
+    workspace.h.resize(dim * dim, 0.0);
+    workspace.w_new.resize(dim, 0.0);
+    let Workspace {
+        z,
+        active,
+        g,
+        d,
+        neg_g,
+        h,
+        w_new,
+    } = workspace;
     #[cfg(feature = "profiling")]
     {
         crate::profile::record(
@@ -234,13 +295,49 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
         );
         crate::profile::allocation_site(
             "svm::train work buffers",
-            7,
-            (n * (std::mem::size_of::<f64>() + std::mem::size_of::<usize>())
-                + (4 * dim + dim * dim) * std::mem::size_of::<f64>()) as u64,
+            [
+                z.capacity(),
+                active.capacity(),
+                g.capacity(),
+                d.capacity(),
+                neg_g.capacity(),
+                h.capacity(),
+                w_new.capacity(),
+            ]
+            .iter()
+            .zip(old_capacities)
+            .filter(|(new, old)| **new > *old)
+            .count() as u64,
+            ((z.capacity() - old_capacities[0]) * std::mem::size_of::<f64>()
+                + (active.capacity() - old_capacities[1]) * std::mem::size_of::<usize>()
+                + (g.capacity() - old_capacities[2]) * std::mem::size_of::<f64>()
+                + (d.capacity() - old_capacities[3]) * std::mem::size_of::<f64>()
+                + (neg_g.capacity() - old_capacities[4]) * std::mem::size_of::<f64>()
+                + (h.capacity() - old_capacities[5]) * std::mem::size_of::<f64>()
+                + (w_new.capacity() - old_capacities[6]) * std::mem::size_of::<f64>())
+                as u64,
         );
     }
 
-    let mut f = p.f_and_active(w, &mut z, &mut active);
+    debug_assert_eq!(initial_scores.len(), n);
+    let mut f = if p.feature_mask.is_none() {
+        let mut objective = 0.0;
+        for &weight in w.iter().take(dim) {
+            objective += 0.5 * weight * weight;
+        }
+        active.clear();
+        for k in 0..n {
+            let margin = 1.0 - p.y[k] * initial_scores[k];
+            z[k] = margin;
+            if margin > 0.0 {
+                objective += p.c[k] * margin * margin;
+                active.push(k);
+            }
+        }
+        objective
+    } else {
+        p.f_and_active(w, z, active)
+    };
     for newton_iteration in 0..max_newton {
         #[cfg(not(feature = "profiling"))]
         let _ = newton_iteration;
@@ -248,7 +345,7 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
         let _newton_context = crate::profile::context(None, None, None, Some(newton_iteration));
         #[cfg(feature = "profiling")]
         let _newton = crate::profile::Scope::new("svm", "newton_iteration_total");
-        p.grad(w, &z, &active, &mut g);
+        p.grad(w, z, active, g);
         #[cfg(feature = "profiling")]
         let convergence_start = std::time::Instant::now();
         let gnorm2: f64 = g.iter().map(|v| v * v).sum();
@@ -272,7 +369,7 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
             None,
         );
         // Newton step: form the (small) Hessian explicitly and Cholesky-solve H d = -g.
-        p.hessian(&active, &mut h);
+        p.hessian(active, h);
         #[cfg(feature = "profiling")]
         let update_start = std::time::Instant::now();
         for j in 0..dim {
@@ -287,9 +384,9 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
             Some(dim as u64),
             None,
         );
-        if !cholesky_solve(&mut h, &neg_g, &mut d, dim) {
+        if !cholesky_solve(h, neg_g, d, dim) {
             // fall back to gradient descent direction if not PD (shouldn't happen: H >= I)
-            d.copy_from_slice(&neg_g);
+            d.copy_from_slice(neg_g);
         }
         // Backtracking line search on f along d
         let gd: f64 = g.iter().zip(d.iter()).map(|(a, b)| a * b).sum();
@@ -311,9 +408,9 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
                 Some(dim as u64),
                 None,
             );
-            let f_new = p.f_and_active(&w_new, &mut z, &mut active);
+            let f_new = p.f_and_active(w_new, z, active);
             if f_new <= f + 1e-4 * step * gd {
-                w.copy_from_slice(&w_new);
+                w.copy_from_slice(w_new);
                 f = f_new;
                 ok = true;
                 break;
@@ -330,7 +427,7 @@ pub fn train(p: &Problem, w: &mut [f64], max_newton: usize, tolerance: f64) {
         );
         if !ok {
             // recompute active set at current w (side effect on z/active) and stop
-            let _ = p.f_and_active(w, &mut z, &mut active);
+            let _ = p.f_and_active(w, z, active);
             break;
         }
     }

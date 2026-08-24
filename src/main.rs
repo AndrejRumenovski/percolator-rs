@@ -15,6 +15,7 @@ mod stats;
 mod svm;
 
 use percolator::{Model, Params};
+use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
@@ -305,13 +306,17 @@ fn ensemble_input(value: &str) -> Result<(String, String), String> {
     Ok((engine.to_string(), path.to_string()))
 }
 
-struct Row {
-    id: String,
+struct Row<'a> {
+    id: Cow<'a, str>,
     score: f64,
     q: f64,
     pep: f64,
-    peptide: String,
-    proteins: String,
+    peptide: &'a str,
+    proteins: &'a str,
+    // `sort_unstable` has size-dependent implementations. Preserve the
+    // original 96-byte owned-row layout so equal-score output order remains
+    // byte-identical while the text itself is borrowed.
+    _sort_layout_padding: [u8; 16],
 }
 
 #[cfg(feature = "profiling")]
@@ -362,7 +367,47 @@ impl<W: Write> Write for ProfiledWriter<W> {
     }
 }
 
-fn write_results(path: &str, mut rows: Vec<Row>) -> std::io::Result<()> {
+fn write_fixed_6<W: Write>(writer: &mut W, value: f64) -> std::io::Result<()> {
+    const SCALE: f64 = 1_000_000.0;
+    let scaled = value.abs() * SCALE;
+    if scaled.is_finite() && scaled < u64::MAX as f64 - 1.0 {
+        let lower = scaled.floor();
+        let fraction = scaled - lower;
+        // Multiplication can move a value very slightly across the half-way
+        // boundary. Let the standard formatter handle every ambiguous case.
+        let error_bound = scaled * (2.0 * f64::EPSILON) + 1e-12;
+        if (fraction - 0.5).abs() > error_bound {
+            let rounded = if fraction < 0.5 { lower } else { lower + 1.0 } as u64;
+            let mut buffer = [0u8; 32];
+            let mut cursor = buffer.len();
+            let mut fraction = rounded % 1_000_000;
+            for _ in 0..6 {
+                cursor -= 1;
+                buffer[cursor] = b'0' + (fraction % 10) as u8;
+                fraction /= 10;
+            }
+            cursor -= 1;
+            buffer[cursor] = b'.';
+            let mut whole = rounded / 1_000_000;
+            loop {
+                cursor -= 1;
+                buffer[cursor] = b'0' + (whole % 10) as u8;
+                whole /= 10;
+                if whole == 0 {
+                    break;
+                }
+            }
+            if value.is_sign_negative() {
+                cursor -= 1;
+                buffer[cursor] = b'-';
+            }
+            return writer.write_all(&buffer[cursor..]);
+        }
+    }
+    write!(writer, "{value:.6}")
+}
+
+fn write_results(path: &str, mut rows: Vec<Row<'_>>) -> std::io::Result<()> {
     #[cfg(feature = "profiling")]
     let sort_start = std::time::Instant::now();
     rows.sort_unstable_by(|x, y| {
@@ -406,11 +451,18 @@ fn write_results(path: &str, mut rows: Vec<Row>) -> std::io::Result<()> {
         "PSMId\tscore\tq-value\tposterior_error_prob\tpeptide\tproteinIds"
     )?;
     for r in rows {
-        writeln!(
-            w,
-            "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
-            r.id, r.score, r.q, r.pep, r.peptide, r.proteins
-        )?;
+        w.write_all(r.id.as_bytes())?;
+        w.write_all(b"\t")?;
+        write_fixed_6(&mut w, r.score)?;
+        w.write_all(b"\t")?;
+        write_fixed_6(&mut w, r.q)?;
+        w.write_all(b"\t")?;
+        write_fixed_6(&mut w, r.pep)?;
+        w.write_all(b"\t")?;
+        w.write_all(r.peptide.as_bytes())?;
+        w.write_all(b"\t")?;
+        w.write_all(r.proteins.as_bytes())?;
+        w.write_all(b"\n")?;
     }
     #[cfg(feature = "profiling")]
     {
@@ -711,39 +763,43 @@ fn main() {
         let reported_scores: Vec<f64> = reported_indices.iter().map(|&i| out.score[i]).collect();
         let reported_labels: Vec<i8> = reported_indices.iter().map(|&i| ds.labels[i]).collect();
         let reported_pi0 = stats::estimate_pi0(&reported_labels);
-        (
-            stats::qvalues(&reported_scores, &reported_labels, reported_pi0),
-            stats::peps(&reported_scores, &reported_labels, reported_pi0),
-        )
+        stats::qvalues_and_peps(&reported_scores, &reported_labels, reported_pi0)
     } else {
         (out.qval.clone(), out.pep.clone())
     };
 
     // PSM-level output
-    let mut targets: Vec<Row> = Vec::new();
-    let mut decoys: Vec<Row> = Vec::new();
+    let target_capacity = reported_indices
+        .iter()
+        .filter(|&&index| ds.labels[index] > 0)
+        .count();
+    let mut targets: Vec<Row<'_>> = Vec::with_capacity(target_capacity);
+    let mut decoys: Vec<Row<'_>> = Vec::with_capacity(reported_indices.len() - target_capacity);
     #[cfg(feature = "profiling")]
     let mut psm_row_string_bytes = 0u64;
     for (output_index, &i) in reported_indices.iter().enumerate() {
         let r = Row {
             id: if args.ensemble {
-                format!(
+                Cow::Owned(format!(
                     "{}:{}",
                     ds.source_names[ds.source[i] as usize], ds.spec_id[i]
-                )
+                ))
             } else {
-                ds.spec_id[i].clone()
+                Cow::Borrowed(&ds.spec_id[i])
             },
             score: out.score[i],
             q: reported_qvals[output_index],
             pep: reported_peps[output_index],
-            peptide: ds.peptide[i].clone(),
-            proteins: ds.proteins[i].clone(),
+            peptide: &ds.peptide[i],
+            proteins: &ds.proteins[i],
+            _sort_layout_padding: [0; 16],
         };
         #[cfg(feature = "profiling")]
         {
-            psm_row_string_bytes +=
-                (r.id.capacity() + r.peptide.capacity() + r.proteins.capacity()) as u64;
+            psm_row_string_bytes += match &r.id {
+                Cow::Owned(id) => id.capacity() as u64,
+                Cow::Borrowed(_) => 0,
+            };
         }
         if ds.labels[i] > 0 {
             targets.push(r);
@@ -760,7 +816,7 @@ fn main() {
         );
         profile::allocation_site(
             "main::psm output row strings",
-            (reported_indices.len() * 3) as u64,
+            u64::from(args.ensemble) * reported_indices.len() as u64,
             psm_row_string_bytes,
         );
     }
@@ -775,15 +831,10 @@ fn main() {
     let _peptide_context = profile::context(Some("peptide_level_processing"), None, None, None);
     #[cfg(feature = "profiling")]
     let _peptide_processing = profile::Scope::new("stage", "peptide_level_processing");
-    let mut best: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    #[cfg(feature = "profiling")]
-    let mut peptide_key_bytes = 0u64;
+    let mut best: ahash::AHashMap<(i8, &str), usize> =
+        ahash::AHashMap::with_capacity(reported_indices.len());
     for &i in &reported_indices {
-        let key = format!("{}\u{1}{}", ds.labels[i], core_peptide(&ds.peptide[i]));
-        #[cfg(feature = "profiling")]
-        {
-            peptide_key_bytes += key.capacity() as u64;
-        }
+        let key = (ds.labels[i], core_peptide(&ds.peptide[i]));
         match best.get(&key) {
             Some(&j) if out.score[j] >= out.score[i] => {}
             _ => {
@@ -791,12 +842,6 @@ fn main() {
             }
         }
     }
-    #[cfg(feature = "profiling")]
-    profile::allocation_site(
-        "main::peptide deduplication keys",
-        reported_indices.len() as u64,
-        peptide_key_bytes,
-    );
     // HashMap iteration is process-randomized. Preserve input order so tied
     // peptide statistics and the loopy-BP message schedule are reproducible.
     let mut pep_idx: Vec<usize> = best.values().copied().collect();
@@ -814,27 +859,24 @@ fn main() {
     let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
     let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
     let ppi0 = stats::estimate_pi0(&plabel);
-    let pq = stats::qvalues(&pscore, &plabel, ppi0);
-    let ppep = stats::peps(&pscore, &plabel, ppi0);
+    let (pq, ppep) = stats::qvalues_and_peps(&pscore, &plabel, ppi0);
 
-    let mut ptargets: Vec<Row> = Vec::new();
-    let mut pdecoys: Vec<Row> = Vec::new();
-    #[cfg(feature = "profiling")]
-    let mut peptide_row_string_bytes = 0u64;
+    let peptide_target_capacity = pep_idx
+        .iter()
+        .filter(|&&index| ds.labels[index] > 0)
+        .count();
+    let mut ptargets: Vec<Row<'_>> = Vec::with_capacity(peptide_target_capacity);
+    let mut pdecoys: Vec<Row<'_>> = Vec::with_capacity(pep_idx.len() - peptide_target_capacity);
     for (k, &i) in pep_idx.iter().enumerate() {
         let r = Row {
-            id: ds.spec_id[i].clone(),
+            id: Cow::Borrowed(&ds.spec_id[i]),
             score: pscore[k],
             q: pq[k],
             pep: ppep[k],
-            peptide: ds.peptide[i].clone(),
-            proteins: ds.proteins[i].clone(),
+            peptide: &ds.peptide[i],
+            proteins: &ds.proteins[i],
+            _sort_layout_padding: [0; 16],
         };
-        #[cfg(feature = "profiling")]
-        {
-            peptide_row_string_bytes +=
-                (r.id.capacity() + r.peptide.capacity() + r.proteins.capacity()) as u64;
-        }
         if ds.labels[i] > 0 {
             ptargets.push(r);
         } else {
@@ -847,11 +889,6 @@ fn main() {
             "main::peptide output row vectors",
             2,
             ((ptargets.capacity() + pdecoys.capacity()) * std::mem::size_of::<Row>()) as u64,
-        );
-        profile::allocation_site(
-            "main::peptide output row strings",
-            (pep_idx.len() * 3) as u64,
-            peptide_row_string_bytes,
         );
     }
     let n_pep_q01 = ptargets.iter().filter(|r| r.q < 0.01).count();
@@ -1052,4 +1089,51 @@ fn write_proteins(
         );
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod output_tests {
+    use super::{write_fixed_6, Row};
+
+    fn fast(value: f64) -> String {
+        let mut output = Vec::new();
+        write_fixed_6(&mut output, value).unwrap();
+        String::from_utf8(output).unwrap()
+    }
+
+    #[test]
+    fn fixed_6_matches_standard_formatter() {
+        let edge_cases = [
+            0.0,
+            -0.0,
+            0.00000049,
+            -0.00000049,
+            0.0000005,
+            -0.0000005,
+            0.9999995,
+            -0.9999995,
+            1.23456789,
+            -123_456.789_012_3,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NAN,
+        ];
+        for value in edge_cases {
+            assert_eq!(fast(value), format!("{value:.6}"), "value={value:?}");
+        }
+
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        for _ in 0..100_000 {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let value = f64::from_bits(state);
+            assert_eq!(fast(value), format!("{value:.6}"), "bits={state:#018x}");
+        }
+    }
+
+    #[test]
+    fn borrowed_row_preserves_sort_layout_size() {
+        assert_eq!(std::mem::size_of::<Row<'_>>(), 96);
+    }
 }
