@@ -5,6 +5,8 @@
 mod mlp;
 mod percolator;
 mod pin;
+#[cfg(feature = "profiling")]
+mod profile;
 mod protein;
 mod protein_bayes;
 mod rt;
@@ -15,6 +17,10 @@ mod svm;
 use percolator::{Model, Params};
 use std::fs::File;
 use std::io::{BufWriter, Write};
+
+#[cfg(feature = "profiling")]
+#[global_allocator]
+static PROFILING_ALLOCATOR: profile::CountingAllocator = profile::CountingAllocator;
 
 fn core_peptide(p: &str) -> &str {
     // strip flanking residues: A.PEPTIDE.B -> PEPTIDE (keep mods)
@@ -44,6 +50,12 @@ struct Args {
     join: bool,
     ensemble: bool,
     rt_features: bool,
+    #[cfg(feature = "profiling")]
+    profile_json: Option<String>,
+    #[cfg(feature = "profiling")]
+    profile_cpu: Option<String>,
+    #[cfg(feature = "profiling")]
+    profile_allocations: bool,
     params: Params,
     profile: &'static str,
 }
@@ -62,7 +74,7 @@ enum ProteinInference {
 /// the default Cpos/Cneg may not transfer.
 fn preset(name: &str) -> Option<(usize, usize, bool)> {
     match name {
-        "fast" => Some((20_000, 5, false)),   // ~quick QA/test pipelines
+        "fast" => Some((20_000, 5, false)), // ~quick QA/test pipelines
         "balanced" => Some((40_000, 10, false)), // ~5% yield hit, still fast
         "canonical" => Some((0, 10, false)), // full default sensitivity (0 = no subsetting)
         _ => None,
@@ -84,6 +96,12 @@ fn parse_args() -> Args {
         join: false,
         ensemble: false,
         rt_features: false,
+        #[cfg(feature = "profiling")]
+        profile_json: None,
+        #[cfg(feature = "profiling")]
+        profile_cpu: None,
+        #[cfg(feature = "profiling")]
+        profile_allocations: false,
         params: Params::default(),
         profile: "canonical",
     };
@@ -129,9 +147,7 @@ fn parse_args() -> Args {
             "--protein-peptide-prior" => {
                 a.protein_bayes.peptide_prior = take().parse().unwrap_or(f64::NAN)
             }
-            "--protein-max-iter" => {
-                a.protein_bayes.max_iter = take().parse().unwrap_or(0)
-            }
+            "--protein-max-iter" => a.protein_bayes.max_iter = take().parse().unwrap_or(0),
             "--rescore-model" | "--model" => {
                 let value = take();
                 a.params.model = match value.as_str() {
@@ -151,12 +167,24 @@ fn parse_args() -> Args {
             "--mlp-l2" => a.params.mlp_l2 = take().parse().unwrap_or(f64::NAN),
             "--auto-model" | "--nested-select" => a.params.nested_selection = true,
             "--no-auto-model" => a.params.nested_selection = false,
-            "--svm-tolerance" => {
-                a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN)
-            }
+            "--svm-tolerance" => a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN),
             "--join" => a.join = true,
             "--ensemble" => a.ensemble = true,
             "--rt-features" => a.rt_features = true,
+            #[cfg(feature = "profiling")]
+            "--profile-json" => a.profile_json = Some(take()),
+            #[cfg(feature = "profiling")]
+            "--profile-cpu" => a.profile_cpu = Some(take()),
+            #[cfg(feature = "profiling")]
+            "--profile-allocations" => a.profile_allocations = true,
+            #[cfg(not(feature = "profiling"))]
+            "--profile-json" | "--profile-cpu" | "--profile-allocations" => {
+                if s != "--profile-allocations" {
+                    let _ = take();
+                }
+                eprintln!("{s} requires a build with --features profiling");
+                std::process::exit(2);
+            }
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
             "--maxiter" => maxiter_opt = take().parse().ok(),
             "--subset-max-train" | "-N" => subset_opt = take().parse().ok(),
@@ -286,17 +314,125 @@ struct Row {
     proteins: String,
 }
 
+#[cfg(feature = "profiling")]
+#[derive(Default)]
+struct WriteCounters {
+    calls: std::sync::atomic::AtomicU64,
+    bytes: std::sync::atomic::AtomicU64,
+    duration_ns: std::sync::atomic::AtomicU64,
+}
+
+#[cfg(feature = "profiling")]
+struct ProfiledWriter<W> {
+    inner: W,
+    counters: std::sync::Arc<WriteCounters>,
+}
+
+#[cfg(feature = "profiling")]
+impl<W: Write> Write for ProfiledWriter<W> {
+    fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
+        let start = std::time::Instant::now();
+        let result = self.inner.write(buffer);
+        let elapsed = start.elapsed().as_nanos().min(u64::MAX as u128) as u64;
+        self.counters
+            .duration_ns
+            .fetch_add(elapsed, std::sync::atomic::Ordering::Relaxed);
+        self.counters
+            .calls
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        if let Ok(bytes) = result {
+            self.counters
+                .bytes
+                .fetch_add(bytes as u64, std::sync::atomic::Ordering::Relaxed);
+        }
+        result
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        let start = std::time::Instant::now();
+        let result = self.inner.flush();
+        let elapsed = start.elapsed().as_nanos().min(u64::MAX as u128) as u64;
+        self.counters
+            .duration_ns
+            .fetch_add(elapsed, std::sync::atomic::Ordering::Relaxed);
+        self.counters
+            .calls
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        result
+    }
+}
+
 fn write_results(path: &str, mut rows: Vec<Row>) -> std::io::Result<()> {
-    rows.sort_unstable_by(|x, y| y.score.partial_cmp(&x.score).unwrap_or(std::cmp::Ordering::Equal));
+    #[cfg(feature = "profiling")]
+    let sort_start = std::time::Instant::now();
+    rows.sort_unstable_by(|x, y| {
+        y.score
+            .partial_cmp(&x.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    #[cfg(feature = "profiling")]
+    profile::record(
+        "sort",
+        "result_row_score_order",
+        sort_start.elapsed(),
+        Some(rows.len() as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    let create_start = std::time::Instant::now();
     let f = File::create(path)?;
+    #[cfg(feature = "profiling")]
+    profile::record(
+        "file_io",
+        "result_file_create",
+        create_start.elapsed(),
+        Some(1),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    let counters = std::sync::Arc::new(WriteCounters::default());
+    #[cfg(feature = "profiling")]
+    let f = ProfiledWriter {
+        inner: f,
+        counters: std::sync::Arc::clone(&counters),
+    };
+    #[cfg(feature = "profiling")]
+    let serialization_start = std::time::Instant::now();
+    #[cfg(feature = "profiling")]
+    let row_count = rows.len();
     let mut w = BufWriter::with_capacity(1 << 20, f);
-    writeln!(w, "PSMId\tscore\tq-value\tposterior_error_prob\tpeptide\tproteinIds")?;
+    writeln!(
+        w,
+        "PSMId\tscore\tq-value\tposterior_error_prob\tpeptide\tproteinIds"
+    )?;
     for r in rows {
         writeln!(
             w,
             "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
             r.id, r.score, r.q, r.pep, r.peptide, r.proteins
         )?;
+    }
+    #[cfg(feature = "profiling")]
+    {
+        use std::sync::atomic::Ordering;
+        w.flush()?;
+        drop(w);
+        let total = serialization_start.elapsed();
+        let write_ns = counters.duration_ns.load(Ordering::Relaxed);
+        profile::record(
+            "file_io",
+            "result_file_write",
+            std::time::Duration::from_nanos(write_ns),
+            Some(counters.calls.load(Ordering::Relaxed)),
+            Some(counters.bytes.load(Ordering::Relaxed)),
+        );
+        profile::record(
+            "serialization",
+            "result_format_and_buffer",
+            total.saturating_sub(std::time::Duration::from_nanos(write_ns)),
+            Some(row_count as u64),
+            None,
+        );
     }
     Ok(())
 }
@@ -305,9 +441,19 @@ fn write_feature_report(path: &str, report: &percolator::FeatureReport) -> std::
     let file = File::create(path)?;
     let mut writer = BufWriter::with_capacity(1 << 16, file);
     writeln!(writer, "# feature_report_version=1")?;
-    writeln!(writer, "# model=linear_svm; coefficients are means across the three out-of-fold models")?;
-    writeln!(writer, "# baseline_target_psms_q<0.01={}", report.baseline_q01)?;
-    writeln!(writer, "# permutation=deterministic within each held-out fold; models held fixed (no retraining)")?;
+    writeln!(
+        writer,
+        "# model=linear_svm; coefficients are means across the three out-of-fold models"
+    )?;
+    writeln!(
+        writer,
+        "# baseline_target_psms_q<0.01={}",
+        report.baseline_q01
+    )?;
+    writeln!(
+        writer,
+        "# permutation=deterministic within each held-out fold; models held fixed (no retraining)"
+    )?;
     writeln!(
         writer,
         "feature_index\tfeature\traw_weight\traw_weight_fold_sd\tstandardized_effect\tstandardized_effect_fold_sd\tlabel_correlation\tfeature_mean\tfeature_std\tselected_folds\tpermutation_q01_drop\tpermuted_target_psms_q<0.01"
@@ -351,27 +497,72 @@ fn main() {
         eprintln!("error: protein inference is unavailable with --ensemble; engine-level duplicate evidence needs a dedicated protein model");
         std::process::exit(2);
     }
+    #[cfg(feature = "profiling")]
+    let profile_session = profile::Session::start(
+        args.profile_json.clone(),
+        args.profile_cpu.clone(),
+        args.profile_allocations,
+    )
+    .unwrap_or_else(|message| {
+        eprintln!("profiling error: {message}");
+        std::process::exit(2);
+    });
+    #[cfg(feature = "profiling")]
+    {
+        profile::metadata("profile_name", args.profile);
+        profile::metadata("seed", args.params.seed);
+        profile::metadata("num_threads", args.params.num_threads);
+        profile::metadata("maxiter", args.params.maxiter);
+        profile::metadata("subset_max_train", args.params.subset_max_train);
+        profile::metadata("allocation_counting", args.profile_allocations);
+        profile::metadata("input_files", &args.pins);
+    }
     eprintln!(
         "profile: {} (model={}, maxiter={}, subset-max-train={}){}{}{}",
         args.profile,
         args.params.model.label(),
         args.params.maxiter,
-        if args.params.subset_max_train == 0 { "none".to_string() } else { args.params.subset_max_train.to_string() },
-        if args.join { format!(", join={} files", args.pins.len()) }
-        else if args.ensemble { format!(", ensemble={} engines", args.pins.len()) }
-        else { String::new() },
-        if args.rt_features { ", rt-features" } else { "" },
-        if args.params.nested_selection { ", nested-selection" } else { "" },
+        if args.params.subset_max_train == 0 {
+            "none".to_string()
+        } else {
+            args.params.subset_max_train.to_string()
+        },
+        if args.join {
+            format!(", join={} files", args.pins.len())
+        } else if args.ensemble {
+            format!(", ensemble={} engines", args.pins.len())
+        } else {
+            String::new()
+        },
+        if args.rt_features {
+            ", rt-features"
+        } else {
+            ""
+        },
+        if args.params.nested_selection {
+            ", nested-selection"
+        } else {
+            ""
+        },
     );
     let t0 = std::time::Instant::now();
     let tp = std::time::Instant::now();
+    #[cfg(feature = "profiling")]
+    let _input_loading = profile::Scope::new("stage", "input_loading");
     let ensemble_inputs: Vec<(String, String)> = if args.ensemble {
-        args.pins.iter().map(|input| ensemble_input(input)).collect::<Result<_, _>>().unwrap_or_else(|message| {
-            eprintln!("error: {message}");
-            std::process::exit(2);
-        })
+        args.pins
+            .iter()
+            .map(|input| ensemble_input(input))
+            .collect::<Result<_, _>>()
+            .unwrap_or_else(|message| {
+                eprintln!("error: {message}");
+                std::process::exit(2);
+            })
     } else {
-        args.pins.iter().map(|path| (String::new(), path.clone())).collect()
+        args.pins
+            .iter()
+            .map(|path| (String::new(), path.clone()))
+            .collect()
     };
     let mut parts: Vec<pin::Dataset> = Vec::with_capacity(ensemble_inputs.len());
     for (_, path) in &ensemble_inputs {
@@ -385,16 +576,35 @@ fn main() {
         parts.push(d);
     }
     let ds = if args.ensemble {
-        pin::merge_ensemble(parts, ensemble_inputs.into_iter().map(|(engine, _)| engine).collect())
-            .unwrap_or_else(|message| {
-                eprintln!("ensemble error: {message}");
-                std::process::exit(2);
-            })
+        pin::merge_ensemble(
+            parts,
+            ensemble_inputs
+                .into_iter()
+                .map(|(engine, _)| engine)
+                .collect(),
+        )
+        .unwrap_or_else(|message| {
+            eprintln!("ensemble error: {message}");
+            std::process::exit(2);
+        })
     } else if parts.len() == 1 {
         parts.pop().unwrap()
     } else {
         pin::merge(parts)
     };
+    #[cfg(feature = "profiling")]
+    {
+        drop(_input_loading);
+        profile::metadata("psms", ds.n_psm);
+        profile::metadata("features", ds.n_feat);
+        profile::metadata(
+            "input_bytes",
+            args.pins
+                .iter()
+                .filter_map(|path| std::fs::metadata(path).ok().map(|metadata| metadata.len()))
+                .sum::<u64>(),
+        );
+    }
     eprintln!("parse: {:.3}s", tp.elapsed().as_secs_f64());
     eprintln!(
         "parsed {} PSMs, {} features ({} targets / {} decoys){}",
@@ -402,16 +612,28 @@ fn main() {
         ds.n_feat,
         ds.labels.iter().filter(|&&l| l > 0).count(),
         ds.labels.iter().filter(|&&l| l < 0).count(),
-        if args.join { format!(", pooled from {} files", ds.source_names.len()) }
-        else if args.ensemble { format!(", ensemble from {} engines", ds.source_names.len()) }
-        else { String::new() },
+        if args.join {
+            format!(", pooled from {} files", ds.source_names.len())
+        } else if args.ensemble {
+            format!(", ensemble from {} engines", ds.source_names.len())
+        } else {
+            String::new()
+        },
     );
 
+    #[cfg(feature = "profiling")]
+    let _rescoring = profile::Scope::new("stage", "rescoring");
     let out = percolator::run(&ds, &args.params);
+    #[cfg(feature = "profiling")]
+    drop(_rescoring);
     if out.nested_folds.is_empty() {
         eprintln!(
             "{} class weights: Cpos={:.3} Cneg={:.3}{}{}",
-            if args.params.model == Model::Svm { "SVM" } else { "MLP" },
+            if args.params.model == Model::Svm {
+                "SVM"
+            } else {
+                "MLP"
+            },
             out.c_alpha,
             out.c_beta,
             if out.c_selected {
@@ -465,6 +687,10 @@ fn main() {
     // Engine reports of the same candidate are training observations, not separate
     // discoveries. Retain the best out-of-fold score per exact candidate and
     // recalibrate q-values on that deduplicated candidate set for ensemble output.
+    #[cfg(feature = "profiling")]
+    let _psm_context = profile::context(Some("psm_level_processing"), None, None, None);
+    #[cfg(feature = "profiling")]
+    let _psm_processing = profile::Scope::new("stage", "psm_level_processing");
     let reported_indices: Vec<usize> = if args.ensemble {
         let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
             std::collections::BTreeMap::new();
@@ -496,10 +722,15 @@ fn main() {
     // PSM-level output
     let mut targets: Vec<Row> = Vec::new();
     let mut decoys: Vec<Row> = Vec::new();
+    #[cfg(feature = "profiling")]
+    let mut psm_row_string_bytes = 0u64;
     for (output_index, &i) in reported_indices.iter().enumerate() {
         let r = Row {
             id: if args.ensemble {
-                format!("{}:{}", ds.source_names[ds.source[i] as usize], ds.spec_id[i])
+                format!(
+                    "{}:{}",
+                    ds.source_names[ds.source[i] as usize], ds.spec_id[i]
+                )
             } else {
                 ds.spec_id[i].clone()
             },
@@ -509,18 +740,50 @@ fn main() {
             peptide: ds.peptide[i].clone(),
             proteins: ds.proteins[i].clone(),
         };
+        #[cfg(feature = "profiling")]
+        {
+            psm_row_string_bytes +=
+                (r.id.capacity() + r.peptide.capacity() + r.proteins.capacity()) as u64;
+        }
         if ds.labels[i] > 0 {
             targets.push(r);
         } else {
             decoys.push(r);
         }
     }
+    #[cfg(feature = "profiling")]
+    {
+        profile::allocation_site(
+            "main::psm output row vectors",
+            2,
+            ((targets.capacity() + decoys.capacity()) * std::mem::size_of::<Row>()) as u64,
+        );
+        profile::allocation_site(
+            "main::psm output row strings",
+            (reported_indices.len() * 3) as u64,
+            psm_row_string_bytes,
+        );
+    }
     let n_psm_q01 = targets.iter().filter(|r| r.q < 0.01).count();
+    #[cfg(feature = "profiling")]
+    drop(_psm_processing);
+    #[cfg(feature = "profiling")]
+    drop(_psm_context);
 
     // Peptide-level: best-scoring PSM per unique (core) peptide, then re-q-value.
+    #[cfg(feature = "profiling")]
+    let _peptide_context = profile::context(Some("peptide_level_processing"), None, None, None);
+    #[cfg(feature = "profiling")]
+    let _peptide_processing = profile::Scope::new("stage", "peptide_level_processing");
     let mut best: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    #[cfg(feature = "profiling")]
+    let mut peptide_key_bytes = 0u64;
     for &i in &reported_indices {
         let key = format!("{}\u{1}{}", ds.labels[i], core_peptide(&ds.peptide[i]));
+        #[cfg(feature = "profiling")]
+        {
+            peptide_key_bytes += key.capacity() as u64;
+        }
         match best.get(&key) {
             Some(&j) if out.score[j] >= out.score[i] => {}
             _ => {
@@ -528,10 +791,26 @@ fn main() {
             }
         }
     }
+    #[cfg(feature = "profiling")]
+    profile::allocation_site(
+        "main::peptide deduplication keys",
+        reported_indices.len() as u64,
+        peptide_key_bytes,
+    );
     // HashMap iteration is process-randomized. Preserve input order so tied
     // peptide statistics and the loopy-BP message schedule are reproducible.
     let mut pep_idx: Vec<usize> = best.values().copied().collect();
+    #[cfg(feature = "profiling")]
+    let peptide_index_sort = std::time::Instant::now();
     pep_idx.sort_unstable();
+    #[cfg(feature = "profiling")]
+    profile::record(
+        "sort",
+        "peptide_input_order",
+        peptide_index_sort.elapsed(),
+        Some(pep_idx.len() as u64),
+        None,
+    );
     let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
     let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
     let ppi0 = stats::estimate_pi0(&plabel);
@@ -540,6 +819,8 @@ fn main() {
 
     let mut ptargets: Vec<Row> = Vec::new();
     let mut pdecoys: Vec<Row> = Vec::new();
+    #[cfg(feature = "profiling")]
+    let mut peptide_row_string_bytes = 0u64;
     for (k, &i) in pep_idx.iter().enumerate() {
         let r = Row {
             id: ds.spec_id[i].clone(),
@@ -549,14 +830,40 @@ fn main() {
             peptide: ds.peptide[i].clone(),
             proteins: ds.proteins[i].clone(),
         };
+        #[cfg(feature = "profiling")]
+        {
+            peptide_row_string_bytes +=
+                (r.id.capacity() + r.peptide.capacity() + r.proteins.capacity()) as u64;
+        }
         if ds.labels[i] > 0 {
             ptargets.push(r);
         } else {
             pdecoys.push(r);
         }
     }
+    #[cfg(feature = "profiling")]
+    {
+        profile::allocation_site(
+            "main::peptide output row vectors",
+            2,
+            ((ptargets.capacity() + pdecoys.capacity()) * std::mem::size_of::<Row>()) as u64,
+        );
+        profile::allocation_site(
+            "main::peptide output row strings",
+            (pep_idx.len() * 3) as u64,
+            peptide_row_string_bytes,
+        );
+    }
     let n_pep_q01 = ptargets.iter().filter(|r| r.q < 0.01).count();
+    #[cfg(feature = "profiling")]
+    drop(_peptide_processing);
+    #[cfg(feature = "profiling")]
+    drop(_peptide_context);
 
+    #[cfg(feature = "profiling")]
+    let _output_context = profile::context(Some("result_output"), None, None, None);
+    #[cfg(feature = "profiling")]
+    let _output = profile::Scope::new("stage", "result_output");
     if let Some(p) = &args.results_psms {
         write_results(p, targets).unwrap();
     }
@@ -569,6 +876,10 @@ fn main() {
     if let Some(p) = &args.decoy_peptides {
         write_results(p, pdecoys).unwrap();
     }
+    #[cfg(feature = "profiling")]
+    drop(_output);
+    #[cfg(feature = "profiling")]
+    drop(_output_context);
 
     // Cross-run: per-source yield when pooled (each file's targets scored by the shared model).
     if args.join {
@@ -583,11 +894,23 @@ fn main() {
 
     // Protein inference uses the best PSM for each peptide sequence.
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
+        #[cfg(feature = "profiling")]
+        let _protein_inference = profile::Scope::new("stage", "protein_inference_and_output");
         let entries: Vec<(f64, f64, String)> = pep_idx
             .iter()
             .enumerate()
             .map(|(k, &i)| (pscore[k], ppep[k], ds.proteins[i].clone()))
             .collect();
+        #[cfg(feature = "profiling")]
+        profile::allocation_site(
+            "main::protein inference entries",
+            (entries.len() + 1) as u64,
+            (entries.capacity() * std::mem::size_of::<(f64, f64, String)>()) as u64
+                + entries
+                    .iter()
+                    .map(|entry| entry.2.capacity() as u64)
+                    .sum::<u64>(),
+        );
         let picked_groups = protein::infer(&entries);
         let picked_q01 = picked_groups
             .iter()
@@ -654,13 +977,47 @@ fn main() {
         n_pep_q01,
         t0.elapsed().as_secs_f64()
     );
+    #[cfg(feature = "profiling")]
+    profile_session.finish().unwrap_or_else(|message| {
+        eprintln!("profiling error: {message}");
+        std::process::exit(1);
+    });
 }
 
-fn write_proteins(path: &str, groups: &[protein::ProtGroup], want_decoy: bool) -> std::io::Result<()> {
+fn write_proteins(
+    path: &str,
+    groups: &[protein::ProtGroup],
+    want_decoy: bool,
+) -> std::io::Result<()> {
+    #[cfg(feature = "profiling")]
+    let create_start = std::time::Instant::now();
     let f = File::create(path)?;
+    #[cfg(feature = "profiling")]
+    profile::record(
+        "file_io",
+        "protein_file_create",
+        create_start.elapsed(),
+        Some(1),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    let counters = std::sync::Arc::new(WriteCounters::default());
+    #[cfg(feature = "profiling")]
+    let f = ProfiledWriter {
+        inner: f,
+        counters: std::sync::Arc::clone(&counters),
+    };
+    #[cfg(feature = "profiling")]
+    let serialization_start = std::time::Instant::now();
     let mut w = BufWriter::with_capacity(1 << 20, f);
-    writeln!(w, "ProteinGroupId\tq-value\tposterior_error_prob\tscore\tnumPeptides\tproteinIds")?;
-    for g in groups.iter().filter(|g| g.picked && g.is_decoy == want_decoy) {
+    writeln!(
+        w,
+        "ProteinGroupId\tq-value\tposterior_error_prob\tscore\tnumPeptides\tproteinIds"
+    )?;
+    for g in groups
+        .iter()
+        .filter(|g| g.picked && g.is_decoy == want_decoy)
+    {
         writeln!(
             w,
             "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
@@ -671,6 +1028,28 @@ fn write_proteins(path: &str, groups: &[protein::ProtGroup], want_decoy: bool) -
             g.n_peptides,
             g.proteins.join(",")
         )?;
+    }
+    #[cfg(feature = "profiling")]
+    {
+        use std::sync::atomic::Ordering;
+        w.flush()?;
+        drop(w);
+        let total = serialization_start.elapsed();
+        let write_ns = counters.duration_ns.load(Ordering::Relaxed);
+        profile::record(
+            "file_io",
+            "protein_file_write",
+            std::time::Duration::from_nanos(write_ns),
+            Some(counters.calls.load(Ordering::Relaxed)),
+            Some(counters.bytes.load(Ordering::Relaxed)),
+        );
+        profile::record(
+            "serialization",
+            "protein_format_and_buffer",
+            total.saturating_sub(std::time::Duration::from_nanos(write_ns)),
+            Some(groups.len() as u64),
+            None,
+        );
     }
     Ok(())
 }

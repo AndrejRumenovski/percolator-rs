@@ -31,7 +31,10 @@ pub fn merge(mut parts: Vec<Dataset>) -> Dataset {
     let n_feat = parts[0].n_feat;
     let mut out = parts.remove(0); // its source is already all-0, source_names = [file0]
     for mut p in parts {
-        assert_eq!(p.n_feat, n_feat, "cannot join files with differing feature columns");
+        assert_eq!(
+            p.n_feat, n_feat,
+            "cannot join files with differing feature columns"
+        );
         let sidx = out.source_names.len() as u32;
         out.source_names.append(&mut p.source_names);
         out.features.append(&mut p.features);
@@ -66,7 +69,9 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
     let mut seen = BTreeSet::new();
     for name in &engine_names {
         if name.is_empty() || !seen.insert(name.clone()) {
-            return Err(format!("ensemble engine names must be non-empty and unique (got '{name}')"));
+            return Err(format!(
+                "ensemble engine names must be non-empty and unique (got '{name}')"
+            ));
         }
     }
 
@@ -122,7 +127,10 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
     let mut spectrum_engines: BTreeMap<i64, BTreeSet<u32>> = BTreeMap::new();
     let mut psm_engines: BTreeMap<(i64, i8, String), BTreeSet<u32>> = BTreeMap::new();
     for row in 0..out.n_psm {
-        spectrum_engines.entry(out.scan[row]).or_default().insert(out.source[row]);
+        spectrum_engines
+            .entry(out.scan[row])
+            .or_default()
+            .insert(out.source[row]);
         psm_engines
             .entry((out.scan[row], out.labels[row], out.peptide[row].clone()))
             .or_default()
@@ -132,9 +140,8 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
     let psm_count = n_feat - 1;
     for row in 0..out.n_psm {
         out.features[row * n_feat + spectrum_count] = spectrum_engines[&out.scan[row]].len() as f64;
-        out.features[row * n_feat + psm_count] = psm_engines
-            [&(out.scan[row], out.labels[row], out.peptide[row].clone())]
-            .len() as f64;
+        out.features[row * n_feat + psm_count] =
+            psm_engines[&(out.scan[row], out.labels[row], out.peptide[row].clone())].len() as f64;
     }
     Ok(out)
 }
@@ -166,7 +173,11 @@ fn atoi(b: &[u8]) -> i64 {
         }
         i += 1;
     }
-    if neg { -v } else { v }
+    if neg {
+        -v
+    } else {
+        v
+    }
 }
 
 #[inline]
@@ -188,22 +199,50 @@ fn split_fields<'a>(line: &'a [u8], out: &mut Vec<&'a [u8]>) {
     out.push(&line[start..]);
 }
 
+#[allow(clippy::needless_range_loop)]
 pub fn parse(path: &str) -> std::io::Result<Dataset> {
+    #[cfg(feature = "profiling")]
+    let parse_start = std::time::Instant::now();
+    #[cfg(feature = "profiling")]
+    let mmap_start = std::time::Instant::now();
     let file = File::open(path)?;
     let mmap = unsafe { Mmap::map(&file)? };
     let data: &[u8] = &mmap;
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "parser",
+        "mmap_setup",
+        mmap_start.elapsed(),
+        None,
+        Some(data.len() as u64),
+    );
 
     // line iterator over the byte buffer (handles trailing \r)
     let mut lines = data.split(|&c| c == b'\n').map(|l| {
-        if l.last() == Some(&b'\r') { &l[..l.len() - 1] } else { l }
+        if l.last() == Some(&b'\r') {
+            &l[..l.len() - 1]
+        } else {
+            l
+        }
     });
 
+    #[cfg(feature = "profiling")]
+    let header_start = std::time::Instant::now();
     let header = lines.next().unwrap_or(&[]);
     let mut hfields: Vec<&[u8]> = Vec::new();
     split_fields(header, &mut hfields);
-    let idx_label = hfields.iter().position(|c| c.eq_ignore_ascii_case(b"Label")).expect("no Label column");
-    let idx_scan = hfields.iter().position(|c| c.eq_ignore_ascii_case(b"ScanNr")).expect("no ScanNr column");
-    let idx_pep = hfields.iter().position(|c| c.eq_ignore_ascii_case(b"Peptide")).expect("no Peptide column");
+    let idx_label = hfields
+        .iter()
+        .position(|c| c.eq_ignore_ascii_case(b"Label"))
+        .expect("no Label column");
+    let idx_scan = hfields
+        .iter()
+        .position(|c| c.eq_ignore_ascii_case(b"ScanNr"))
+        .expect("no ScanNr column");
+    let idx_pep = hfields
+        .iter()
+        .position(|c| c.eq_ignore_ascii_case(b"Peptide"))
+        .expect("no Peptide column");
 
     let mut feat_cols: Vec<usize> = Vec::new();
     let mut feature_names: Vec<String> = Vec::new();
@@ -214,6 +253,14 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
         }
     }
     let n_feat = feat_cols.len();
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "parser",
+        "header_and_feature_names",
+        header_start.elapsed(),
+        Some(hfields.len() as u64),
+        Some(header.len() as u64),
+    );
 
     // rough row estimate for pre-allocation
     let approx_rows = data.len() / (header.len().max(1) + 1) + 16;
@@ -237,6 +284,20 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
 
     let mut fields: Vec<&[u8]> = Vec::with_capacity(hfields.len());
     let mut first = true;
+    #[cfg(feature = "profiling")]
+    let rows_start = std::time::Instant::now();
+    #[cfg(feature = "profiling")]
+    let mut split_time = std::time::Duration::ZERO;
+    #[cfg(feature = "profiling")]
+    let mut numeric_time = std::time::Duration::ZERO;
+    #[cfg(feature = "profiling")]
+    let mut string_copy_time = std::time::Duration::ZERO;
+    #[cfg(feature = "profiling")]
+    let mut float_fields = 0u64;
+    #[cfg(feature = "profiling")]
+    let mut copied_string_bytes = 0u64;
+    #[cfg(feature = "profiling")]
+    let mut string_allocations = 0u64;
     for line in lines {
         if line.is_empty() {
             continue;
@@ -247,18 +308,41 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
                 continue;
             }
         }
+        #[cfg(feature = "profiling")]
+        let split_start = std::time::Instant::now();
         split_fields(line, &mut fields);
+        #[cfg(feature = "profiling")]
+        {
+            split_time += split_start.elapsed();
+        }
         if fields.len() <= idx_pep {
             continue;
         }
+        #[cfg(feature = "profiling")]
+        let spec_string_start = std::time::Instant::now();
+        ds.spec_id
+            .push(String::from_utf8_lossy(fields[0]).into_owned());
+        #[cfg(feature = "profiling")]
+        {
+            string_copy_time += spec_string_start.elapsed();
+        }
+        #[cfg(feature = "profiling")]
+        let numeric_start = std::time::Instant::now();
         let label: i8 = if atoi(fields[idx_label]) > 0 { 1 } else { -1 };
-        ds.spec_id.push(String::from_utf8_lossy(fields[0]).into_owned());
         ds.labels.push(label);
         ds.scan.push(atoi(fields[idx_scan]));
         for &j in &feat_cols {
             ds.features.push(parse_f64(fields[j]));
         }
-        ds.peptide.push(String::from_utf8_lossy(fields[idx_pep]).into_owned());
+        #[cfg(feature = "profiling")]
+        {
+            numeric_time += numeric_start.elapsed();
+            float_fields += feat_cols.len() as u64;
+        }
+        #[cfg(feature = "profiling")]
+        let string_start = std::time::Instant::now();
+        ds.peptide
+            .push(String::from_utf8_lossy(fields[idx_pep]).into_owned());
         let prot = if fields.len() > idx_pep + 1 {
             // proteins may contain tabs; rejoin from original line span
             let start_ptr = fields[idx_pep + 1].as_ptr() as usize - line.as_ptr() as usize;
@@ -266,10 +350,68 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
         } else {
             String::new()
         };
+        #[cfg(feature = "profiling")]
+        {
+            string_copy_time += string_start.elapsed();
+            copied_string_bytes += (fields[0].len() + fields[idx_pep].len() + prot.len()) as u64;
+            string_allocations += if prot.is_empty() { 2 } else { 3 };
+        }
         ds.proteins.push(prot);
     }
     ds.n_psm = ds.labels.len();
     ds.source = vec![0u32; ds.n_psm];
+    #[cfg(feature = "profiling")]
+    {
+        let row_time = rows_start.elapsed();
+        crate::profile::record(
+            "parser",
+            "row_loading_total",
+            row_time,
+            Some(ds.n_psm as u64),
+            Some(data.len().saturating_sub(header.len()) as u64),
+        );
+        crate::profile::record(
+            "parser",
+            "field_splitting",
+            split_time,
+            Some(ds.n_psm as u64),
+            None,
+        );
+        crate::profile::record(
+            "parser",
+            "numeric_and_float_parsing",
+            numeric_time,
+            Some(float_fields),
+            None,
+        );
+        crate::profile::record(
+            "parser",
+            "string_allocation_and_copy",
+            string_copy_time,
+            Some(string_allocations),
+            Some(copied_string_bytes),
+        );
+        crate::profile::allocation_site(
+            "pin::parse row strings",
+            string_allocations,
+            copied_string_bytes,
+        );
+        let vector_bytes = ds.features.capacity() as u64 * std::mem::size_of::<f64>() as u64
+            + ds.labels.capacity() as u64 * std::mem::size_of::<i8>() as u64
+            + ds.scan.capacity() as u64 * std::mem::size_of::<i64>() as u64
+            + ds.spec_id.capacity() as u64 * std::mem::size_of::<String>() as u64
+            + ds.peptide.capacity() as u64 * std::mem::size_of::<String>() as u64
+            + ds.proteins.capacity() as u64 * std::mem::size_of::<String>() as u64
+            + ds.source.capacity() as u64 * std::mem::size_of::<u32>() as u64;
+        crate::profile::allocation_site("pin::parse column vectors", 7, vector_bytes);
+        crate::profile::record(
+            "parser",
+            "pin_parse_total",
+            parse_start.elapsed(),
+            Some(ds.n_psm as u64),
+            Some(data.len() as u64),
+        );
+    }
     Ok(ds)
 }
 
@@ -296,18 +438,31 @@ mod tests {
 
     #[test]
     fn ensemble_namespaces_features_and_counts_exact_cross_engine_support() {
-        let comet = dataset("xcorr", &[(10, 1, "A.PEPTIDE.B", 4.0), (11, 1, "A.OTHER.B", 2.0)]);
-        let tide = dataset("exact_p_value", &[(10, 1, "A.PEPTIDE.B", 0.01), (10, -1, "A.DECOY.B", 0.9)]);
-        let out = merge_ensemble(vec![comet, tide], vec!["comet".to_string(), "tide".to_string()]).unwrap();
+        let comet = dataset(
+            "xcorr",
+            &[(10, 1, "A.PEPTIDE.B", 4.0), (11, 1, "A.OTHER.B", 2.0)],
+        );
+        let tide = dataset(
+            "exact_p_value",
+            &[(10, 1, "A.PEPTIDE.B", 0.01), (10, -1, "A.DECOY.B", 0.9)],
+        );
+        let out = merge_ensemble(
+            vec![comet, tide],
+            vec!["comet".to_string(), "tide".to_string()],
+        )
+        .unwrap();
 
-        assert_eq!(out.feature_names, vec![
-            "ensemble_engine=comet",
-            "ensemble_engine=tide",
-            "ensemble_engine=comet;feature=xcorr",
-            "ensemble_engine=tide;feature=exact_p_value",
-            "ensemble_spectrum_engine_count",
-            "ensemble_psm_engine_count",
-        ]);
+        assert_eq!(
+            out.feature_names,
+            vec![
+                "ensemble_engine=comet",
+                "ensemble_engine=tide",
+                "ensemble_engine=comet;feature=xcorr",
+                "ensemble_engine=tide;feature=exact_p_value",
+                "ensemble_spectrum_engine_count",
+                "ensemble_psm_engine_count",
+            ]
+        );
         assert_eq!(out.n_psm, 4);
         assert_eq!(out.row(0), &[1.0, 0.0, 4.0, 0.0, 2.0, 2.0]);
         assert_eq!(out.row(1), &[1.0, 0.0, 2.0, 0.0, 1.0, 1.0]);

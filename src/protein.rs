@@ -1,3 +1,5 @@
+#![allow(clippy::items_after_test_module)]
+
 //! Picked-protein target-decoy inference.
 //!
 //! We build the bipartite peptide<->protein graph, collapse proteins that share peptides
@@ -26,7 +28,10 @@ struct UnionFind {
 }
 impl UnionFind {
     fn new(n: usize) -> Self {
-        UnionFind { parent: (0..n).collect(), rank: vec![0; n] }
+        UnionFind {
+            parent: (0..n).collect(),
+            rank: vec![0; n],
+        }
     }
     fn find(&mut self, x: usize) -> usize {
         let mut r = x;
@@ -76,7 +81,10 @@ mod tests {
         let groups = infer(&entries);
         // A and B collapse into one group; C separate -> 2 groups
         assert_eq!(groups.len(), 2);
-        let ab = groups.iter().find(|g| g.proteins.contains(&"A".to_string())).unwrap();
+        let ab = groups
+            .iter()
+            .find(|g| g.proteins.contains(&"A".to_string()))
+            .unwrap();
         assert!(ab.proteins.contains(&"B".to_string()));
     }
 
@@ -102,7 +110,10 @@ mod tests {
         let t = groups.iter().find(|g| !g.is_decoy).unwrap();
         let d = groups.iter().find(|g| g.is_decoy).unwrap();
         assert!(t.picked, "higher-scoring target should be picked");
-        assert!(!d.picked, "lower-scoring decoy counterpart should be dropped");
+        assert!(
+            !d.picked,
+            "lower-scoring decoy counterpart should be dropped"
+        );
         // and if the decoy outscores the target, the decoy is picked instead
         let entries2 = vec![
             (3.0, 0.5, "sp|P2|X".to_string()),
@@ -125,9 +136,15 @@ mod tests {
             (3.5, 0.50, "DECOY_Y".to_string()), // lone decoy
         ];
         let g = infer(&entries);
-        let picked = g.iter().filter(|x| !x.is_decoy && x.picked && x.qval < 0.01).count();
+        let picked = g
+            .iter()
+            .filter(|x| !x.is_decoy && x.picked && x.qval < 0.01)
+            .count();
         let classic = classic_target_q01(&g);
-        assert!(picked >= classic, "picked FDR must be >= classic (got {picked} vs {classic})");
+        assert!(
+            picked >= classic,
+            "picked FDR must be >= classic (got {picked} vs {classic})"
+        );
     }
 
     #[test]
@@ -148,18 +165,33 @@ mod tests {
             .collect();
         let groups = infer(&entries);
 
-        let picked = groups.iter().filter(|g| !g.is_decoy && g.picked && g.qval < 0.01).count();
+        let picked = groups
+            .iter()
+            .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
+            .count();
         let classic = classic_target_q01(&groups);
         assert_eq!(classic, 81, "classic q<0.01 count drifted");
         assert_eq!(picked, 121, "picked q<0.01 count drifted");
-        assert!(picked > classic, "synthetic grouped fixture should favor picked FDR ({picked} vs {classic})");
+        assert!(
+            picked > classic,
+            "synthetic grouped fixture should favor picked FDR ({picked} vs {classic})"
+        );
 
         let shared = groups
             .iter()
-            .find(|g| g.proteins.iter().any(|p| p == "SHARED_A") && g.proteins.iter().any(|p| p == "SHARED_B"))
+            .find(|g| {
+                g.proteins.iter().any(|p| p == "SHARED_A")
+                    && g.proteins.iter().any(|p| p == "SHARED_B")
+            })
             .expect("shared target group should exist");
-        assert_eq!(shared.n_peptides, 3, "shared target group should aggregate its peptides");
-        assert!(shared.picked, "shared target group should win its picked competition");
+        assert_eq!(
+            shared.n_peptides, 3,
+            "shared target group should aggregate its peptides"
+        );
+        assert!(
+            shared.picked,
+            "shared target group should win its picked competition"
+        );
     }
 
     fn write_synthetic_pin_fixture() -> PathBuf {
@@ -173,11 +205,31 @@ mod tests {
         for i in 0..120 {
             let target = format!("T{:03}", i);
             let target_score = 1000.0 - i as f64;
-            append_group(&mut pin, &mut scan, 1, target_score, &target, &[target.as_str()], 3);
+            append_group(
+                &mut pin,
+                &mut scan,
+                1,
+                target_score,
+                &target,
+                &[target.as_str()],
+                3,
+            );
 
             let decoy = format!("DECOY_{target}");
-            let decoy_score = if i < 40 { 920.5 - i as f64 } else { 100.0 - (i - 40) as f64 };
-            append_group(&mut pin, &mut scan, -1, decoy_score, &target, &[decoy.as_str()], 2);
+            let decoy_score = if i < 40 {
+                920.5 - i as f64
+            } else {
+                100.0 - (i - 40) as f64
+            };
+            append_group(
+                &mut pin,
+                &mut scan,
+                -1,
+                decoy_score,
+                &target,
+                &[decoy.as_str()],
+                2,
+            );
         }
 
         append_group(
@@ -199,8 +251,24 @@ mod tests {
             2,
         );
 
-        append_group(&mut pin, &mut scan, -1, 40.0, "LONE_DEC", &["DECOY_LONE_A"], 1);
-        append_group(&mut pin, &mut scan, -1, 39.0, "LONE_DEC", &["DECOY_LONE_B"], 1);
+        append_group(
+            &mut pin,
+            &mut scan,
+            -1,
+            40.0,
+            "LONE_DEC",
+            &["DECOY_LONE_A"],
+            1,
+        );
+        append_group(
+            &mut pin,
+            &mut scan,
+            -1,
+            39.0,
+            "LONE_DEC",
+            &["DECOY_LONE_B"],
+            1,
+        );
 
         fs::write(&path, pin).expect("synthetic PIN fixture should write");
         path
@@ -257,6 +325,7 @@ fn strip_decoy(id: &str) -> &str {
 }
 
 /// Split the raw proteins field (tab- or space-separated protein ids).
+#[allow(clippy::manual_pattern_char_comparison)]
 pub(crate) fn split_proteins(s: &str) -> Vec<&str> {
     s.split(|c: char| c == '\t' || c == ' ' || c == ';')
         .filter(|p| !p.is_empty())
@@ -265,11 +334,27 @@ pub(crate) fn split_proteins(s: &str) -> Vec<&str> {
 
 /// `entries`: one per peptide-level identification — (score, pep, raw_proteins_field).
 pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
+    #[cfg(feature = "profiling")]
+    let _inference = crate::profile::Scope::with_elements(
+        "protein_inference",
+        "picked_protein_inference",
+        entries.len(),
+    );
+    #[cfg(feature = "profiling")]
+    let mut split_vector_calls = 0u64;
+    #[cfg(feature = "profiling")]
+    let mut split_vector_bytes = 0u64;
     // index protein ids
     let mut id_of: HashMap<&str, usize> = HashMap::new();
     let mut names: Vec<&str> = Vec::new();
     for (_, _, raw) in entries {
-        for p in split_proteins(raw) {
+        let proteins = split_proteins(raw);
+        #[cfg(feature = "profiling")]
+        {
+            split_vector_calls += 1;
+            split_vector_bytes += (proteins.capacity() * std::mem::size_of::<&str>()) as u64;
+        }
+        for p in proteins {
             if !id_of.contains_key(p) {
                 id_of.insert(p, names.len());
                 names.push(p);
@@ -282,6 +367,11 @@ pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
     // pass 1: union all proteins that co-occur in a peptide (shared-peptide grouping)
     for (_, _, raw) in entries {
         let prots = split_proteins(raw);
+        #[cfg(feature = "profiling")]
+        {
+            split_vector_calls += 1;
+            split_vector_bytes += (prots.capacity() * std::mem::size_of::<&str>()) as u64;
+        }
         if prots.len() > 1 {
             let first = id_of[prots[0]];
             for p in &prots[1..] {
@@ -303,6 +393,11 @@ pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
     let mut groups: HashMap<usize, G> = HashMap::new();
     for (score, pep, raw) in entries {
         let prots = split_proteins(raw);
+        #[cfg(feature = "profiling")]
+        {
+            split_vector_calls += 1;
+            split_vector_bytes += (prots.capacity() * std::mem::size_of::<&str>()) as u64;
+        }
         if prots.is_empty() {
             continue;
         }
@@ -324,14 +419,32 @@ pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
         }
         g.n_peptides += 1;
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "protein::infer split protein vectors",
+        split_vector_calls,
+        split_vector_bytes,
+    );
 
     // materialize
+    #[cfg(feature = "profiling")]
+    let mut member_sort_duration = std::time::Duration::ZERO;
+    #[cfg(feature = "profiling")]
+    let mut member_sort_elements = 0u64;
     let mut out: Vec<ProtGroup> = groups
         .into_values()
         .map(|g| {
             let is_decoy = g.proteins.iter().any(|&pi| is_decoy_protein(names[pi]));
-            let mut prot_names: Vec<String> = g.proteins.iter().map(|&pi| names[pi].to_string()).collect();
+            let mut prot_names: Vec<String> =
+                g.proteins.iter().map(|&pi| names[pi].to_string()).collect();
+            #[cfg(feature = "profiling")]
+            let member_sort_start = std::time::Instant::now();
             prot_names.sort();
+            #[cfg(feature = "profiling")]
+            {
+                member_sort_duration += member_sort_start.elapsed();
+                member_sort_elements += prot_names.len() as u64;
+            }
             ProtGroup {
                 // best-peptide score (Savitski picked FDR): the group's best peptide SVM
                 // discriminant — continuous (no −ln(PEP=0) saturation ties that scramble the
@@ -346,9 +459,31 @@ pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
             }
         })
         .collect();
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "protein_group_member_order",
+        member_sort_duration,
+        Some(member_sort_elements),
+        None,
+    );
 
     picked_fdr(&mut out);
-    out.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    #[cfg(feature = "profiling")]
+    let output_sort_start = std::time::Instant::now();
+    out.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "protein_group_score_order",
+        output_sort_start.elapsed(),
+        Some(out.len() as u64),
+        None,
+    );
     out
 }
 
@@ -356,7 +491,10 @@ pub fn infer(entries: &[(f64, f64, String)]) -> Vec<ProtGroup> {
 /// to quantify the sensitivity gain from picked FDR (picked >= classic at the same q).
 pub fn classic_target_q01(groups: &[ProtGroup]) -> usize {
     let scores: Vec<f64> = groups.iter().map(|g| g.score).collect();
-    let labels: Vec<i8> = groups.iter().map(|g| if g.is_decoy { -1 } else { 1 }).collect();
+    let labels: Vec<i8> = groups
+        .iter()
+        .map(|g| if g.is_decoy { -1 } else { 1 })
+        .collect();
     let q = stats::qvalues(&scores, &labels, 1.0);
     q.iter()
         .zip(labels.iter())
@@ -368,11 +506,33 @@ pub fn classic_target_q01(groups: &[ProtGroup]) -> usize {
 /// counterpart (matched by decoy-stripped, canonicalized member names), keep only the
 /// higher-scoring of the pair ("pick"), and compute q-values over the picked entries.
 /// This halves double-counting and is more sensitive & better-calibrated than naive TDA.
+#[allow(clippy::useless_conversion)]
 fn picked_fdr(groups: &mut [ProtGroup]) {
+    #[cfg(feature = "profiling")]
+    let _picked =
+        crate::profile::Scope::with_elements("protein_inference", "picked_fdr", groups.len());
+    #[cfg(feature = "profiling")]
+    let mut key_sort_duration = std::time::Duration::ZERO;
+    #[cfg(feature = "profiling")]
+    let mut key_sort_elements = 0u64;
+    #[cfg(feature = "profiling")]
+    let mut key_vector_bytes = 0u64;
     // pairing key = sorted set of decoy-stripped member names
-    let key_of = |g: &ProtGroup| -> String {
+    #[allow(unused_mut)]
+    let mut key_of = |g: &ProtGroup| -> String {
         let mut ks: Vec<&str> = g.proteins.iter().map(|p| strip_decoy(p)).collect();
+        #[cfg(feature = "profiling")]
+        {
+            key_vector_bytes += (ks.capacity() * std::mem::size_of::<&str>()) as u64;
+            key_sort_elements += ks.len() as u64;
+        }
+        #[cfg(feature = "profiling")]
+        let key_sort_start = std::time::Instant::now();
         ks.sort_unstable();
+        #[cfg(feature = "profiling")]
+        {
+            key_sort_duration += key_sort_start.elapsed();
+        }
         ks.dedup();
         ks.join("|")
     };
@@ -382,11 +542,30 @@ fn picked_fdr(groups: &mut [ProtGroup]) {
     for gi in 0..groups.len() {
         let k = key_of(&groups[gi]);
         let e = buckets.entry(k).or_insert((None, None));
-        let slot = if groups[gi].is_decoy { &mut e.1 } else { &mut e.0 };
+        let slot = if groups[gi].is_decoy {
+            &mut e.1
+        } else {
+            &mut e.0
+        };
         match *slot {
             Some(j) if groups[j].score >= groups[gi].score => {}
             _ => *slot = Some(gi),
         }
+    }
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "sort",
+            "protein_picked_key_member_order",
+            key_sort_duration,
+            Some(key_sort_elements),
+            None,
+        );
+        crate::profile::allocation_site(
+            "protein::picked_fdr key vectors",
+            groups.len() as u64,
+            key_vector_bytes,
+        );
     }
 
     // one competition entry per bucket: the higher-scoring of target/decoy
@@ -394,7 +573,11 @@ fn picked_fdr(groups: &mut [ProtGroup]) {
     for (t, d) in buckets.values() {
         let pick = match (t, d) {
             (Some(ti), Some(di)) => {
-                if groups[*ti].score >= groups[*di].score { (*ti, false) } else { (*di, true) }
+                if groups[*ti].score >= groups[*di].score {
+                    (*ti, false)
+                } else {
+                    (*di, true)
+                }
             }
             (Some(ti), None) => (*ti, false),
             (None, Some(di)) => (*di, true),

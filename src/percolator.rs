@@ -9,8 +9,8 @@ use rayon::prelude::*;
 use std::collections::BTreeMap;
 
 pub struct Params {
-    pub maxiter: usize,       // semi-supervised iterations
-    pub test_fdr: f64,        // FDR to pick positive training examples
+    pub maxiter: usize,          // semi-supervised iterations
+    pub test_fdr: f64,           // FDR to pick positive training examples
     pub subset_max_train: usize, // 0 = use all
     pub seed: u64,
     pub max_newton: usize,
@@ -118,7 +118,16 @@ impl Rng {
 /// Build the normalized design matrix with an appended bias column (=1.0).
 /// Returns (matrix row-major, dim) where dim = n_feat + 1.
 fn build_matrix(ds: &Dataset) -> (Vec<f64>, usize) {
+    #[cfg(feature = "profiling")]
+    let _normalization =
+        crate::profile::Scope::with_elements("stage", "normalization_total", ds.n_psm);
     let rows: Vec<usize> = (0..ds.n_psm).collect();
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "percolator::build_matrix row indices",
+        1,
+        (rows.capacity() * std::mem::size_of::<usize>()) as u64,
+    );
     build_matrix_fit(ds, &rows)
 }
 
@@ -131,6 +140,12 @@ struct Normalization {
 }
 
 fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
+    #[cfg(feature = "profiling")]
+    let _fit = crate::profile::Scope::with_elements(
+        "normalization",
+        "fit_mean_and_variance",
+        fit_rows.len(),
+    );
     assert!(!fit_rows.is_empty());
     let nf = ds.n_feat;
     let mut mean = vec![0.0f64; nf];
@@ -152,6 +167,12 @@ fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
         }
     }
     let mut std = vec![1.0f64; nf];
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "percolator::fit_normalization vectors",
+        3,
+        (3 * nf * std::mem::size_of::<f64>()) as u64,
+    );
     for j in 0..nf {
         let value = (var[j] / fit_rows.len() as f64).sqrt();
         std[j] = if value > 1e-12 { value } else { 1.0 };
@@ -162,7 +183,26 @@ fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
 fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, usize) {
     let nf = ds.n_feat;
     let dim = nf + 1;
+    #[cfg(feature = "profiling")]
+    let allocation_start = std::time::Instant::now();
     let mut x = vec![0.0f64; ds.n_psm * dim];
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "normalization",
+            "matrix_allocation_and_zeroing",
+            allocation_start.elapsed(),
+            Some(x.len() as u64),
+            Some((x.len() * std::mem::size_of::<f64>()) as u64),
+        );
+        crate::profile::allocation_site(
+            "percolator::normalized design matrix",
+            1,
+            (x.capacity() * std::mem::size_of::<f64>()) as u64,
+        );
+    }
+    #[cfg(feature = "profiling")]
+    let transform_start = std::time::Instant::now();
     for i in 0..ds.n_psm {
         let row = ds.row(i);
         let base = i * dim;
@@ -171,6 +211,14 @@ fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, u
         }
         x[base + nf] = 1.0;
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "normalization",
+        "matrix_transform",
+        transform_start.elapsed(),
+        Some(ds.n_psm as u64),
+        Some((x.len() * std::mem::size_of::<f64>()) as u64),
+    );
     (x, dim)
 }
 
@@ -194,6 +242,9 @@ enum FoldModel {
 
 impl FoldModel {
     fn score_rows(&self, x: &[f64], dim: usize, rows: &[usize], out: &mut [f64]) {
+        #[cfg(feature = "profiling")]
+        let _scoring =
+            crate::profile::Scope::with_elements("scoring", "model_score_rows", rows.len());
         match self {
             FoldModel::Svm(weights) => score_all(x, dim, weights, rows, out),
             FoldModel::Mlp(network) => {
@@ -245,6 +296,11 @@ fn standardized_heldout_scores(
 
 /// Pick the single best-separating feature (either orientation) as the initial direction.
 fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec<f64> {
+    #[cfg(feature = "profiling")]
+    let _context = crate::profile::context(Some("initial_direction"), None, None, None);
+    #[cfg(feature = "profiling")]
+    let _initial =
+        crate::profile::Scope::with_elements("stage", "initial_direction_selection", labels.len());
     let n = labels.len();
     let pi0 = stats::estimate_pi0(labels);
     let all: Vec<usize> = (0..n).collect();
@@ -252,10 +308,24 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
     best_w[dim - 1] = 0.0;
     let mut best_count = -1i64;
     let mut scores = vec![0.0f64; n];
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "percolator::initial_direction buffers",
+        3,
+        ((dim + n) * std::mem::size_of::<f64>() + n * std::mem::size_of::<usize>()) as u64,
+    );
+    #[cfg(feature = "profiling")]
+    let mut scoring_time = std::time::Duration::ZERO;
     for j in 0..dim - 1 {
         for &sign in &[1.0f64, -1.0f64] {
+            #[cfg(feature = "profiling")]
+            let scoring_start = std::time::Instant::now();
             for i in 0..n {
                 scores[i] = sign * x[i * dim + j];
+            }
+            #[cfg(feature = "profiling")]
+            {
+                scoring_time += scoring_start.elapsed();
             }
             let q = stats::qvalues(&scores, labels, pi0);
             let count = q
@@ -272,6 +342,14 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
             }
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "scoring",
+        "initial_direction_feature_scoring",
+        scoring_time,
+        Some(((dim - 1) * 2 * n) as u64),
+        None,
+    );
     let _ = all;
     best_w
 }
@@ -290,6 +368,14 @@ fn train_fold(
     model_seed: u64,
     feature_mask: Option<&[bool]>,
 ) -> FoldModel {
+    #[cfg(feature = "profiling")]
+    let _fold_training = crate::profile::Scope::with_elements(
+        "cross_validation",
+        "fold_training_total",
+        train_rows.len(),
+    );
+    #[cfg(feature = "profiling")]
+    let setup_start = std::time::Instant::now();
     let mut model = match p.model {
         Model::Svm => FoldModel::Svm(w0.to_vec()),
         Model::Mlp => FoldModel::Mlp(mlp::Network::new(dim, p.mlp_hidden, w0, model_seed)),
@@ -297,12 +383,42 @@ fn train_fold(
     let mut scores = vec![0.0f64; train_rows.len()];
     let sub_labels: Vec<i8> = train_rows.iter().map(|&r| labels[r]).collect();
     let pi0 = stats::estimate_pi0(&sub_labels);
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "cross_validation",
+            "fold_training_setup",
+            setup_start.elapsed(),
+            Some(train_rows.len() as u64),
+            None,
+        );
+        crate::profile::allocation_site(
+            "percolator::train_fold persistent buffers",
+            3,
+            (std::mem::size_of_val(w0)
+                + scores.capacity() * std::mem::size_of::<f64>()
+                + sub_labels.capacity() * std::mem::size_of::<i8>()) as u64,
+        );
+    }
 
-    for _iter in 0..hp.maxiter {
+    for iteration in 0..hp.maxiter {
+        #[cfg(not(feature = "profiling"))]
+        let _ = iteration;
+        #[cfg(feature = "profiling")]
+        let _iteration_context = crate::profile::context(
+            Some("semi_supervised_iteration"),
+            None,
+            Some(iteration),
+            None,
+        );
+        #[cfg(feature = "profiling")]
+        let _iteration = crate::profile::Scope::new("semi_supervised_iteration", "iteration_total");
         model.score_rows(x, dim, train_rows, &mut scores);
         let q = stats::qvalues(&scores, &sub_labels, pi0);
 
         // positives: targets under test_fdr ; negatives: all decoys
+        #[cfg(feature = "profiling")]
+        let positive_start = std::time::Instant::now();
         let mut pos: Vec<usize> = Vec::new();
         let mut neg: Vec<usize> = Vec::new();
         for (k, &r) in train_rows.iter().enumerate() {
@@ -313,6 +429,21 @@ fn train_fold(
             } else {
                 neg.push(r);
             }
+        }
+        #[cfg(feature = "profiling")]
+        {
+            crate::profile::record(
+                "semi_supervised_iteration",
+                "confident_positive_selection",
+                positive_start.elapsed(),
+                Some(train_rows.len() as u64),
+                None,
+            );
+            crate::profile::allocation_site(
+                "percolator::train_fold positive/negative rows",
+                2,
+                ((pos.capacity() + neg.capacity()) * std::mem::size_of::<usize>()) as u64,
+            );
         }
         if pos.is_empty() || neg.is_empty() {
             continue;
@@ -328,6 +459,8 @@ fn train_fold(
         let c_pos = hp.alpha;
         let c_neg = hp.beta;
 
+        #[cfg(feature = "profiling")]
+        let training_buffer_start = std::time::Instant::now();
         let mut rows: Vec<usize> = Vec::with_capacity(pos.len() + neg.len());
         let mut y: Vec<f64> = Vec::with_capacity(pos.len() + neg.len());
         let mut c: Vec<f64> = Vec::with_capacity(pos.len() + neg.len());
@@ -340,6 +473,23 @@ fn train_fold(
             rows.push(r);
             y.push(-1.0);
             c.push(c_neg);
+        }
+        #[cfg(feature = "profiling")]
+        {
+            crate::profile::record(
+                "semi_supervised_iteration",
+                "training_row_buffer_setup",
+                training_buffer_start.elapsed(),
+                Some(rows.len() as u64),
+                None,
+            );
+            crate::profile::allocation_site(
+                "percolator::train_fold iteration training buffers",
+                3,
+                (rows.capacity() * std::mem::size_of::<usize>()
+                    + (y.capacity() + c.capacity()) * std::mem::size_of::<f64>())
+                    as u64,
+            );
         }
         match &mut model {
             FoldModel::Svm(weights) => {
@@ -414,16 +564,41 @@ fn cv_scores(
     hp: Hp,
     seed: u64,
 ) -> Vec<f64> {
+    #[cfg(feature = "profiling")]
+    let _cv = crate::profile::Scope::with_elements("stage", "cross_validation_total", labels.len());
     let n = labels.len();
     let all_folds: [u8; 3] = [0, 1, 2];
 
     let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>) {
+        #[cfg(feature = "profiling")]
+        let _fold_context =
+            crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
+        #[cfg(feature = "profiling")]
+        let _fold_total = crate::profile::Scope::new("cross_validation", "fold_total");
+        #[cfg(feature = "profiling")]
+        let setup_start = std::time::Instant::now();
         let train_rows: Vec<usize> = (0..n).filter(|&i| fold[i] != test).collect();
         let test_rows: Vec<usize> = (0..n).filter(|&i| fold[i] == test).collect();
         // Each fold gets its own RNG stream derived from the run seed, so folds never
         // depend on one another's draws — results are identical serial or parallel.
         let fold_seed = seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
         let mut rng = Rng(fold_seed);
+        #[cfg(feature = "profiling")]
+        {
+            crate::profile::record(
+                "cross_validation",
+                "fold_setup",
+                setup_start.elapsed(),
+                Some(n as u64),
+                None,
+            );
+            crate::profile::allocation_site(
+                "percolator::cv_scores fold row vectors",
+                2,
+                ((train_rows.capacity() + test_rows.capacity()) * std::mem::size_of::<usize>())
+                    as u64,
+            );
+        }
         let model = train_fold(
             x,
             dim,
@@ -436,22 +611,58 @@ fn cv_scores(
             fold_seed ^ 0xD1B5_4A32_D192_ED03,
             None,
         );
+        #[cfg(feature = "profiling")]
+        let _heldout_context =
+            crate::profile::context(Some("final_heldout_scoring"), None, None, None);
         let mut sc = vec![0.0f64; test_rows.len()];
+        #[cfg(feature = "profiling")]
+        crate::profile::allocation_site(
+            "percolator::cv_scores heldout score vector",
+            1,
+            (sc.capacity() * std::mem::size_of::<f64>()) as u64,
+        );
         model.score_rows(x, dim, &test_rows, &mut sc);
         (test_rows, sc)
     };
 
+    #[cfg(feature = "profiling")]
+    let dispatch_start = std::time::Instant::now();
     let parts: Vec<(Vec<usize>, Vec<f64>)> = if p.num_threads > 1 {
         all_folds.par_iter().map(per_fold).collect()
     } else {
         all_folds.iter().map(per_fold).collect()
     };
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "cross_validation",
+        "fold_dispatch_and_join",
+        dispatch_start.elapsed(),
+        Some(3),
+        None,
+    );
 
+    #[cfg(feature = "profiling")]
+    let merge_start = std::time::Instant::now();
     let mut final_score = vec![0.0f64; n];
     for (test_rows, sc) in parts {
         for (k, &r) in test_rows.iter().enumerate() {
             final_score[r] = sc[k];
         }
+    }
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "cross_validation",
+            "heldout_score_merge",
+            merge_start.elapsed(),
+            Some(n as u64),
+            None,
+        );
+        crate::profile::allocation_site(
+            "percolator::cv_scores final score vector",
+            1,
+            (final_score.capacity() * std::mem::size_of::<f64>()) as u64,
+        );
     }
     final_score
 }
@@ -481,7 +692,11 @@ fn select_c(
         .iter()
         .flat_map(|&a| C_NEG_GRID.iter().map(move |&b| (a, b)))
         .collect();
-    let subset = if p.c_select_subset == 0 { p.subset_max_train } else { p.c_select_subset };
+    let subset = if p.c_select_subset == 0 {
+        p.subset_max_train
+    } else {
+        p.c_select_subset
+    };
 
     // Every candidate re-seeds from p.seed, so its score is independent of evaluation
     // order — the parallel and serial paths return bit-identical results.
@@ -510,7 +725,10 @@ fn select_c(
             best_i = i;
         }
     }
-    cands.get(best_i).copied().unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT))
+    cands
+        .get(best_i)
+        .copied()
+        .unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT))
 }
 
 #[derive(Clone)]
@@ -548,7 +766,11 @@ fn rank_features(
     let mut scores = vec![0.0; rows.len()];
     let mut ranking = Vec::with_capacity(dim.saturating_sub(1));
     for feature in 0..dim - 1 {
-        let mut best = RankedFeature { index: feature, sign: 1.0, yield_count: 0 };
+        let mut best = RankedFeature {
+            index: feature,
+            sign: 1.0,
+            yield_count: 0,
+        };
         for &sign in &[1.0, -1.0] {
             for (k, &row) in rows.iter().enumerate() {
                 scores[k] = sign * x[row * dim + feature];
@@ -660,7 +882,12 @@ fn inner_splits(
                 .collect();
             let (x, dim) = build_matrix_fit(ds, &train_rows);
             let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
-            InnerSplit { x, train_rows, validation_rows, ranking }
+            InnerSplit {
+                x,
+                train_rows,
+                validation_rows,
+                ranking,
+            }
         })
         .collect()
 }
@@ -783,16 +1010,12 @@ fn select_outer_hyperparameters(
     feature_counts.dedup();
     let feature_candidates: Vec<NestedCandidate> = feature_counts
         .into_iter()
-        .map(|feature_count| NestedCandidate { feature_count, ..selected })
+        .map(|feature_count| NestedCandidate {
+            feature_count,
+            ..selected
+        })
         .collect();
-    (selected, _) = select_stage(
-        &splits,
-        dim,
-        &ds.labels,
-        outer_fold,
-        &feature_candidates,
-        p,
-    );
+    (selected, _) = select_stage(&splits, dim, &ds.labels, outer_fold, &feature_candidates, p);
 
     // Stage 3 selects the Newton gradient-norm stopping tolerance.
     let mut tolerances = vec![p.svm_tolerance];
@@ -803,7 +1026,10 @@ fn select_outer_hyperparameters(
     }
     let tolerance_candidates: Vec<NestedCandidate> = tolerances
         .into_iter()
-        .map(|tolerance| NestedCandidate { tolerance, ..selected })
+        .map(|tolerance| NestedCandidate {
+            tolerance,
+            ..selected
+        })
         .collect();
     let (selected, inner_yield) = select_stage(
         &splits,
@@ -825,11 +1051,7 @@ fn select_outer_hyperparameters(
     }
 }
 
-fn nested_cv_scores(
-    ds: &Dataset,
-    outer_fold: &[u8],
-    p: &Params,
-) -> (Vec<f64>, Vec<FoldSelection>) {
+fn nested_cv_scores(ds: &Dataset, outer_fold: &[u8], p: &Params) -> (Vec<f64>, Vec<FoldSelection>) {
     let outer_folds = [0u8, 1, 2];
     let evaluate_outer = |&test_fold: &u8| {
         let train_rows: Vec<usize> = (0..ds.n_psm)
@@ -850,8 +1072,7 @@ fn nested_cv_scores(
             subset: p.subset_max_train,
             tolerance: selected.tolerance,
         };
-        let fold_seed = p.seed
-            ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+        let fold_seed = p.seed ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
         let mut rng = Rng(fold_seed.max(1));
         let model = train_fold(
             &x,
@@ -865,14 +1086,8 @@ fn nested_cv_scores(
             fold_seed ^ 0xD1B5_4A32_D192_ED03,
             Some(&mask),
         );
-        let scores = standardized_heldout_scores(
-            &model,
-            &x,
-            dim,
-            &ds.labels,
-            &train_rows,
-            &test_rows,
-        );
+        let scores =
+            standardized_heldout_scores(&model, &x, dim, &ds.labels, &train_rows, &test_rows);
         (test_rows, scores, selected)
     };
 
@@ -897,17 +1112,41 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     let n = ds.n_psm;
 
     // Deterministic 3-fold assignment; ensemble candidate duplicates stay together.
+    #[cfg(feature = "profiling")]
+    let fold_start = std::time::Instant::now();
     let all_rows: Vec<usize> = (0..n).collect();
     let fold = assign_dataset_folds(ds, &all_rows, 3, p.seed);
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "stage",
+            "fold_creation_and_setup",
+            fold_start.elapsed(),
+            Some(n as u64),
+            None,
+        );
+        crate::profile::allocation_site(
+            "percolator::run fold setup vectors",
+            2,
+            (all_rows.capacity() * std::mem::size_of::<usize>()
+                + fold.capacity() * std::mem::size_of::<u8>()) as u64,
+        );
+    }
 
     if p.nested_selection {
-        assert_eq!(p.model, Model::Svm, "nested selection currently supports only SVM");
+        assert_eq!(
+            p.model,
+            Model::Svm,
+            "nested selection currently supports only SVM"
+        );
         let nested = || nested_cv_scores(ds, &fold, p);
-        let (final_score, nested_folds) =
-            match rayon::ThreadPoolBuilder::new().num_threads(p.num_threads).build() {
-                Ok(pool) if p.num_threads > 1 => pool.install(nested),
-                _ => nested(),
-            };
+        let (final_score, nested_folds) = match rayon::ThreadPoolBuilder::new()
+            .num_threads(p.num_threads)
+            .build()
+        {
+            Ok(pool) if p.num_threads > 1 => pool.install(nested),
+            _ => nested(),
+        };
         let pi0 = stats::estimate_pi0(&ds.labels);
         let qval = stats::qvalues(&final_score, &ds.labels, pi0);
         let pep = stats::peps(&final_score, &ds.labels, pi0);
@@ -930,7 +1169,10 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     let (alpha, beta) = if selected {
         // A private pool keeps thread count under this run's control, so callers that
         // already parallelize across files (the benchmark harness) stay single-threaded.
-        match rayon::ThreadPoolBuilder::new().num_threads(p.num_threads).build() {
+        match rayon::ThreadPoolBuilder::new()
+            .num_threads(p.num_threads)
+            .build()
+        {
             Ok(pool) if p.num_threads > 1 => {
                 pool.install(|| select_c(&x, dim, &ds.labels, &fold, &w0, p))
             }
@@ -950,6 +1192,8 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     let final_score = cv_scores(&x, dim, &ds.labels, &fold, &w0, p, hp, p.seed);
 
     let pi0 = stats::estimate_pi0(&ds.labels);
+    #[cfg(feature = "profiling")]
+    let _final_context = crate::profile::context(Some("final_psm_statistics"), None, None, None);
     let qval = stats::qvalues(&final_score, &ds.labels, pi0);
     let pep = stats::peps(&final_score, &ds.labels, pi0);
     Output {
@@ -1039,7 +1283,12 @@ fn outer_fold_assignments(ds: &Dataset, seed: u64) -> Vec<u8> {
     assign_dataset_folds(ds, &rows, 3, seed)
 }
 
-fn explain_fixed_models(ds: &Dataset, p: &Params, output: &Output, fold: &[u8]) -> Vec<ExplanationFold> {
+fn explain_fixed_models(
+    ds: &Dataset,
+    p: &Params,
+    output: &Output,
+    fold: &[u8],
+) -> Vec<ExplanationFold> {
     let all_rows: Vec<usize> = (0..ds.n_psm).collect();
     let normalization = fit_normalization(ds, &all_rows);
     let (x, dim) = transform_matrix(ds, &normalization);
@@ -1054,10 +1303,13 @@ fn explain_fixed_models(ds: &Dataset, p: &Params, output: &Output, fold: &[u8]) 
     [0u8, 1, 2]
         .iter()
         .map(|&test_fold| {
-            let train_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] != test_fold).collect();
-            let test_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] == test_fold).collect();
-            let fold_seed = p.seed
-                ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let train_rows: Vec<usize> = (0..ds.n_psm)
+                .filter(|&row| fold[row] != test_fold)
+                .collect();
+            let test_rows: Vec<usize> = (0..ds.n_psm)
+                .filter(|&row| fold[row] == test_fold)
+                .collect();
+            let fold_seed = p.seed ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
             let mut rng = Rng(fold_seed.max(1));
             let model = train_fold(
                 &x,
@@ -1094,8 +1346,12 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
     [0u8, 1, 2]
         .iter()
         .map(|&test_fold| {
-            let train_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] != test_fold).collect();
-            let test_rows: Vec<usize> = (0..ds.n_psm).filter(|&row| fold[row] == test_fold).collect();
+            let train_rows: Vec<usize> = (0..ds.n_psm)
+                .filter(|&row| fold[row] != test_fold)
+                .collect();
+            let test_rows: Vec<usize> = (0..ds.n_psm)
+                .filter(|&row| fold[row] == test_fold)
+                .collect();
             let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
             let normalization = fit_normalization(ds, &train_rows);
             let (x, dim) = transform_matrix(ds, &normalization);
@@ -1109,8 +1365,7 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
                 subset: p.subset_max_train,
                 tolerance: selected.tolerance,
             };
-            let fold_seed = p.seed
-                ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let fold_seed = p.seed ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
             let mut rng = Rng(fold_seed.max(1));
             let model = train_fold(
                 &x,
@@ -1186,7 +1441,11 @@ fn target_q01(scores: &[f64], labels: &[i8], test_fdr: f64) -> usize {
 /// post hoc: it never changes rescoring or model selection, and permutation
 /// importance holds the trained models fixed rather than retraining them.
 pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureReport {
-    assert_eq!(p.model, Model::Svm, "feature reports currently support only SVM");
+    assert_eq!(
+        p.model,
+        Model::Svm,
+        "feature reports currently support only SVM"
+    );
     let fold = outer_fold_assignments(ds, p.seed);
     let models = if p.nested_selection {
         explain_nested_models(ds, p, &fold)
@@ -1213,8 +1472,8 @@ pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureRepor
                 * (ds.labels[row] as f64 - label_mean);
         }
         covariance /= ds.n_psm as f64;
-        let label_correlation = covariance
-            / (global_normalization.std[feature] * label_std).max(1e-12);
+        let label_correlation =
+            covariance / (global_normalization.std[feature] * label_std).max(1e-12);
 
         let mut permuted_scores = vec![0.0; ds.n_psm];
         for (fold_index, model) in models.iter().enumerate() {

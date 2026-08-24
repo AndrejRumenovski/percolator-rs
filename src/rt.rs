@@ -9,10 +9,26 @@ use crate::pin::Dataset;
 /// Arbitrary units; the model is linearly re-aligned to observed RT anyway.
 fn coeff(aa: u8) -> f64 {
     match aa {
-        b'W' => 11.0, b'F' => 10.5, b'L' => 9.6, b'I' => 8.4, b'M' => 5.8,
-        b'V' => 5.0, b'Y' => 4.0, b'A' => 0.5, b'T' => 0.4, b'P' => 0.2,
-        b'C' => 0.8, b'G' => 0.0, b'S' => -0.1, b'Q' => -0.3, b'N' => -0.5,
-        b'E' => 1.1, b'D' => -0.5, b'H' => -1.0, b'R' => -1.3, b'K' => -1.9,
+        b'W' => 11.0,
+        b'F' => 10.5,
+        b'L' => 9.6,
+        b'I' => 8.4,
+        b'M' => 5.8,
+        b'V' => 5.0,
+        b'Y' => 4.0,
+        b'A' => 0.5,
+        b'T' => 0.4,
+        b'P' => 0.2,
+        b'C' => 0.8,
+        b'G' => 0.0,
+        b'S' => -0.1,
+        b'Q' => -0.3,
+        b'N' => -0.5,
+        b'E' => 1.1,
+        b'D' => -0.5,
+        b'H' => -1.0,
+        b'R' => -1.3,
+        b'K' => -1.9,
         _ => 0.0,
     }
 }
