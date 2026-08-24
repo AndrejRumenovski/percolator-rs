@@ -43,8 +43,16 @@ jobs:
       - name: Feature-report regression gate (deterministic linear-SVM explanation)
         run: bash tests/feature_report.sh
 
+      - name: Ensemble regression gate (deduplicated deterministic engine views)
+        run: bash tests/ensemble_regression.sh
+
       - name: Protein regression gate (synthetic picked-FDR fixture)
         run: bash tests/protein_regression.sh
+
+      - name: Benchmark pipeline regression tests
+        run: |
+          python3 -m unittest -v bench/multidataset/test_normalize_sage_pin.py
+          (cd bench/protein_calibration && python3 -m unittest -v test_report.py)
 
   # Full-dataset performance smoke test. Requires the PXD032157 data (2.3 GB) and the
   # extracted C++ reference binary, which are not in the repo — so this runs only on a

@@ -1,0 +1,9 @@
+selection_rule	ordinal	bytes	sha256	file
+lexicographically_first_three	1	48635987	09c823ac5d0488d961885400a93048aae96974537f211d0b35b26cb574c2bcc4	03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-01-comet.pin
+lexicographically_first_three	2	52120620	05d5e535cac3c92fce6d752cb8ab348e7fd14299e3029714b34ef2afabe1f84c	03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-02-comet.pin
+lexicographically_first_three	3	9071098	bff342cfcb9b4e23814345c9be247f4a65c29af2bd4cff456c29669f23e7f2e7	03May2016-QEHF1-Anopheles-4-atrium-S-3hpm-4th-01-comet.pin
+four_smallest_by_bytes	1	8254268	c45cfe99282b5a2dbab5ad5e153302d2f8b6540a68eae646417ae6ecc111fe6b	28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.pin
+four_smallest_by_bytes	2	8986485	a7118eb2d5f1a5b2a9d07e4799fcfcd778c993459b65d0e8e7ac2a3493e581be	28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-02-comet.pin
+four_smallest_by_bytes	3	9071098	bff342cfcb9b4e23814345c9be247f4a65c29af2bd4cff456c29669f23e7f2e7	03May2016-QEHF1-Anopheles-4-atrium-S-3hpm-4th-01-comet.pin
+four_smallest_by_bytes	4	10924370	d0ae3497a961461c8eea80b4a7315c0e36a6f3b45f522b4b972a276d547fc3e5	03May2016-QEHF1-Anopheles-4-atrium-S-3hpm-4th-02-comet.pin
+largest_by_bytes	1	71971056	3ebdb8c9dea37ea0af815b47305730ef7088fe25a55efa2f5df9040318e8bd48	9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.pin

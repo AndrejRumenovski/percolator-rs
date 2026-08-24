@@ -1,9 +1,9 @@
 # Multi-dataset benchmark
 
 The speed advantage generalizes across all five tested search configurations; the identification
-delta does not. On the four compact extension cases, percolator-rs is **8.9–17.7x faster** and uses
-**35–63% of the C++ peak RSS**, while its PSM count at reported q≤0.01 ranges from **−1.8% to
-+12.0%** relative to C++ Percolator 3.09. PXD032157 remains the large-scale case at 19x faster and
+delta does not. On the four compact extension cases, percolator-rs is **7.3–14.6x faster** and uses
+**37–67% of the C++ peak RSS**, while its PSM count at reported q≤0.01 ranges from **−1.8% to
++12.0%** relative to C++ Percolator 3.09. PXD032157 remains the large-scale case at 18x faster and
 +3.9% PSMs. This is stronger evidence than a single dataset, but it is not evidence that either
 implementation's reported q-values are calibrated to a true 1% FDR.
 
@@ -34,11 +34,11 @@ q≤0.01 by reading the named `q-value` column, including C++ outputs that add a
 
 | Case | Wall, Rust / C++ | Speedup | Peak RSS, Rust / C++ | PSMs, Rust / C++ | Rust PSM delta | Peptides, Rust / C++ |
 |---|---:|---:|---:|---:|---:|---:|
-| PXD032157 (N=4 processes) | 19.4 / 370 s | **19.1x** | 0.85 / 1.56 GiB | 107,046 / 103,038 | **+3.89%** | 37,469 / 35,852 |
-| PXD007145 Tide | 0.48 / 5.89 s | **12.3x** | 53.0 / 131.2 MiB | 29,264 / 27,617 | **+5.96%** | 20,614 / 19,722 |
-| PXD020243 MSFragger | 0.04 / 0.50 s | **12.5x** | 11.4 / 18.5 MiB | 1,554 / 1,388 | **+11.96%** | 1,177 / 1,062 |
-| PXD060954 Sage | 0.25 / 4.43 s | **17.7x** | 30.4 / 86.5 MiB | 26,614 / 25,795 | **+3.18%** | 11,433 / 11,336 |
-| Upstream yeast fixture | 0.10 / 0.89 s | **8.9x** | 21.1 / 33.6 MiB | 1,126 / 1,147 | **−1.83%** | 903 / 928 |
+| PXD032157 (N=4 processes) | 20.8 / 376.2 s | **18.1x** | 0.87 / 1.49 GiB | 107,046 / 103,038 | **+3.89%** | 37,469 / 35,852 |
+| PXD007145 Tide | 0.53 / 5.99 s | **11.3x** | 53.1 / 131.4 MiB | 29,264 / 27,617 | **+5.96%** | 20,614 / 19,722 |
+| PXD020243 MSFragger | 0.07 / 0.51 s | **7.3x** | 12.3 / 18.2 MiB | 1,554 / 1,388 | **+11.96%** | 1,177 / 1,062 |
+| PXD060954 Sage | 0.31 / 4.54 s | **14.6x** | 32.0 / 86.4 MiB | 26,624 / 25,795 | **+3.21%** | 11,420 / 11,336 |
+| Upstream yeast fixture | 0.10 / 0.90 s | **9.0x** | 22.0 / 33.5 MiB | 1,126 / 1,147 | **−1.83%** | 903 / 928 |
 
 Compact wall/RSS figures are medians of three runs and include process startup, so they should be
 read as order-of-magnitude portability checks, not sub-100-ms microbenchmarks. The full PXD032157
@@ -73,8 +73,10 @@ Two deterministic adaptations are required:
 - Sage writes a full MGF title into `ScanNr`. percolator-rs accepts it, but C++ 3.09 aborts because
   it requires an integer. [`normalize_sage_pin.py`](multidataset/normalize_sage_pin.py) extracts the
   title's deposited `#scan` integer. It also removes Sage's already-trained `posterior_error` to
-  avoid circular rescoring and three constant mobility fields absent from the MGF export. Both
-  implementations then receive that exact same normalized PIN.
+  avoid circular rescoring and three constant mobility fields absent from the MGF export. Because
+  Sage's parallel writer can vary row order and its `SpecId` is order-derived, the normalizer sorts
+  complete records and assigns stable sequential IDs. Both implementations then receive that exact
+  same normalized PIN.
 
 ## Interpretation and limits
 
@@ -86,5 +88,6 @@ Two deterministic adaptations are required:
   mixture for that schema.
 - The yeast case usefully falsifies a universal “Rust always yields more” claim: C++ finds 1.8%
   more PSMs and 2.7% more peptides there.
-- The current matrix is DDA-focused. A future extension should add a valid DIA-derived PIN and a
-  known-mixture/entrapment case outside PXD032157.
+- The current matrix is DDA-focused. A future extension should add a valid DIA-derived PIN. Protein
+  inference calibration outside PXD032157 is handled separately by the
+  [PrEST standard benchmark](PROTEIN_CALIBRATION.md).

@@ -1,0 +1,4 @@
+file	relabel_seed	null_rows	random_target_rows	select_c_false_psms	fixed_c_false_psms
+03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-01-comet	42	90993	45440	0	0
+03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-02-comet	42	97914	48899	5	5
+03May2016-QEHF1-Anopheles-4-atrium-S-3hpm-4th-01-comet	42	16686	8342	3	1

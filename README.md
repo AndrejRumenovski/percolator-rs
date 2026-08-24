@@ -11,13 +11,15 @@ semi-supervised PSM rescoring algorithm, built to benchmark against the referenc
 Benchmarked against **C++ Percolator 3.09** on five search configurations spanning mosquito,
 human, bacterial, and yeast samples; Comet, Tide, MSFragger, and Sage inputs; a timsTOF Pro and
 Orbitrap-family instruments; and search databases from 4,647 to 139,191 target proteins. Across the
-four compact extension cases, percolator-rs is **8.9–17.7x faster**, using **35–63%** of C++ peak
+four compact extension cases, percolator-rs is **7.3–14.6x faster**, using **37–67%** of C++ peak
 RSS. Reported-q yield is not uniformly higher: the PSM delta ranges from **−1.8% to +12.0%**.
 See the complete, reproducible [multi-dataset benchmark](bench/MULTI_DATASET.md).
+The dated command/result matrix for the full study suite is in
+[`bench/REPRODUCTION.md`](bench/REPRODUCTION.md).
 
 An experimental `--rescore-model mlp` path runs a deterministic one-hidden-layer neural model
 through the same folds and FDR procedures as the default SVM. It does **not** improve aggregate
-yield: on PXD032157 it reports 1.42% fewer PSMs and 2.73% fewer peptides while taking 4.46x longer;
+yield: on PXD032157 it reports 1.42% fewer PSMs and 2.73% fewer peptides while taking 5.96x longer;
 four independent extension cases are also slightly lower in aggregate. The SVM remains the default.
 See the [small-MLP benchmark](bench/DEEP_LEARNING.md).
 
@@ -26,16 +28,15 @@ The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB —
 
 | | C++ Percolator 3.09 | percolator-rs |
 |---|---|---|
-| **Wall clock** — 65 files, one process | 542 s | **54.9 s** (9.9x faster) |
-| **Wall clock** — 65 files, 4 processes | 370 s | **19.4 s** (19x faster) |
+| **Wall clock** — 65 files, 4 processes | 376.2 s | **20.8 s** (18.1x faster) |
 | **PSMs** at reported q < 0.01 | 103 038 | **107 046** (+3.9%) |
 | **Peptides** at reported q < 0.01 | 35 852 | **37 469** (+4.5%) |
-| **Peak memory** — 4 processes | 1.56 GiB | **0.85 GiB** |
+| **Peak memory** — 4 processes | 1.49 GiB | **0.87 GiB** |
 
 Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
-bought by doing less work. **One percolator-rs process finishes faster (54.9 s) than the C++
-reference manages using all 12 cores** (~107 s floor); to get under 60 s the reference must enable
-speed flags that cost it 12-15% of its identifications.
+bought by doing less work. A sequential percolator-rs run takes 62.0 s, while the reference takes
+376.2 s even with four-file concurrency. To get under 60 s here, the reference must enable speed
+flags that cost it 12–15% of its identifications.
 
 Results are bit-deterministic under a fixed seed and guarded by CI regression gates. A pure-null
 control is strongly conservative, but a six-run foreign-proteome entrapment experiment finds that
@@ -67,9 +68,11 @@ Faithful to the Percolator method:
 ## FDR calibration
 `bench/null_calibration.sh` runs a pure-null experiment: keep only the decoy rows of a real `.pin`
 and randomly relabel half as targets, so **every** reported identification is false by construction.
-A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–6 false IDs out of
-22k–60k null targets** (~0.01% against a nominal 1%), and turning on the class-weight grid search
-(`--select-c`) shifts that by at most ±2 — neither setting buys yield by loosening the FDR.
+A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–5 false IDs out of
+8k–49k randomly relabelled null targets** (at most ~0.01% against a nominal 1%). Turning on the
+class-weight grid search (`--select-c`) changes the three counts from 0/5/1 to 0/5/3 — neither
+setting buys yield by loosening the FDR. Machine-readable results are in
+[`bench/null-calibration-results.tsv`](bench/null-calibration-results.tsv).
 
 The stronger signal-present check is `bench/entrapment/run.sh`: six deposited mzML runs are
 re-searched against the native database plus an equally sized foreign plant proteome. At reported
@@ -93,13 +96,14 @@ and negative yield result are documented in [`bench/DEEP_LEARNING.md`](bench/DEE
 `--num-threads` (default 1) parallelizes the 3 CV folds within a single file — and the class-weight
 grid too, when `--select-c` is on. Results are bit-identical at any thread count. It defaults to 1 so
 harnesses that already run many files concurrently don't oversubscribe; use it for **single-file**
-runs (1.74 s → 1.10 s at `--num-threads 3`, saturating there since there are only 3 folds; 3.48 s
-→ 1.56 s at `--num-threads 9` with `--select-c`).
+runs. On the largest PXD032157 PIN, three-run medians are 2.05 s → 1.39 s at `--num-threads 3`,
+and 3.93 s → 1.85 s at `--num-threads 9` with `--select-c`; outputs are byte-identical. See the
+[`advanced-feature benchmark`](bench/ADVANCED_FEATURES.md).
 Learner class weights: `--cpos F` / `--cneg F` pin them; `--select-c` opts into the per-file grid
-search, which is **off by default for every profile** (it costs ~3x wall time without beating the
+search, which is **off by default for every profile** (it costs ~2.5x wall time without beating the
 fixed defaults on this dataset — see [Fidelity notes](#fidelity-notes)).
 `--auto-model` instead performs true per-outer-fold nested validation of SVM C, class ratio,
-training-only feature subsets, and Newton tolerance. It avoids test-fold contamination but is 10.2x
+training-only feature subsets, and Newton tolerance. It avoids test-fold contamination but is 10.3x
 slower, with 0.37% fewer PSMs and 0.45% more peptides on PXD032157; see the complete
 [automatic-selection evaluation](bench/AUTOMATIC_SELECTION.md).
 
@@ -133,15 +137,14 @@ Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs):
 
 | profile | wall | peak RAM | PSM q<0.01 | peptide q<0.01 |
 |---|--:|--:|--:|--:|
-| `--canonical` (default) | 18.2 s | 0.73 GiB | 107 046 | 37 469 |
-| `--balanced` | 18.3 s | 0.65 GiB | 106 817 (−0.2%) | 37 526 (+0.2%) |
-| `--fast` | **12.5 s** | 0.69 GiB | 105 237 (−1.7%) | 36 772 (−1.9%) |
+| `--canonical` (default) | 20.4 s | 0.87 GiB | 107 046 | 37 469 |
+| `--balanced` | 20.4 s | 0.87 GiB | 106 817 (−0.2%) | 37 526 (+0.2%) |
+| `--fast` | **14.6 s** | 0.88 GiB | 105 237 (−1.7%) | 36 772 (−1.9%) |
 
 Note: because percolator-rs's canonical mode is already fast, `--balanced` lands essentially at
 canonical speed *and* yield here; `--fast` cuts ~30 % of the time for a ~2 % yield cost (far better
 than the C++ fast config's −12 %/−15 %, since percolator-rs keeps full 3-fold CV — only the SVM
-training-set size is capped). Measured without writing result files, so these run ~1 s under the
-CI gate's figure.
+training-set size is capped). These measurements include writing the result files to local ext4.
 
 ## Benchmark vs C++ Percolator 3.09 (PXD032157, 65 files, 12-core Ryzen 5 5600G)
 
@@ -149,20 +152,19 @@ CI gate's figure.
 
 | implementation | settings | wall (65 files) | yield (PSM / peptide q<0.01) |
 |---|---|---|---|
-| C++ reference | default, sequential | 542 s | 103 038 / 35 852 (canonical) |
-| C++ reference | default — floor on 12 cores | ~107 s (can't reach 60 s) | 103 038 / 35 852 |
-| C++ reference | **fast flags** to reach 60 s | 49 s | 90 395 / 30 530 (**−12% / −15%**) |
-| **percolator-rs** | default full fidelity, sequential | **54.9 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
-| **percolator-rs** | **default full fidelity, N=4** | **19.4 s** | **107 046 / 37 469** |
-| percolator-rs | `--select-c` per-file weight search, N=4 | 57.2 s | 106 558 / 37 330 |
-| percolator-rs | `--auto-model` nested selection, N=4 | 213.5 s | 106 652 / 37 636 |
+| C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 (canonical) |
+| C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%**) |
+| **percolator-rs** | default full fidelity, sequential | **62.0 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
+| **percolator-rs** | **default full fidelity, N=4** | **20.8 s** | **107 046 / 37 469** |
+| percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | 106 558 / 37 330 |
+| percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | 106 652 / 37 636 |
 
 percolator-rs reaches sub-60 s **without** cutting iterations and **without** the 12–15 % yield loss the
-C++ implementation needs to get there — and it identifies ~4 % *more* than the canonical reference run.
-A single percolator-rs process (54.9 s) finishes ahead of the reference's 12-core floor (~107 s).
+C++ implementation needs to get there — and it identifies ~4% *more* than the canonical reference run.
+A single percolator-rs process (62.0 s) finishes far ahead of the reference's observed N=4 run.
 
-**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.85 GiB** vs the C++
-reference's **1.56 GiB** (per process roughly half: 263 MB vs 377–525 MB).
+**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.87 GiB** vs the C++
+reference's **1.49 GiB**.
 See `bench/RS_VS_CPP.md` for the full table.
 
 ## Advanced biological features
@@ -207,20 +209,30 @@ the synthetic gate remains the portable hosted-CI check.
 > The picked score uses the best-peptide SVM discriminant. Bayesian mode instead models all distinct
 > peptide evidence and shared-peptide ambiguity; it does not assume the picked grouping or ranking.
 
+Protein-level calibration is evaluated separately on the
+[PXD008425 PrEST homology standard](bench/PROTEIN_CALIBRATION.md), which has explicit present/absent
+protein pairs and 1,000 entrapment proteins. Replicate 1 is reserved for Bayesian α/β/γ selection;
+replicates 2 and 3 remain held out for validation and final testing. Selection chooses α=0.1,
+β=0.0001, γ=0.001 and sharply improves fixed-default calibration, but does **not** validate nominal
+1% protein FDR across every vial; all methods also report false proteins in the held-out blank.
+
 ### Retention-time features (`--rt-features`)
 `src/rt.rs` predicts RT from peptide sequence (per-residue coefficient model), aligns it to
 observed elution (ScanNr proxy) by least-squares on targets, and appends `rt_abs_error` /
 `rt_sq_error` as two extra features. Correct PSMs elute near their predicted RT; random/decoy
-matches deviate. **Measured effect:** +11 % / +5 % PSMs on two files, −9 % on another — the
-framework works and *can* boost separation, but the coarse ScanNr proxy makes it inconsistent.
+matches deviate. On the three lexicographically first PXD032157 files, the measured PSM effects are
+**−4.81%, +3.98%, and +2.00%**. The framework can boost separation, but the coarse ScanNr proxy
+makes it inconsistent. The pinned inputs and complete protocol are in the
+[`advanced-feature benchmark`](bench/ADVANCED_FEATURES.md).
 Plugging in true retention times + a stronger predictor (Elude/DeepLC-style) is the path to
 reliable gains.
 
 ### Cross-run / file-group joint training (`--join file1.pin file2.pin …`)
 Pools PSMs from several runs and trains **one shared model** (3-fold CV over the pool), then
 scores each run — small files borrow statistical power from the group. Prints per-file yield.
-**Measured:** 4 small files, 1400 → 1426 target PSMs at q<0.01 (+1.9 %), 3 of 4 improved
-(the strongest run gives a little back — the expected shared-model regularization trade).
+On the four smallest PXD032157 PINs by byte size, the measured aggregate is **1,524 → 1,606** target
+PSMs at q<0.01 (+5.38%); three of four improve and one gives back 16 PSMs. Input hashes and per-file
+results are in the [`advanced-feature benchmark`](bench/ADVANCED_FEATURES.md).
 
 ### Experimental search-engine ensemble (`--ensemble ENGINE=PIN …`)
 
@@ -307,8 +319,9 @@ per-file spread: files below the reference went 36 → 11, worst single-file def
 original "1 % gap" was never a bias — it was two-sided variance that happened to nearly cancel.
 
 The per-file grid search (`--select-c`) was built on top of that fix and, on this dataset, does
-**not** pay for itself: ~3x the wall time, and a coin flip per file (better on 33, worse on 28,
-marginally worse in aggregate) because candidates are ranked by an abbreviated proxy run. It remains
+**not** pay for itself: 2.5x the wall time, and a coin flip per file (better on 32, worse on 28,
+tied on 5, and marginally worse in aggregate) because candidates are ranked by an abbreviated proxy
+run. It remains
 available for data where the fixed defaults may not transfer. Those defaults were themselves chosen
 by measurement on this dataset — treat them as a well-tested starting point, not a universal
 constant.
@@ -316,7 +329,7 @@ constant.
 The newer `--auto-model` path removes the legacy selector's evaluation leakage: normalization,
 initialization, feature ranking, hyperparameter choice, and fitting all occur inside each outer
 training partition, and fold-specific margins are standardized from training decoys before pooling.
-It finishes 394 PSMs below but 167 peptides above fixed defaults while costing 10.2x more, then loses
+It finishes 394 PSMs below but 167 peptides above fixed defaults while costing 10.3x more, then loses
 both metrics on independent extension cases. All 195 outer models keep the existing solver tolerance
 and 194 keep all features, so the added flexibility is not justified as a default here. Full design
 and held-out results: [`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md).

@@ -16,7 +16,10 @@ esac
   echo "FAIL: missing $SEARCH_ROOT/database-stats.txt; run bench/entrapment/run.sh first"
   exit 2
 }
-mapfile -t pins < <(find "$SEARCH_ROOT" -mindepth 2 -maxdepth 2 -type f -name comet.pin | sort)
+# Crux can leave its generic default output directory beside the six explicitly
+# named sample directories.  It is not a seventh sample.
+mapfile -t pins < <(find "$SEARCH_ROOT" -mindepth 2 -maxdepth 2 -type f -name comet.pin \
+  ! -path "$SEARCH_ROOT/comet-out/*" | sort)
 [ "${#pins[@]}" -eq 6 ] || { echo "FAIL: expected 6 entrapment PINs, found ${#pins[@]}"; exit 2; }
 cargo build --release
 rm -rf "$OUT"

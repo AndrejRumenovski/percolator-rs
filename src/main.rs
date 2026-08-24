@@ -57,8 +57,8 @@ enum ProteinInference {
 /// Execution profiles: preset (subset_max_train, maxiter, select_c) tuned for a use case.
 /// Explicit --subset-max-train / --maxiter / --cpos / --cneg always override the preset.
 /// `select_c` enables the per-file SVM class-weight grid search. It is OFF for every profile:
-/// measured on PXD032157 it costs ~3x wall time and does not beat the fixed default weights
-/// (33 files better, 28 worse, aggregate slightly worse). Opt in with --select-c on data where
+/// measured on PXD032157 it costs ~2.5x wall time and does not beat the fixed default weights
+/// (32 files better, 28 worse, 5 tied, aggregate slightly worse). Opt in with --select-c on data where
 /// the default Cpos/Cneg may not transfer.
 fn preset(name: &str) -> Option<(usize, usize, bool)> {
     match name {

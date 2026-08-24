@@ -1,9 +1,12 @@
 # Fast reference run — 65× PXD032157 percolator under 60 s
 
 Goal: run all 65 Comet `.pin` files through the reference C++ Percolator 3.09 in **under 60 s wall**
-with **minimal peak RAM**. Baseline (sequential, default settings) was **542 s** / 525 MiB peak.
+with minimal peak RAM. A clean 2026-08-24 rerun of the current driver finishes in **59.398 s** at
+N=5, peaks at **1,219,140 KiB**, validates all 65 files, and reproduces 90,395 PSMs / 30,530
+peptides exactly. The exploratory scaling figures below predate the final reproducibility ledger and
+are retained as development history, not as fresh measurements.
 
-## Why default settings can't hit 60 s
+## Historical default-work estimate
 Total work at default settings = **1290 CPU-seconds** → a hard **~107 s floor** on 12 cores even at
 perfect packing. Sub-60 s therefore requires cutting per-run work, using percolator's built-in
 speed flags (`--subset-max-train`, `--maxiter`).
@@ -16,7 +19,7 @@ speed flags (`--subset-max-train`, `--maxiter`).
 - Results written to **local ext4** (`$HOME`), not the NTFS/ntfs-3g "New Volume" (FUSE writes are ~2× slower:
   the same run writing to the external drive took 95.7 s vs 58.6 s to ext4).
 
-## Pareto frontier (compute only, output → /dev/null)
+## Historical Pareto exploration (compute only, output → /dev/null)
 | N | wall | peak RAM |
 |---|------|----------|
 | 6 | 35.6 s | 1.69 GiB |
@@ -31,16 +34,19 @@ N=3 misses at default trim; trimming to `--maxiter 4` or `--subset-max-train 150
 | config | wall | peak RAM | valid | target PSMs q<0.01 | target peptides q<0.01 |
 |--------|------|----------|-------|--------------------|------------------------|
 | **N=4** (min RAM)      | **58.6 s** | **0.88 GiB** | 65/65 | 90 395 | 30 530 |
-| **N=5** (safe margin)  | **49.4 s** | 1.19 GiB     | 65/65 | 90 395 | 30 530 |
+| **N=5** (fresh rerun)  | **59.398 s** | 1.16 GiB   | 65/65 | 90 395 | 30 530 |
 
-Baseline canonical (default, sequential): 542 s, 525 MiB, 103 038 PSMs / 35 852 peptides.
+Historical baseline canonical (default, sequential): 542 s, 525 MiB, 103 038 PSMs / 35 852
+peptides. The clean current canonical N=4 measurement is 376.233 s and 1,564,824 KiB aggregate peak;
+see [`RS_VS_CPP.md`](RS_VS_CPP.md).
 
-**Recommendation:** N=5 for a comfortable margin (49.4 s, ~1.2 GiB); N=4 if minimizing RAM is
-paramount (58.6 s, 0.88 GiB). Both are ~9–11× faster than the sequential baseline.
+**Recommendation:** N=5 meets the target on this host, but the 59.398 s repeat leaves little timing
+margin; treat the exact yields and 65/65 validation as stable, and the wall budget as host-sensitive.
 
 ## Accuracy tradeoff
 The speed flags cost identifications: **−12% PSMs, −15% peptides** at q<0.01 vs the canonical default run.
 These fast outputs are therefore **not canonical** — the canonical reference stays in `reference/PXD032157/`.
-For a smaller accuracy hit (−5.6% PSMs) at ~50 s use `--subset-max-train 40000` at N=5 (slightly more RAM).
+The historical exploration also found a smaller accuracy hit (−5.6% PSMs) with
+`--subset-max-train 40000`; that configuration was not part of the 2026-08-24 clean rerun.
 
 Run it: `bash bench/fastrun.sh` (writes to `$HOME/percolator_fast_out`).

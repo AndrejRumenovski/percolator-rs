@@ -8,9 +8,10 @@ production default.
 
 On the 65-file PXD032157 benchmark, nested selection reports 106,652 PSMs and 37,636 peptides at
 reported q<0.01 versus 107,046 and 37,469 with fixed defaults: -0.37% PSMs but +0.45% distinct
-peptides. It wins 33 files, loses 31, and ties one at PSM level, but takes 213.5 seconds versus 20.9
-seconds at four-file concurrency (10.2x slower). The older whole-dataset `--select-c` experiment
-reports 106,558 PSMs and 37,330 peptides; proper nesting changes the tradeoff but does not produce a
+peptides. It wins 33 files, loses 31, and ties one at PSM level, but takes 206.4 seconds versus 20.1
+seconds at four-file concurrency (10.3x slower). The older whole-dataset `--select-c` experiment
+reports 106,558 PSMs and 37,330 peptides in 49.7 seconds. It wins 32 files, loses 28, and ties five
+against fixed weights at PSM level; proper nesting changes the tradeoff but does not produce a
 consistent gain.
 
 The four independent extension cases are also lower in aggregate:
@@ -18,10 +19,10 @@ The four independent extension cases are also lower in aggregate:
 | case | fixed PSM / peptide | nested PSM / peptide | nested delta |
 |---|---:|---:|---:|
 | PXD020243, MSFragger | 1,554 / 1,177 | 1,347 / 1,015 | -207 / -162 |
-| PXD060954, Sage | 26,614 / 11,433 | 26,621 / 11,421 | +7 / -12 |
+| PXD060954, Sage | 26,624 / 11,420 | 26,642 / 11,426 | +18 / +6 |
 | Hogrebe, Tide | 29,264 / 20,614 | 29,274 / 20,610 | +10 / -4 |
 | Percolator yeast | 1,126 / 903 | 1,123 / 878 | -3 / -25 |
-| **aggregate** | **58,558 / 34,127** | **58,365 / 33,924** | **-193 / -203** |
+| **aggregate** | **58,568 / 34,114** | **58,386 / 33,929** | **-182 / -185** |
 
 On the six-run signal-present entrapment search, nested selection accepts 19,556 PSMs at reported
 q<=0.01 versus 19,666 fixed. Adjusted FDP is slightly lower: 2.68% (95% CI 2.42-2.95%)

@@ -1,0 +1,11 @@
+study	case	baseline_psm	treatment_psm	delta_psm	delta_percent	baseline_peptide	treatment_peptide	baseline_wall_seconds	treatment_wall_seconds
+retention-time	lexical-1	208	198	-10	-4.808	51	49	1.350	1.380
+retention-time	lexical-2	176	183	7	3.977	48	51	1.360	1.460
+retention-time	lexical-3	401	409	8	1.995	122	133	0.180	0.170
+joint-training	smallest-1	392	417	25	6.378	NA	NA	NA	NA
+joint-training	smallest-2	355	385	30	8.451	NA	NA	NA	NA
+joint-training	smallest-3	401	385	-16	-3.990	NA	NA	NA	NA
+joint-training	smallest-4	376	419	43	11.436	NA	NA	NA	NA
+joint-training	aggregate	1524	1606	82	5.381	NA	NA	NA	NA
+threading	fixed-largest	6162	6162	0	0.000	2678	2678	2.050	1.390
+threading	select-c-largest	6094	6094	0	0.000	2606	2606	3.930	1.850

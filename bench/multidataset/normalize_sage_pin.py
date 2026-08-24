@@ -2,7 +2,9 @@
 """Normalize Sage PIN metadata for a fair Rust/C++ Percolator comparison.
 
 Sage preserves an MGF TITLE string in ScanNr, whereas C++ Percolator requires an
-integer.  Extract the trailing ``#scan`` value (or use a deterministic row index).
+integer.  Extract the trailing ``#scan`` value.  Sage writes otherwise identical
+results in nondeterministic order and assigns ``SpecId`` from that order, so sort
+the normalized records and replace ``SpecId`` with a stable sequential ID.
 Also remove Sage's already-trained posterior error feature to avoid circular
 rescoring, along with constant mobility fields lost during MGF export.
 """
@@ -38,12 +40,39 @@ def main() -> None:
         header = next(reader)
         keep = [i for i, name in enumerate(header) if name not in DROP]
         scan_idx = header.index("ScanNr")
-        writer = csv.writer(dst, delimiter="\t", lineterminator="\n")
-        writer.writerow(header[i] for i in keep)
-        for row_number, row in enumerate(reader, start=1):
+        output_header = [header[i] for i in keep]
+        spec_idx = output_header.index("SpecId")
+        output_scan_idx = output_header.index("ScanNr")
+        rows = []
+        for row_number, row in enumerate(reader, start=2):
+            if len(row) != len(header):
+                raise ValueError(
+                    f"row {row_number} has {len(row)} fields; expected {len(header)}"
+                )
             match = SCAN.search(row[scan_idx])
-            row[scan_idx] = match.group(1) if match else str(row_number)
-            writer.writerow(row[i] for i in keep)
+            if not match:
+                raise ValueError(
+                    f"row {row_number} has no integer scan suffix: {row[scan_idx]!r}"
+                )
+            row[scan_idx] = match.group(1)
+            rows.append([row[i] for i in keep])
+
+        # Sage's parallel writer does not promise record order.  Exclude its
+        # order-derived SpecId from the key, then use the complete normalized
+        # record as a deterministic tie breaker.
+        key_indices = [i for i in range(len(output_header)) if i != spec_idx]
+        rows.sort(
+            key=lambda row: (
+                int(row[output_scan_idx]),
+                *(row[i] for i in key_indices),
+            )
+        )
+
+        writer = csv.writer(dst, delimiter="\t", lineterminator="\n")
+        writer.writerow(output_header)
+        for stable_id, row in enumerate(rows, start=1):
+            row[spec_idx] = str(stable_id)
+            writer.writerow(row)
 
 
 if __name__ == "__main__":

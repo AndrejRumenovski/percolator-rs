@@ -51,20 +51,23 @@ not the full 8.6-million-PSM benchmark.
 |---|---:|---:|---:|---:|
 | PXD032157 fixture | 9,216 / 0 | 10,331 / 758 | 0.07 / 0.17 s | 9,216 components; 93 loopy |
 | PXD007145 Tide | 17,164 / 4,037 | 17,164 / 3,687 | 0.45 / 0.68 s | 17,164; all trees |
-| PXD020243 MSFragger | 5,849 / 190 | 5,849 / 163 | 0.04 / 0.08 s | 5,849; all trees |
-| PXD060954 Sage | 6,061 / 1,598 | 6,149 / 1,542 | 0.23 / 0.33 s | 6,061; 23 loopy |
-| Upstream yeast fixture | 15,105 / 460 | 15,814 / 215 | 0.10 / 0.22 s | 15,105; 42 loopy |
+| PXD020243 MSFragger | 5,849 / 190 | 5,849 / 163 | 0.04 / 0.10 s | 5,849; all trees |
+| PXD060954 Sage | 6,062 / 1,597 | 6,150 / 1,540 | 0.28 / 0.40 s | 6,062; 23 loopy |
+| Upstream yeast fixture | 15,105 / 460 | 15,814 / 215 | 0.11 / 0.22 s | 15,105; 42 loopy |
 
-All five Bayesian runs converged in 37–46 iterations. Total-process cost was 1.4–2.4x wall time and
-1.26–1.53x peak RSS relative to picked inference. On the four compact public extension cases,
-Bayesian q<0.01 yield was 3.5–53% lower. It was dramatically higher on the redundant PXD032157
+All five Bayesian runs converged in 37–46 iterations. Total-process cost was 1.4–2.5x wall time and
+1.25–1.55x peak RSS relative to picked inference. On the four compact public extension cases,
+Bayesian q<0.01 yield was 3.6–53% lower. It was dramatically higher on the redundant PXD032157
 fixture, where many proteins share the same peptide evidence and the probability that at least one
 member of a large group is present can be high under γ=0.5.
 
 That PXD032157 reversal should be treated as a calibration warning, not a headline sensitivity gain.
 The existing signal-present entrapment test already shows imperfect PSM-level calibration on this
-search. A future protein-level known-mixture benchmark and dataset-specific α/β/γ selection are
-needed before preferring one thresholded list as more accurate.
+search. The dedicated [PrEST protein-calibration benchmark](PROTEIN_CALIBRATION.md) provides
+present/absent protein truth under shared-peptide ambiguity and selects α/β/γ on a fixed calibration
+replicate before evaluating held-out replicates. The selected parameters substantially improve the
+fixed model but do not validate nominal 1% protein FDR across every held-out vial, so picked inference
+remains the operational default and neither list should be treated as universally calibrated.
 
 ## Reproduction
 

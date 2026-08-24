@@ -1,10 +1,11 @@
 benchmark	case	method	psm_reported_q_0.01	peptide_reported_q_0.01	adjusted_fdp	wall_seconds
-PXD032157	65-file Comet aggregate	fixed	107046	37469	NA	20.900
-PXD032157	65-file Comet aggregate	nested	106652	37636	NA	213.523
+PXD032157	65-file Comet aggregate	fixed	107046	37469	NA	20.056
+PXD032157	65-file Comet aggregate	legacy-select-c	106558	37330	NA	49.703
+PXD032157	65-file Comet aggregate	nested	106652	37636	NA	206.411
 multi-dataset	PXD020243 MSFragger	fixed	1554	1177	NA	NA
 multi-dataset	PXD020243 MSFragger	nested	1347	1015	NA	NA
-multi-dataset	PXD060954 Sage	fixed	26614	11433	NA	NA
-multi-dataset	PXD060954 Sage	nested	26621	11421	NA	NA
+multi-dataset	PXD060954 Sage	fixed	26624	11420	NA	NA
+multi-dataset	PXD060954 Sage	nested	26642	11426	NA	NA
 multi-dataset	Hogrebe Tide	fixed	29264	20614	NA	NA
 multi-dataset	Hogrebe Tide	nested	29274	20610	NA	NA
 multi-dataset	Percolator yeast	fixed	1126	903	NA	NA

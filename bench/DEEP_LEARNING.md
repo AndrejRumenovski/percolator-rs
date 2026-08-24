@@ -9,7 +9,7 @@ useful.
 
 At reported q<0.01 on the 65-file PXD032157 benchmark, the MLP reports 105,521 PSMs and 36,447
 peptides versus 107,046 and 37,469 for the SVM: -1.42% PSMs and -2.73% peptides. The MLP takes
-120.8 seconds at four-file concurrency versus 27.1 seconds for the SVM (4.46x slower). It wins on
+119.8 seconds at four-file concurrency versus 20.1 seconds for the SVM (5.96x slower). It wins on
 21 files, loses on 42, and ties on two at PSM level; peptide counts improve on 22, decline on 40,
 and tie on three.
 
@@ -18,15 +18,15 @@ The four independent extension cases also do not show an aggregate gain:
 | case | SVM PSM / peptide | MLP PSM / peptide | MLP delta |
 |---|---:|---:|---:|
 | PXD020243, MSFragger | 1,554 / 1,177 | 1,525 / 1,179 | -29 / +2 |
-| PXD060954, Sage | 26,614 / 11,433 | 26,642 / 11,408 | +28 / -25 |
+| PXD060954, Sage | 26,624 / 11,420 | 26,592 / 11,395 | -32 / -25 |
 | Hogrebe, Tide | 29,264 / 20,614 | 29,264 / 20,562 | 0 / -52 |
 | Percolator yeast | 1,126 / 903 | 1,079 / 871 | -47 / -32 |
-| **aggregate** | **58,558 / 34,127** | **58,510 / 34,020** | **-48 / -107** |
+| **aggregate** | **58,568 / 34,114** | **58,460 / 34,007** | **-108 / -107** |
 
 The six-run signal-present entrapment check reaches the same practical conclusion. At reported
-q<=0.01 the MLP accepts 19,149 PSMs at an adjusted entrapment FDP of 2.45% (95% CI 2.21-2.71%),
+q<=0.01 the MLP accepts 19,382 PSMs at an adjusted entrapment FDP of 2.60% (95% CI 2.36-2.87%),
 while the SVM accepts 19,666 at 2.78% (2.53-3.06%). The MLP is slightly less anti-conservative but
-finds 517 fewer PSMs, and neither model validates nominal 1% FDR.
+finds 284 fewer PSMs, and neither model validates nominal 1% FDR.
 
 Machine-readable results are in [`model-comparison-results.tsv`](model-comparison-results.tsv).
 

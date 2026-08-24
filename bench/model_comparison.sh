@@ -30,12 +30,14 @@ run_model() {
   (
     local peak_rss=0 current
     while [ ! -f "$stop_file" ]; do
-      current=$(ps --no-headers -o rss -C percolator-rs 2>/dev/null | awk '{sum+=$1} END{print sum+0}')
+      current=$(ps --no-headers -o rss -C percolator-rs 2>/dev/null |
+        awk '{sum+=$1} END{print sum+0}' || true)
       if [ "${current:-0}" -gt "$peak_rss" ]; then
         peak_rss=$current
         echo "$peak_rss" >"$peak_file"
       fi
-      sleep 0.1
+      # Small SVM inputs can finish between 100 ms samples.
+      sleep 0.02
     done
   ) &
   monitor=$!

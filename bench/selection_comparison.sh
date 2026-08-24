@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Compare fixed SVM defaults with leakage-free nested automatic selection.
+# Compare fixed SVM defaults, the legacy whole-file class-weight grid, and
+# leakage-free nested automatic selection.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/target/release/percolator-rs"
@@ -27,7 +28,12 @@ run_method() {
     stem=$(basename "$pin" .pin)
     destination="$out/$stem"
     mkdir -p "$destination"
-    [ "$method" = nested ] && selection_flag=(--auto-model)
+    case "$method" in
+      fixed) ;;
+      legacy) selection_flag=(--select-c) ;;
+      nested) selection_flag=(--auto-model) ;;
+      *) echo "FAIL: unknown selection method: $method" >&2; return 2 ;;
+    esac
     "$BIN" --canonical --seed 1 --rescore-model svm "${selection_flag[@]}" \
       --results-psms "$destination/target.psms.tsv" \
       --decoy-results-psms "$destination/decoy.psms.tsv" \
@@ -52,20 +58,26 @@ run_method() {
 printf 'method\tfiles\tpsm_q_lt_0.01\tpeptide_q_lt_0.01\twall_seconds\n' \
   >"$SELECTION_BENCH_OUT/summary.tsv"
 run_method fixed
+run_method legacy
 run_method nested
 
-printf 'sample\tfixed_psm\tnested_psm\tdelta_psm\tfixed_peptide\tnested_peptide\tdelta_peptide\n' \
+printf 'sample\tfixed_psm\tlegacy_psm\tnested_psm\tlegacy_delta_psm\tnested_delta_psm\tfixed_peptide\tlegacy_peptide\tnested_peptide\tlegacy_delta_peptide\tnested_delta_peptide\n' \
   >"$SELECTION_BENCH_OUT/per-file.tsv"
 for fixed_log in "$SELECTION_BENCH_OUT"/fixed/*/log; do
   sample=$(basename "$(dirname "$fixed_log")")
+  legacy_log="$SELECTION_BENCH_OUT/legacy/$sample/log"
   nested_log="$SELECTION_BENCH_OUT/nested/$sample/log"
   fixed_psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$fixed_log")
+  legacy_psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$legacy_log")
   nested_psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$nested_log")
   fixed_peptide=$(sed -n 's/.*target peptides q<0.01: \([0-9]*\).*/\1/p' "$fixed_log")
+  legacy_peptide=$(sed -n 's/.*target peptides q<0.01: \([0-9]*\).*/\1/p' "$legacy_log")
   nested_peptide=$(sed -n 's/.*target peptides q<0.01: \([0-9]*\).*/\1/p' "$nested_log")
-  printf '%s\t%d\t%d\t%d\t%d\t%d\t%d\n' "$sample" \
-    "$fixed_psm" "$nested_psm" "$((nested_psm-fixed_psm))" \
-    "$fixed_peptide" "$nested_peptide" "$((nested_peptide-fixed_peptide))" \
+  printf '%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n' "$sample" \
+    "$fixed_psm" "$legacy_psm" "$nested_psm" \
+    "$((legacy_psm-fixed_psm))" "$((nested_psm-fixed_psm))" \
+    "$fixed_peptide" "$legacy_peptide" "$nested_peptide" \
+    "$((legacy_peptide-fixed_peptide))" "$((nested_peptide-fixed_peptide))" \
     >>"$SELECTION_BENCH_OUT/per-file.tsv"
 done
 
