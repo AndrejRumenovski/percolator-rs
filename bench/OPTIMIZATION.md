@@ -22,11 +22,20 @@ final three trials each reproduced all **260/260** target/decoy PSM/peptide TSV 
 byte. Thus the final result preserves not only aggregate yield but output values, row ordering,
 ties, fold behavior, solver convergence, and formatting.
 
+Sequential monitoring confirms that the N=4 improvement did not come from shifting work or changing
+concurrency. The optimized full-dataset runs took 36.078, 36.278, and 36.265 seconds: a **36.265-second
+median**, 41.3% below the documented 61.753-second pre-optimization run. Median peak RSS was 206,708
+KiB and all 260 outputs again matched the baseline manifest. The optimized N=4 speedup over its
+sequential median is 3.01x, essentially the same scaling as the baseline's 2.97x; the improvement is
+therefore reduced per-file computation rather than increased parallelism.
+
 ## Measurement method
 
 - Host: AMD Ryzen 5 5600G, 6 cores / 12 threads, Linux, Rust 1.97.0, LLVM 22.1.6.
 - Input: 65 PIN files, 2,295,401,156 bytes, 8,639,746 PSMs.
 - Command: `RS_BENCH_BIN=target/release/percolator-rs RS_BENCH_OUT=... bash bench/run_rs.sh canonical 4`.
+- Sequential control: the same command with concurrency `1`, run three times after the final N=4
+  candidate was fixed.
 - Each promising change was first screened with five runs of the largest PIN, then measured with
   three full N=4 runs. A change was retained only when it improved the relevant screen or full
   median and preserved exact outputs.
@@ -105,4 +114,3 @@ scans, parser allocation/copy work, and exact TSV number formatting. Further wor
 must continue to preserve unstable tie permutations and byte-identical output; changing statistical
 thresholds, iteration limits, folds, convergence, or output precision is outside this optimization
 contract.
-

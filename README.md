@@ -34,7 +34,7 @@ The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB —
 | **Peak memory** — 4 processes | 1.49 GiB | **0.76 GiB** |
 
 Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
-bought by doing less work. A sequential percolator-rs run takes 62.0 s, while the reference takes
+bought by doing less work. A sequential percolator-rs run takes 36.3 s, while the reference takes
 376.2 s even with four-file concurrency. To get under 60 s here, the reference must enable speed
 flags that cost it 12–15% of its identifications.
 
@@ -157,16 +157,16 @@ checks, and final runtime profile.
 |---|---|---|---|
 | C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 (canonical) |
 | C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%**) |
-| **percolator-rs** | default full fidelity, sequential | **62.0 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
+| **percolator-rs** | default full fidelity, sequential | **36.3 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
 | **percolator-rs** | **default full fidelity, N=4** | **12.1 s** | **107 046 / 37 469** |
 | percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | 106 558 / 37 330 |
 | percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | 106 652 / 37 636 |
 
 percolator-rs reaches sub-60 s **without** cutting iterations and **without** the 12–15 % yield loss the
 C++ implementation needs to get there — and it identifies ~4% *more* than the canonical reference run.
-A single percolator-rs process (62.0 s) finishes far ahead of the reference's observed N=4 run.
+A single percolator-rs process (36.3 s) finishes far ahead of the reference's observed N=4 run.
 
-**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.87 GiB** vs the C++
+**Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.76 GiB** vs the C++
 reference's **1.49 GiB**.
 See `bench/RS_VS_CPP.md` for the full table.
 
