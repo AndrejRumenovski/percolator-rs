@@ -43,7 +43,7 @@ observed=$(( $(wc -l <"$WORK/serial/target.psms.tsv") + $(wc -l <"$WORK/serial/d
 }
 awk -F'\t' 'FNR>1 && $1 !~ /^(comet|tide):/ {bad=1} END{exit bad}' \
   "$WORK/serial/target.psms.tsv" "$WORK/serial/decoy.psms.tsv"
-rg -q 'ensemble from 2 engines' "$WORK/serial/stderr.log"
+grep -q 'ensemble from 2 engines' "$WORK/serial/stderr.log"
 
 if "$BIN" --ensemble "comet=$FIX" "tide=$FIX" \
     --results-proteins "$WORK/proteins.tsv" >/dev/null 2>&1; then
