@@ -251,16 +251,27 @@ impl FoldModel {
     }
 }
 
-/// Score held-out rows on a fold-comparable scale fitted from training decoys.
-/// This is needed when nested selection chooses different C values per fold.
-fn standardized_heldout_scores(
+/// Location and scale of one fold model's null distribution, measured on its own
+/// training decoys.
+///
+/// Independently fitted folds have no reason to share an intercept or a score
+/// scale, so pooling their raw margins lets an arbitrary per-fold offset decide
+/// the merged ranking -- and therefore the q-values, which depend only on the
+/// merged order.  Every fold is instead expressed in standard deviations above
+/// its own training-decoy mean, which is a common scale with a meaning: how far
+/// a PSM sits from that fold's null.
+///
+/// The reference anchors instead on the held-out selection boundary and the
+/// held-out median decoy.  Training decoys are used here because they keep the
+/// transform inside the training partition; the mapping is affine and increasing
+/// either way, so it never reorders a fold internally.
+fn training_null_calibration(
     model: &FoldModel,
     x: &[f64],
     dim: usize,
     labels: &[i8],
     train_rows: &[usize],
-    heldout_rows: &[usize],
-) -> Vec<f64> {
+) -> (f64, f64) {
     let mut reference_rows: Vec<usize> = train_rows
         .iter()
         .copied()
@@ -271,16 +282,21 @@ fn standardized_heldout_scores(
     }
     let mut reference_scores = vec![0.0; reference_rows.len()];
     model.score_rows(x, dim, &reference_rows, &mut reference_scores);
-    let mean = reference_scores.iter().sum::<f64>() / reference_scores.len() as f64;
-    let variance = reference_scores
-        .iter()
-        .map(|score| {
-            let difference = score - mean;
-            difference * difference
-        })
-        .sum::<f64>()
-        / reference_scores.len() as f64;
-    let standard_deviation = variance.sqrt().max(1e-12);
+    let (mean, standard_deviation) = mean_and_sd(&reference_scores);
+    (mean, standard_deviation.max(1e-12))
+}
+
+/// Score held-out rows on the fold-comparable scale of [`training_null_calibration`].
+fn standardized_heldout_scores(
+    model: &FoldModel,
+    x: &[f64],
+    dim: usize,
+    labels: &[i8],
+    train_rows: &[usize],
+    heldout_rows: &[usize],
+) -> Vec<f64> {
+    let (mean, standard_deviation) =
+        training_null_calibration(model, x, dim, labels, train_rows);
     let mut heldout_scores = vec![0.0; heldout_rows.len()];
     model.score_rows(x, dim, heldout_rows, &mut heldout_scores);
     for score in &mut heldout_scores {
@@ -681,9 +697,14 @@ impl FoldSetup {
         #[cfg(feature = "profiling")]
         let _heldout_context =
             crate::profile::context(Some("final_heldout_scoring"), None, None, None);
-        let mut scores = vec![0.0f64; self.test_rows.len()];
-        model.score_rows(&self.x, self.dim, &self.test_rows, &mut scores);
-        scores
+        standardized_heldout_scores(
+            &model,
+            &self.x,
+            self.dim,
+            &ds.labels,
+            &self.train_rows,
+            &self.test_rows,
+        )
     }
 }
 
@@ -1338,27 +1359,6 @@ fn mean_and_sd(values: &[f64]) -> (f64, f64) {
     (mean, variance.sqrt())
 }
 
-fn training_score_calibration(
-    model: &FoldModel,
-    x: &[f64],
-    dim: usize,
-    labels: &[i8],
-    train_rows: &[usize],
-) -> (f64, f64) {
-    let mut reference_rows: Vec<usize> = train_rows
-        .iter()
-        .copied()
-        .filter(|&row| labels[row] < 0)
-        .collect();
-    if reference_rows.len() < 2 {
-        reference_rows = train_rows.to_vec();
-    }
-    let mut scores = vec![0.0; reference_rows.len()];
-    model.score_rows(x, dim, &reference_rows, &mut scores);
-    let (mean, std) = mean_and_sd(&scores);
-    (mean, std.max(1e-12))
-}
-
 fn outer_fold_assignments(ds: &Dataset, seed: u64) -> Vec<u8> {
     let rows: Vec<usize> = (0..ds.n_psm).collect();
     assign_dataset_folds(ds, &rows, 3, seed)
@@ -1452,7 +1452,7 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
                 Some(&active_features),
             );
             let (score_mean, score_std) =
-                training_score_calibration(&model, &x, dim, &ds.labels, &train_rows);
+                training_null_calibration(&model, &x, dim, &ds.labels, &train_rows);
             let weights = match model {
                 FoldModel::Svm(weights) => weights,
                 FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
@@ -1780,6 +1780,85 @@ mod tests {
             }
         }
         assert!(covered.iter().all(|&count| count == 1));
+    }
+
+    /// Standardization must only move folds relative to each other: within a
+    /// fold it is an increasing affine map, so the order cannot change.
+    #[test]
+    fn fold_standardization_preserves_within_fold_order() {
+        let dataset = selection_fixture();
+        let params = Params {
+            maxiter: 3,
+            num_threads: 1,
+            c_alpha: Some(C_POS_DEFAULT),
+            c_beta: Some(C_NEG_DEFAULT),
+            ..Params::default()
+        };
+        let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &all_rows, 3, params.seed);
+        let hp = Hp {
+            alpha: C_POS_DEFAULT,
+            beta: C_NEG_DEFAULT,
+            maxiter: params.maxiter,
+            subset: params.subset_max_train,
+            tolerance: params.svm_tolerance,
+        };
+        for &test in OUTER_FOLDS.iter() {
+            let setup = fold_setup(&dataset, &fold, test, &params, params.seed);
+            let mut rng = Rng(setup.seed);
+            let model = train_fold(
+                &setup.x,
+                setup.dim,
+                &dataset.labels,
+                &setup.train_rows,
+                &setup.w0,
+                &params,
+                &mut rng,
+                hp,
+                setup.seed ^ 0xD1B5_4A32_D192_ED03,
+                None,
+            );
+            let mut raw = vec![0.0; setup.test_rows.len()];
+            model.score_rows(&setup.x, setup.dim, &setup.test_rows, &mut raw);
+            let standardized = standardized_heldout_scores(
+                &model,
+                &setup.x,
+                setup.dim,
+                &dataset.labels,
+                &setup.train_rows,
+                &setup.test_rows,
+            );
+            let rank = |values: &[f64]| {
+                let mut order: Vec<usize> = (0..values.len()).collect();
+                order.sort_by(|&a, &b| values[b].total_cmp(&values[a]));
+                order
+            };
+            assert_eq!(rank(&raw), rank(&standardized), "fold {test} reordered");
+
+            // The calibration really is the training-null location and scale.
+            let (mean, sd) = training_null_calibration(
+                &model,
+                &setup.x,
+                setup.dim,
+                &dataset.labels,
+                &setup.train_rows,
+            );
+            let decoy_rows: Vec<usize> = setup
+                .train_rows
+                .iter()
+                .copied()
+                .filter(|&row| dataset.labels[row] < 0)
+                .collect();
+            let mut decoy_scores = vec![0.0; decoy_rows.len()];
+            model.score_rows(&setup.x, setup.dim, &decoy_rows, &mut decoy_scores);
+            let centred: Vec<f64> = decoy_scores
+                .iter()
+                .map(|score| (score - mean) / sd)
+                .collect();
+            let (centred_mean, centred_sd) = mean_and_sd(&centred);
+            assert!(centred_mean.abs() < 1e-9, "training null not centred");
+            assert!((centred_sd - 1.0).abs() < 1e-9, "training null not scaled");
+        }
     }
 
     #[test]
