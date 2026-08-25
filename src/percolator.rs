@@ -120,22 +120,6 @@ impl Rng {
     }
 }
 
-/// Build the normalized design matrix with an appended bias column (=1.0).
-/// Returns (matrix row-major, dim) where dim = n_feat + 1.
-fn build_matrix(ds: &Dataset) -> (Vec<f64>, usize) {
-    #[cfg(feature = "profiling")]
-    let _normalization =
-        crate::profile::Scope::with_elements("stage", "normalization_total", ds.n_psm);
-    let rows: Vec<usize> = (0..ds.n_psm).collect();
-    #[cfg(feature = "profiling")]
-    crate::profile::allocation_site(
-        "percolator::build_matrix row indices",
-        1,
-        (rows.capacity() * std::mem::size_of::<usize>()) as u64,
-    );
-    build_matrix_fit(ds, &rows)
-}
-
 /// Per-feature centering and scaling learned from a training partition.
 /// Kept separately so explanatory reports can convert SVM coefficients back to
 /// the original PIN units.
@@ -305,19 +289,26 @@ fn standardized_heldout_scores(
     heldout_scores
 }
 
-/// Pick the single best-separating feature (either orientation) as the initial direction.
-fn initial_direction(x: &[f64], dim: usize, labels: &[i8], p: &Params) -> Vec<f64> {
+/// Pick the single best-separating feature (either orientation) as the initial
+/// direction, using `rows` only.
+///
+/// Feature *and* label information both enter this choice, so it must be fitted
+/// inside the outer training partition: a direction selected on the full dataset
+/// carries every held-out label into the model that later scores it.
+fn initial_direction(x: &[f64], dim: usize, labels: &[i8], rows: &[usize], p: &Params) -> Vec<f64> {
     #[cfg(feature = "profiling")]
     let _context = crate::profile::context(Some("initial_direction"), None, None, None);
     #[cfg(feature = "profiling")]
     let _initial =
-        crate::profile::Scope::with_elements("stage", "initial_direction_selection", labels.len());
-    let n = labels.len();
+        crate::profile::Scope::with_elements("stage", "initial_direction_selection", rows.len());
+    let n = rows.len();
     // Selecting a direction is a heuristic, not an error-rate claim: the
     // reference likewise drops the finite-sample safeguard here because it is
     // too restrictive on small partitions.
     let tdc = stats::Tdc::training(p.null_target_win_prob);
     let test_fdr = p.test_fdr;
+    let fit_labels: Vec<i8> = rows.iter().map(|&row| labels[row]).collect();
+    let labels = &fit_labels[..];
     let mut order = Vec::new();
     let mut best_w = vec![0.0f64; dim];
     best_w[dim - 1] = 0.0;
@@ -336,8 +327,8 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], p: &Params) -> Vec<f6
     for j in 0..dim - 1 {
         #[cfg(feature = "profiling")]
         let scoring_start = std::time::Instant::now();
-        for i in 0..n {
-            scores[i] = x[i * dim + j];
+        for (k, &row) in rows.iter().enumerate() {
+            scores[k] = x[row * dim + j];
         }
         #[cfg(feature = "profiling")]
         {
@@ -369,8 +360,8 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], p: &Params) -> Vec<f6
         } else {
             #[cfg(feature = "profiling")]
             let scoring_start = std::time::Instant::now();
-            for i in 0..n {
-                scores[i] = -x[i * dim + j];
+            for (k, &row) in rows.iter().enumerate() {
+                scores[k] = -x[row * dim + j];
             }
             #[cfg(feature = "profiling")]
             {
@@ -621,86 +612,106 @@ pub struct FoldSelection {
     pub inner_yield: usize,
 }
 
-/// Full 3-fold pass with the given hyperparameters; returns out-of-fold scores
-/// for every PSM (each scored by a model that never saw its fold).
-#[allow(clippy::too_many_arguments)]
-fn cv_scores(
-    x: &[f64],
+/// Everything one outer fold needs, fitted inside its own training partition.
+///
+/// Both the normalization location/scale and the initial direction are estimated
+/// from `train_rows` alone.  Fitting either on the full dataset would let a
+/// held-out row shape the model that goes on to score it: the feature
+/// distribution through normalization, and the labels through the direction
+/// search.
+struct FoldSetup {
+    train_rows: Vec<usize>,
+    test_rows: Vec<usize>,
+    x: Vec<f64>,
     dim: usize,
-    labels: &[i8],
-    fold: &[u8],
-    w0: &[f64],
-    p: &Params,
-    hp: Hp,
+    w0: Vec<f64>,
+    /// Per-fold RNG stream derived from the run seed, so folds never depend on
+    /// one another's draws and results are identical serial or parallel.
     seed: u64,
-) -> Vec<f64> {
-    #[cfg(feature = "profiling")]
-    let _cv = crate::profile::Scope::with_elements("stage", "cross_validation_total", labels.len());
-    let n = labels.len();
-    let all_folds: [u8; 3] = [0, 1, 2];
+}
 
-    let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>) {
-        #[cfg(feature = "profiling")]
-        let _fold_context =
-            crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
-        #[cfg(feature = "profiling")]
-        let _fold_total = crate::profile::Scope::new("cross_validation", "fold_total");
-        #[cfg(feature = "profiling")]
-        let setup_start = std::time::Instant::now();
-        let train_rows: Vec<usize> = (0..n).filter(|&i| fold[i] != test).collect();
-        let test_rows: Vec<usize> = (0..n).filter(|&i| fold[i] == test).collect();
-        // Each fold gets its own RNG stream derived from the run seed, so folds never
-        // depend on one another's draws — results are identical serial or parallel.
-        let fold_seed = seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
-        let mut rng = Rng(fold_seed);
-        #[cfg(feature = "profiling")]
-        {
-            crate::profile::record(
-                "cross_validation",
-                "fold_setup",
-                setup_start.elapsed(),
-                Some(n as u64),
-                None,
-            );
-            crate::profile::allocation_site(
-                "percolator::cv_scores fold row vectors",
-                2,
-                ((train_rows.capacity() + test_rows.capacity()) * std::mem::size_of::<usize>())
-                    as u64,
-            );
-        }
+fn fold_setup(ds: &Dataset, fold: &[u8], test: u8, p: &Params, seed: u64) -> FoldSetup {
+    #[cfg(feature = "profiling")]
+    let _fold_context = crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
+    #[cfg(feature = "profiling")]
+    let setup_start = std::time::Instant::now();
+    let n = ds.n_psm;
+    let train_rows: Vec<usize> = (0..n).filter(|&i| fold[i] != test).collect();
+    let test_rows: Vec<usize> = (0..n).filter(|&i| fold[i] == test).collect();
+    assert!(
+        !train_rows.is_empty(),
+        "outer fold {test} left no training rows"
+    );
+    let (x, dim) = build_matrix_fit(ds, &train_rows);
+    let w0 = initial_direction(&x, dim, &ds.labels, &train_rows, p);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "cross_validation",
+        "fold_setup",
+        setup_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    FoldSetup {
+        train_rows,
+        test_rows,
+        x,
+        dim,
+        w0,
+        seed: seed.max(1) ^ ((test as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15)),
+    }
+}
+
+impl FoldSetup {
+    /// Train on this fold's training partition and score its held-out rows.
+    fn train_and_score(&self, ds: &Dataset, p: &Params, hp: Hp) -> Vec<f64> {
+        let mut rng = Rng(self.seed);
         let model = train_fold(
-            x,
-            dim,
-            labels,
-            &train_rows,
-            w0,
+            &self.x,
+            self.dim,
+            &ds.labels,
+            &self.train_rows,
+            &self.w0,
             p,
             &mut rng,
             hp,
-            fold_seed ^ 0xD1B5_4A32_D192_ED03,
+            self.seed ^ 0xD1B5_4A32_D192_ED03,
             None,
         );
         #[cfg(feature = "profiling")]
         let _heldout_context =
             crate::profile::context(Some("final_heldout_scoring"), None, None, None);
-        let mut sc = vec![0.0f64; test_rows.len()];
+        let mut scores = vec![0.0f64; self.test_rows.len()];
+        model.score_rows(&self.x, self.dim, &self.test_rows, &mut scores);
+        scores
+    }
+}
+
+const OUTER_FOLDS: [u8; 3] = [0, 1, 2];
+
+/// Full 3-fold pass with the given hyperparameters; returns out-of-fold scores
+/// for every PSM (each scored by a model that never saw its fold).
+fn cv_scores(ds: &Dataset, fold: &[u8], p: &Params, hp: Hp, seed: u64) -> Vec<f64> {
+    #[cfg(feature = "profiling")]
+    let _cv = crate::profile::Scope::with_elements("stage", "cross_validation_total", ds.n_psm);
+
+    let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>) {
         #[cfg(feature = "profiling")]
-        crate::profile::allocation_site(
-            "percolator::cv_scores heldout score vector",
-            1,
-            (sc.capacity() * std::mem::size_of::<f64>()) as u64,
-        );
-        model.score_rows(x, dim, &test_rows, &mut sc);
-        (test_rows, sc)
+        let _fold_total = crate::profile::Scope::new("cross_validation", "fold_total");
+        let setup = fold_setup(ds, fold, test, p, seed);
+        let scores = setup.train_and_score(ds, p, hp);
+        (setup.test_rows, scores)
     };
 
     #[cfg(feature = "profiling")]
     let dispatch_start = std::time::Instant::now();
+    // Folds run one at a time unless the caller asked for fold-level threads:
+    // each fold holds its own normalized design matrix, so a parallel pass costs
+    // three of them at once.
     let parts: Vec<(Vec<usize>, Vec<f64>)> = if p.num_threads > 1 {
-        all_folds.par_iter().map(per_fold).collect()
+        OUTER_FOLDS.par_iter().map(per_fold).collect()
     } else {
-        all_folds.iter().map(per_fold).collect()
+        OUTER_FOLDS.iter().map(per_fold).collect()
     };
     #[cfg(feature = "profiling")]
     crate::profile::record(
@@ -713,27 +724,20 @@ fn cv_scores(
 
     #[cfg(feature = "profiling")]
     let merge_start = std::time::Instant::now();
-    let mut final_score = vec![0.0f64; n];
-    for (test_rows, sc) in parts {
-        for (k, &r) in test_rows.iter().enumerate() {
-            final_score[r] = sc[k];
+    let mut final_score = vec![0.0f64; ds.n_psm];
+    for (test_rows, scores) in parts {
+        for (k, &row) in test_rows.iter().enumerate() {
+            final_score[row] = scores[k];
         }
     }
     #[cfg(feature = "profiling")]
-    {
-        crate::profile::record(
-            "cross_validation",
-            "heldout_score_merge",
-            merge_start.elapsed(),
-            Some(n as u64),
-            None,
-        );
-        crate::profile::allocation_site(
-            "percolator::cv_scores final score vector",
-            1,
-            (final_score.capacity() * std::mem::size_of::<f64>()) as u64,
-        );
-    }
+    crate::profile::record(
+        "cross_validation",
+        "heldout_score_merge",
+        merge_start.elapsed(),
+        Some(ds.n_psm as u64),
+        None,
+    );
     final_score
 }
 
@@ -749,14 +753,12 @@ fn yield_at_fdr(scores: &[f64], labels: &[i8], test_fdr: f64, p: &Params) -> usi
 /// Pick (alpha, beta) by cross-validation: for each candidate, run an abbreviated
 /// 3-fold pass and keep the one with the highest out-of-fold yield at `test_fdr`.
 /// Mirrors the reference's "Selecting Cpos/Cneg by cross-validation" step.
-fn select_c(
-    x: &[f64],
-    dim: usize,
-    labels: &[i8],
-    fold: &[u8],
-    w0: &[f64],
-    p: &Params,
-) -> (f64, f64) {
+///
+/// The grid is scored on the same out-of-fold predictions that are later
+/// reported, so this remains a selection-biased, non-nested procedure; use
+/// `--auto-model` for nested selection.  Folds are the outer loop so each fold's
+/// training-only preprocessing is fitted once and reused by every candidate.
+fn select_c(ds: &Dataset, fold: &[u8], p: &Params) -> (f64, f64) {
     let cands: Vec<(f64, f64)> = C_POS_GRID
         .iter()
         .flat_map(|&a| C_NEG_GRID.iter().map(move |&b| (a, b)))
@@ -767,25 +769,37 @@ fn select_c(
         p.c_select_subset
     };
 
-    // Every candidate re-seeds from p.seed, so its score is independent of evaluation
-    // order — the parallel and serial paths return bit-identical results.
-    let eval = |&(alpha, beta): &(f64, f64)| -> usize {
-        let hp = Hp {
-            alpha,
-            beta,
-            maxiter: p.c_select_maxiter,
-            subset,
-            tolerance: p.svm_tolerance,
+    // Every candidate re-seeds from the fold seed, so its score is independent of
+    // evaluation order — the parallel and serial paths return bit-identical results.
+    let mut candidate_scores: Vec<Vec<f64>> = vec![vec![0.0f64; ds.n_psm]; cands.len()];
+    for &test in OUTER_FOLDS.iter() {
+        let setup = fold_setup(ds, fold, test, p, p.seed);
+        let evaluate = |(index, &(alpha, beta)): (usize, &(f64, f64))| -> (usize, Vec<f64>) {
+            let hp = Hp {
+                alpha,
+                beta,
+                maxiter: p.c_select_maxiter,
+                subset,
+                tolerance: p.svm_tolerance,
+            };
+            (index, setup.train_and_score(ds, p, hp))
         };
-        let sc = cv_scores(x, dim, labels, fold, w0, p, hp, p.seed);
-        yield_at_fdr(&sc, labels, p.test_fdr, p)
-    };
+        let parts: Vec<(usize, Vec<f64>)> = if p.num_threads > 1 {
+            cands.par_iter().enumerate().map(evaluate).collect()
+        } else {
+            cands.iter().enumerate().map(evaluate).collect()
+        };
+        for (index, scores) in parts {
+            for (k, &row) in setup.test_rows.iter().enumerate() {
+                candidate_scores[index][row] = scores[k];
+            }
+        }
+    }
 
-    let yields: Vec<usize> = if p.num_threads > 1 {
-        cands.par_iter().map(eval).collect()
-    } else {
-        cands.iter().map(eval).collect()
-    };
+    let yields: Vec<usize> = candidate_scores
+        .iter()
+        .map(|scores| yield_at_fdr(scores, &ds.labels, p.test_fdr, p))
+        .collect();
 
     // First maximum wins, so ties resolve by grid order regardless of threading.
     let mut best_i = 0;
@@ -1232,10 +1246,6 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
         };
     }
 
-    let (x, dim) = build_matrix(ds);
-
-    let w0 = initial_direction(&x, dim, &ds.labels, p);
-
     let selected = p.c_alpha.is_none() || p.c_beta.is_none();
     let (alpha, beta) = if selected {
         // A private pool keeps thread count under this run's control, so callers that
@@ -1244,10 +1254,8 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
             .num_threads(p.num_threads)
             .build()
         {
-            Ok(pool) if p.num_threads > 1 => {
-                pool.install(|| select_c(&x, dim, &ds.labels, &fold, &w0, p))
-            }
-            _ => select_c(&x, dim, &ds.labels, &fold, &w0, p),
+            Ok(pool) if p.num_threads > 1 => pool.install(|| select_c(ds, &fold, p)),
+            _ => select_c(ds, &fold, p),
         }
     } else {
         (p.c_alpha.unwrap(), p.c_beta.unwrap())
@@ -1260,7 +1268,7 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
         subset: p.subset_max_train,
         tolerance: p.svm_tolerance,
     };
-    let final_score = cv_scores(&x, dim, &ds.labels, &fold, &w0, p, hp, p.seed);
+    let final_score = cv_scores(ds, &fold, p, hp, p.seed);
 
     #[cfg(feature = "profiling")]
     let _final_context = crate::profile::context(Some("final_psm_statistics"), None, None, None);
@@ -1362,10 +1370,6 @@ fn explain_fixed_models(
     output: &Output,
     fold: &[u8],
 ) -> Vec<ExplanationFold> {
-    let all_rows: Vec<usize> = (0..ds.n_psm).collect();
-    let normalization = fit_normalization(ds, &all_rows);
-    let (x, dim) = transform_matrix(ds, &normalization);
-    let initial = initial_direction(&x, dim, &ds.labels, p);
     let hp = Hp {
         alpha: output.c_alpha,
         beta: output.c_beta,
@@ -1373,40 +1377,35 @@ fn explain_fixed_models(
         subset: p.subset_max_train,
         tolerance: p.svm_tolerance,
     };
-    [0u8, 1, 2]
+    OUTER_FOLDS
         .iter()
         .map(|&test_fold| {
-            let train_rows: Vec<usize> = (0..ds.n_psm)
-                .filter(|&row| fold[row] != test_fold)
-                .collect();
-            let test_rows: Vec<usize> = (0..ds.n_psm)
-                .filter(|&row| fold[row] == test_fold)
-                .collect();
-            let fold_seed = p.seed ^ ((test_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
-            let mut rng = Rng(fold_seed.max(1));
+            // Rebuilt through the same seeded path as `cv_scores`, so the report
+            // describes the model that actually produced the held-out scores.
+            let setup = fold_setup(ds, fold, test_fold, p, p.seed);
+            let normalization = fit_normalization(ds, &setup.train_rows);
+            let mut rng = Rng(setup.seed);
             let model = train_fold(
-                &x,
-                dim,
+                &setup.x,
+                setup.dim,
                 &ds.labels,
-                &train_rows,
-                &initial,
+                &setup.train_rows,
+                &setup.w0,
                 p,
                 &mut rng,
                 hp,
-                fold_seed ^ 0xD1B5_4A32_D192_ED03,
+                setup.seed ^ 0xD1B5_4A32_D192_ED03,
                 None,
             );
             let weights = match model {
                 FoldModel::Svm(weights) => weights,
                 FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
             };
+            let dim = setup.dim;
             ExplanationFold {
                 weights,
-                normalization: Normalization {
-                    mean: normalization.mean.clone(),
-                    std: normalization.std.clone(),
-                },
-                test_rows,
+                normalization,
+                test_rows: setup.test_rows,
                 active_features: vec![true; dim],
                 score_mean: 0.0,
                 score_std: 1.0,
@@ -1650,6 +1649,137 @@ mod tests {
         }
         let actual = select_outer_hyperparameters(&changed_test, &outer_train, 0, &params);
         assert_eq!(actual, expected);
+    }
+
+    /// Perturb everything about the held-out fold -- features and labels -- and
+    /// require that the model trained to score that fold does not move.  This is
+    /// the falsifiable form of "leakage-free": if normalization or the initial
+    /// direction were still fitted globally, these assertions would fail.
+    #[test]
+    fn heldout_rows_cannot_influence_the_model_that_scores_them() {
+        let dataset = selection_fixture();
+        let params = Params {
+            maxiter: 3,
+            num_threads: 1,
+            c_alpha: Some(C_POS_DEFAULT),
+            c_beta: Some(C_NEG_DEFAULT),
+            ..Params::default()
+        };
+        let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &all_rows, 3, params.seed);
+
+        let mut corrupted = selection_fixture();
+        for row in all_rows.iter().copied().filter(|&row| fold[row] == 0) {
+            corrupted.labels[row] *= -1;
+            for feature in 0..corrupted.n_feat {
+                corrupted.features[row * corrupted.n_feat + feature] =
+                    1_000_000.0 * (feature + 1) as f64;
+            }
+        }
+
+        let baseline = fold_setup(&dataset, &fold, 0, &params, params.seed);
+        let perturbed = fold_setup(&corrupted, &fold, 0, &params, params.seed);
+
+        assert_eq!(
+            perturbed.w0, baseline.w0,
+            "initial direction moved with held-out rows"
+        );
+        let normalized_train = |setup: &FoldSetup| -> Vec<f64> {
+            setup
+                .train_rows
+                .iter()
+                .flat_map(|&row| {
+                    setup.x[row * setup.dim..(row + 1) * setup.dim]
+                        .iter()
+                        .copied()
+                })
+                .collect()
+        };
+        assert_eq!(
+            normalized_train(&perturbed),
+            normalized_train(&baseline),
+            "training-row normalization moved with held-out rows"
+        );
+
+        let hp = Hp {
+            alpha: C_POS_DEFAULT,
+            beta: C_NEG_DEFAULT,
+            maxiter: params.maxiter,
+            subset: params.subset_max_train,
+            tolerance: params.svm_tolerance,
+        };
+        let weights = |ds: &Dataset, setup: &FoldSetup| -> Vec<f64> {
+            let mut rng = Rng(setup.seed);
+            match train_fold(
+                &setup.x,
+                setup.dim,
+                &ds.labels,
+                &setup.train_rows,
+                &setup.w0,
+                &params,
+                &mut rng,
+                hp,
+                setup.seed ^ 0xD1B5_4A32_D192_ED03,
+                None,
+            ) {
+                FoldModel::Svm(w) => w,
+                FoldModel::Mlp(_) => unreachable!(),
+            }
+        };
+        assert_eq!(
+            weights(&corrupted, &perturbed),
+            weights(&dataset, &baseline),
+            "fold model weights moved with held-out rows"
+        );
+    }
+
+    /// Each fold must fit its own normalization; otherwise the "training-only"
+    /// claim would be vacuously satisfied by every fold sharing one transform.
+    #[test]
+    fn folds_fit_their_own_normalization_and_direction() {
+        let dataset = selection_fixture();
+        let params = Params {
+            maxiter: 2,
+            num_threads: 1,
+            ..Params::default()
+        };
+        let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &all_rows, 3, params.seed);
+        let first = fold_setup(&dataset, &fold, 0, &params, params.seed);
+        let second = fold_setup(&dataset, &fold, 1, &params, params.seed);
+        assert_ne!(
+            first.x, second.x,
+            "two folds produced an identical design matrix, so normalization is not fold-local"
+        );
+        let global = fit_normalization(&dataset, &all_rows);
+        let fold_local = fit_normalization(&dataset, &first.train_rows);
+        assert_ne!(
+            global.mean, fold_local.mean,
+            "fold normalization matched the all-rows fit"
+        );
+    }
+
+    /// Scoring is out of fold: every reported score comes from a model whose
+    /// training partition excluded that row.
+    #[test]
+    fn every_row_is_scored_by_a_model_that_excluded_it() {
+        let dataset = selection_fixture();
+        let params = Params {
+            maxiter: 2,
+            num_threads: 1,
+            ..Params::default()
+        };
+        let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &all_rows, 3, params.seed);
+        let mut covered = vec![0u8; dataset.n_psm];
+        for &test in OUTER_FOLDS.iter() {
+            let setup = fold_setup(&dataset, &fold, test, &params, params.seed);
+            for &row in &setup.test_rows {
+                covered[row] += 1;
+                assert!(!setup.train_rows.contains(&row));
+            }
+        }
+        assert!(covered.iter().all(|&count| count == 1));
     }
 
     #[test]
