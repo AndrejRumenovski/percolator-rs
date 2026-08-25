@@ -6,101 +6,169 @@
 A from-scratch Rust reimplementation of the [Percolator](https://github.com/percolator/percolator)
 semi-supervised PSM rescoring algorithm, built to benchmark against the reference C++ Percolator 3.09.
 
-> **Scientific-validation warning (2026-08-25):** the canonical/default workflow has failed
-> adversarial validation. Its initial direction uses labels from all folds, its fold margins are
-> pooled without reference-style score normalization, its q-value estimator omits the final decoy
-> pseudocount and tie grouping, and its PEP estimator is not the C++ 3.09 procedure. In 30 repeated
-> exchangeable-label null experiments, Rust made at least one false discovery at every tested q
-> threshold in 17/30 runs (empirical complete-null FDR 56.7%); C++ made none in 29 successful runs
-> and failed closed once. On the signal-present entrapment data, 87 known-false PSMs have a reported
-> Rust PEP rounded to exactly zero. **Do not interpret the current Rust q-values or PEPs as validated
-> probabilities, or its additional reported-q yield as improved accuracy or sensitivity.** See the
-> read-only [`implementation audit`](validation/IMPLEMENTATION_AUDIT.md) and complete
-> [`scientific validation report`](validation/SCIENTIFIC_VALIDATION.md).
+> **Status (2026-08-25):** the workflow that failed adversarial validation has been repaired, and the
+> predeclared experiments were rerun against a frozen build. Complete-null rejections went from
+> **17/30 to 0/30** at every threshold from q<0.001 to q<0.10; exact-zero PEPs from **9,155 to 0**
+> (87 known-false matches to 0); entrapment-adjusted FDP at reported q<0.01 from **2.70% to 1.82%**;
+> and agreement with C++ 3.09 under matched post-processing from a **+1,619 PSM** gap on Tide to
+> **+0.8**. The q-values and PEPs are **still anti-conservative on signal-present data** — 1.8× nominal
+> at q<0.01, which the reference also reaches — so they must not be described as calibrated, and the
+> protein-level output has not been revalidated. What changed, what it was measured against, and what
+> still fails: [`validation/REPAIR.md`](validation/REPAIR.md). The failure this responded to is
+> preserved in [`validation/SCIENTIFIC_VALIDATION.md`](validation/SCIENTIFIC_VALIDATION.md) and
+> [`validation/IMPLEMENTATION_AUDIT.md`](validation/IMPLEMENTATION_AUDIT.md).
 
 ## Results
 
-Benchmarked against **C++ Percolator 3.09** on five search configurations spanning mosquito,
-human, bacterial, and yeast samples; Comet, Tide, MSFragger, and Sage inputs; a timsTOF Pro and
-Orbitrap-family instruments; and search databases from 4,647 to 139,191 target proteins. Across the
-four compact extension cases, percolator-rs is **7.3–14.6x faster**, using **37–67%** of C++ peak
-RSS. Reported-q yield is not uniformly higher: the PSM delta ranges from **−1.8% to +12.0%**.
-See the complete, reproducible [multi-dataset benchmark](bench/MULTI_DATASET.md).
-The dated command/result matrix for the full study suite is in
-[`bench/REPRODUCTION.md`](bench/REPRODUCTION.md).
+The headline claim is agreement, not advantage. Under matched post-processing on four independent
+datasets — Tide, Sage, MSFragger and the upstream yeast fixture, five seeds each — percolator-rs and
+C++ Percolator 3.09 report PSM counts at q<0.01 that differ by **+0.8, +15.2, −2.8 and +15.4**, with
+Jaccard 0.92–0.996 and score rank correlation 0.95–0.999. Before the statistical repair those gaps
+were +1,619, +828, +130 and +8.8. Almost the whole historical difference was defects on the
+percolator-rs side or a post-processing mismatch in how the comparison was configured; it was never
+evidence of better identification.
+
+| Dataset | pre-repair Rust − C++ | repaired Rust − C++ (matched) | Jaccard | score Spearman |
+|---|---:|---:|---:|---:|
+| PXD007145 Tide | +1,619.0 | **+0.8** | 0.9930 | 0.9988 |
+| PXD060954 Sage | +828.2 | **+15.2** | 0.9962 | 0.9955 |
+| PXD020243 MSFragger | +130.4 | **−2.8** | 0.9235 | 0.9627 |
+| Upstream yeast | +8.8 | **+15.4** | 0.9201 | 0.9498 |
+
+Matched means C++ under `--post-processing-tdc`, because percolator-rs performs spectrum-level
+target-decoy competition by default and three of these four PINs report several candidates per
+precursor. Full method and per-seed distributions: [`validation/REPAIR.md`](validation/REPAIR.md).
+
+On the four compact cases the pre-repair build was **7.3–14.6x faster** than the reference, using
+**37–67%** of its peak RSS. Those timings have not been re-measured since the repair, which cost
+roughly a third of the throughput on the large benchmark below. See the
+[multi-dataset benchmark](bench/MULTI_DATASET.md); the dated command/result matrix for the full study
+suite is in [`bench/REPRODUCTION.md`](bench/REPRODUCTION.md).
 
 An experimental `--rescore-model mlp` path runs a deterministic one-hidden-layer neural model
 through the same folds and FDR procedures as the default SVM. It does **not** improve aggregate
-yield: on PXD032157 it reports 1.42% fewer PSMs and 2.73% fewer peptides while taking 5.96x longer;
-four independent extension cases are also slightly lower in aggregate. The SVM remains the default.
-See the [small-MLP benchmark](bench/DEEP_LEARNING.md).
+yield and has not been revalidated since the repair. The SVM remains the default. See the
+[small-MLP benchmark](bench/DEEP_LEARNING.md).
 
 The large-scale performance benchmark remains PXD032157 — 65 Comet `.pin` files, 2.3 GB — on a
-12-core Ryzen 5 5600G. Inputs and machine are matched, but model selection and statistical
-post-processing are materially different; the identification counts are not a scientific accuracy
-comparison.
+12-core Ryzen 5 5600G. Inputs and machine are matched; post-processing is not, because the reference
+default does not compete candidates within a spectrum and percolator-rs does. The identification
+counts below are throughput-run outputs, not a scientific accuracy comparison.
 
 | | C++ Percolator 3.09 | percolator-rs |
 |---|---|---|
-| **Wall clock** — 65 files, 4 processes | 376.2 s | **12.1 s** (31.2x faster) |
-| **PSMs** at reported q < 0.01 | 103 038 | **107 046** (+3.9%) |
-| **Peptides** at reported q < 0.01 | 35 852 | **37 469** (+4.5%) |
+| **Wall clock** — 65 files, 4 processes | 376.2 s | **16.1 s** (23.4x faster) |
 | **Peak memory** — 4 processes | 1.49 GiB | **0.76 GiB** |
 
-Full iterations and full 3-fold cross-validation — no training-set reduction, so the speedup is not
-bought by doing less work. A sequential percolator-rs run takes 36.3 s, while the reference takes
-376.2 s even with four-file concurrency. To get under 60 s here, the reference must enable speed
-flags that cost it 12–15% of its identifications.
+Full iterations and full 3-fold cross-validation — no training-set reduction. A sequential
+percolator-rs run takes 51.1 s, while the reference takes 376.2 s even with four-file concurrency.
+The pre-repair build was faster (12.1 s at N=4, 36.3 s sequential); each of the three folds now fits
+its own normalization, initial direction and design matrix, which is where the time went. Peak memory
+is unchanged because folds run one at a time by default.
+
+Identification counts from this pair of runs are deliberately **not** tabulated together. The
+recorded reference run auto-detected these PINs as separate-search input and used mix-max, while
+percolator-rs uses direct competition, so the two numbers answer different questions. percolator-rs
+reports 106,795 target PSMs and 35,866 target peptides at q<0.01 here; that is its own canonical
+baseline (previously 107,046 / 37,469 under the rejected methodology), not a comparison. The matched
+comparison is the four-dataset table above.
 
 Results are bit-deterministic under a fixed seed and guarded by regression gates. Repeated
-pure-null experiments and a six-run foreign-proteome entrapment experiment both reject calibrated
-FDR control for the current Rust estimator; see [FDR calibration](#fdr-calibration).
+complete-null experiments now find no false discovery at any threshold; the signal-present entrapment
+experiment still rejects nominal 1% control for both implementations. See
+[FDR calibration](#fdr-calibration).
 
 ## Current algorithm
 
-The implementation is Percolator-style, but the validation audit found material departures from
-C++ 3.09 and from leakage-free cross-validation:
-1. **PIN parse** — streaming tab-delimited reader (`ExpMass`/`CalcMass` excluded from features by name).
-2. **Feature normalization** — per-feature z-score, bias column appended.
-3. **Initial direction** — best single feature (either orientation) by target-decoy yield at q<0.01.
-4. **Semi-supervised training** — iterate (default 10×): score → target-decoy q-values → pick confident
-   targets (q<0.01) as positives, all decoys as negatives → retrain the fold-local learner. The
-   default is a class-weighted **L2-regularized squared-hinge linear SVM** (primal truncated-Newton /
-   Newton-CG solver, the same L2-loss family as the reference L2-SVM-MFN). An experimental small MLP
-   is available with `--rescore-model mlp`.
-   The class weights are **absolute** (`Cpos=1`, `Cneg=4`), not derived from the target/decoy class
-   balance. This is the single largest reported-yield change here: the heuristic
-   `Cpos = max(n_neg/n_pos, 1)` explodes (~300x) when confident targets are scarce and swamps the
-   decoys — measured, it is the *worst* corner of the weight space. Pin the weights with
-   `--cpos/--cneg`, or search them per file with `--select-c` (see [Fidelity notes](#fidelity-notes)).
-   For leakage-free selection of C, class ratio, feature count, and solver tolerance, use the
-   experimental nested `--auto-model` path.
-5. **3-fold out-of-fold scoring** — each PSM is scored by an SVM objective that excluded its fold,
-   but default normalization uses all feature rows and default initial-direction selection uses all
-   labels. The default is therefore **not leakage-free or nested**. Only the experimental
-   `--auto-model` path isolates those base-feature steps.
-6. **Experimental target-decoy q-values and PAVA PEPs** — these are bounded and monotone in the
-   implementation's score ordering, but repeated null and entrapment validation shows that they are
-   not calibrated probabilities. They are not equivalent to the C++ 3.09 estimators.
+1. **PIN parse** — streaming tab-delimited reader. Metadata columns are the contiguous prefix after
+   `Label` drawn from `ScanNr`, `ExpMass`, `CalcMass`, `rt`/`retentiontime`, `FileName`/`SpectraFile`,
+   matched case-insensitively, exactly as the reference does; features start at the first
+   unrecognized header. Malformed, missing or non-finite required values **stop the run** with the
+   file, line, column name and offending text.
+2. **Fold construction** — three folds built from spectrum groups keyed by `(source, ScanNr)`, so
+   every candidate of one spectrum, target and decoy alike, trains and is scored together.
+3. **Per-fold preprocessing** — z-score location and scale, and the initial direction (best single
+   feature in either orientation by training-set yield), are both fitted **inside that fold's
+   training partition**. Nothing about a held-out row reaches the model that scores it.
+4. **Semi-supervised training** — iterate (default 10x): score → target-decoy q-values → pick
+   confident targets (q<0.01) as positives, all decoys as negatives → retrain the fold-local learner.
+   The default is a class-weighted **L2-regularized squared-hinge linear SVM** (primal
+   truncated-Newton solver, the same L2-loss family as the reference L2-SVM-MFN). Class weights are
+   **absolute** (`Cpos=1`, `Cneg=4`); pin them with `--cpos/--cneg`, or search per file with
+   `--select-c`, which remains **selection-biased and non-nested** because it ranks candidates on the
+   same out-of-fold predictions it later reports. `--auto-model` performs nested selection.
+   An experimental small MLP is available with `--rescore-model mlp`.
+5. **Fold merging** — each fold's held-out scores are expressed in standard deviations above that
+   fold's own training-decoy mean before pooling. Independently fitted models share no intercept or
+   score unit, and the merged ranking is the only thing q-values see. (The reference instead anchors
+   on the held-out selection boundary and median decoy; training decoys are used here to keep the
+   transform inside the training partition.)
+6. **Spectrum-level competition** — the best-scoring candidate of each precursor
+   (`source`, `ScanNr`, `ExpMass`) is kept and the rest dropped, on the rescored values. This is the
+   reference's `--post-processing-tdc`. It is on by default because the q-value estimator assumes
+   each spectrum contributes at most one competition winner; `--no-psm-competition` reports every
+   candidate, and its q-values are then not FDR estimates.
+7. **Target-decoy q-values** — `min(1, pi0 * (D+1) * lambda / max(1, T))` evaluated once per exact-score
+   tie group and shared by every member, then the reverse cumulative minimum. `pi0 = 1`, the
+   conservative choice for direct competition and what the reference uses for concatenated input;
+   `lambda = p/(1-p)` with `p = --null-target-win-prob` (default 0.5, so 1.0 — use `1/(1+k)` for `k`
+   decoys per target). The `+1` is the finite-sample safeguard; without it a leading run of targets
+   reports exactly zero estimated FDP however thin the evidence.
+8. **Posterior error probabilities** — derived from those q-values through the identity of Käll et
+   al. (2008): `q_k` is the mean PEP over the top `k` targets, so `raw PEP_k = k*q_k - (k-1)*q_{k-1}`,
+   plus half a false discovery of prior mass spread over the list, then an isotonic fit. A PEP of
+   exactly zero is unreachable by construction.
+9. **Peptide and protein levels** — best PSM per peptide, then the same estimators; picked or
+   Bayesian protein inference. Protein output has **not** been revalidated since the repair.
+
+**Input contract.** A concatenated target-decoy search against a decoy database the same size as the
+target database. Separate target/decoy searches (mix-max post-processing) are not supported.
 
 ## FDR calibration
-The earlier `bench/null_calibration.sh` result was interpreted incorrectly by dividing a small
-number of accepted targets by the large number of null targets. Under a complete null every
-discovery is false, so the realized FDP is 1 whenever there is any rejection and 0 otherwise; FDR
-is the probability of any rejection across repeated null datasets. The corrected repeated study
-uses ten exact-balance relabelings of each of three PINs. Rust rejects at least one false target in
-**17/30 runs at every threshold from q<0.001 through q<0.10** (empirical FDR 56.7%; counts are
-unchanged across thresholds because the accepted PSMs have q=0). C++ rejects none in 29 successful
-runs and terminates without an initial direction in one. This is a failed Rust FDR validation, not
-conservative behavior. The versioned runner is [`validation/run_null.py`](validation/run_null.py).
 
-The stronger signal-present check is `bench/entrapment/run.sh`: six deposited mzML runs are
-re-searched against the native database plus an equally sized foreign plant proteome. At reported
-q≤0.01, percolator-rs accepts **19,666 PSMs at an entrapment-estimated 2.78% FDP**; C++ 3.09 accepts
-**19,126 at 2.62%**. Thus the +2.82% nominal-q yield lead on these runs is real as a count but is
-*not* validated at an actual 1% FDR. Both implementations share the larger calibration failure,
-with Rust slightly more anti-conservative at this cutoff. Full design, uncertainty intervals, and
-all thresholds: [`bench/ENTRAPMENT.md`](bench/ENTRAPMENT.md).
+**Complete null.** Ten exact-balance relabelings of each of three PXD032157 PINs: only original decoy
+rows are kept and half are relabelled target, so features are exchangeable with respect to the label
+and every accepted pseudo-target is false by construction. Under a complete null, FDP is 1 whenever
+anything is accepted and 0 otherwise, so empirical FDR is the probability of any rejection.
+
+| Threshold | pre-repair | **repaired** | C++ 3.09 |
+|---|---:|---:|---:|
+| q<0.001 through q<0.10 | 17/30 runs | **0/30 runs** | 0/29 runs |
+
+Empirical complete-null FDR falls from 0.567 to **0.000** at every threshold. No seed was excluded.
+Zero rejections in 30 replicates bounds the complete-null FDR above by about 0.12 at 95% confidence —
+consistent with control at every threshold, and not a demonstration of control at 0.001. Runner:
+[`validation/run_null.py`](validation/run_null.py).
+
+**Signal-present entrapment.** Six deposited mzML runs re-searched against the native database plus
+an equally sized foreign plant proteome; pure foreign-proteome assignments are known errors. Five
+seeds, at reported q<0.01:
+
+| Arm | accepted | entrapment-adjusted FDP |
+|---|---:|---:|
+| pre-repair percolator-rs | 19,542.8 | 2.698% |
+| percolator-rs, competition off | 19,226.6 | 2.561% |
+| C++ 3.09, no competition | 19,178.0 | 2.521% |
+| **percolator-rs (default)** | **19,533.0** | **1.816%** |
+| C++ 3.09, `--post-processing-tdc` | 19,515.4 | 1.729% |
+
+The repair accepts essentially the same number of PSMs at two-thirds the false discovery proportion.
+The estimator and cross-validation fixes account for the move from 2.70% to 2.56% — that is,
+they removed percolator-rs's excess over the reference. The rest came from spectrum-level
+competition, which **neither** implementation had been doing: the study's Comet PINs report five
+candidates per scan, which breaks the assumption target-decoy competition rests on.
+
+**This still fails nominal 1% control, for both implementations.** Reported q<0.01 corresponds to an
+estimated 1.8% FDP here. Do not read q<0.01 as "1% error". Candidate explanations for the residual —
+the plug-in entrapment fraction, dependence between accepted PSMs, and the altered search space —
+are stated but not resolved in [`validation/REPAIR.md`](validation/REPAIR.md). Design and thresholds:
+[`bench/ENTRAPMENT.md`](bench/ENTRAPMENT.md).
+
+**Posterior error probabilities.** On the same entrapment data and the same 435,261-target
+denominator: exact-zero PEPs fall from **9,155 to 0** and known-false matches at PEP=0 from **87 to
+0**, with weighted absolute calibration error from **0.0634 to 0.0171** (C++ 3.09: 0.0178). Every bin
+remains anti-conservative by one to three percentage points, so the PEPs are improved and are not
+calibrated.
 
 ## Build & run
 ```
@@ -152,41 +220,49 @@ Presets so you don't have to memorize flag combinations. Pass one of `--fast` / 
 |---|---|---|
 | `--fast` | `--subset-max-train 20000 --maxiter 5` | quick QA / test pipelines |
 | `--balanced` | `--subset-max-train 40000 --maxiter 10` | fast with near-full yield |
-| `--canonical` (default) | full defaults (maxiter 10, no subsetting) | maximum current reported-q yield; statistics are not validated |
+| `--canonical` (default) | full defaults (maxiter 10, no subsetting) | the validated configuration; the only one the repair evidence covers |
 
 Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs). The canonical row is the
-median of three portable `x86-64-v3` runs from the 2026-08-24 optimization campaign; the noncanonical
-profiles have not yet been rerun with these common-path optimizations.
+median of three runs on the repaired build; the `--balanced` and `--fast` rows predate both the
+2026-08-24 optimization campaign and the statistical repair, and have not been re-measured.
 
 | profile | wall | peak RAM | PSM q<0.01 | peptide q<0.01 |
 |---|--:|--:|--:|--:|
-| `--canonical` (default) | **12.1 s** | **0.76 GiB** | 107 046 | 37 469 |
-| `--balanced` | 20.4 s | 0.87 GiB | 106 817 (−0.2%) | 37 526 (+0.2%) |
-| `--fast` | **14.6 s** | 0.88 GiB | 105 237 (−1.7%) | 36 772 (−1.9%) |
+| `--canonical` (default), repaired | **16.1 s** | **0.78 GiB** | 106 795 | 35 866 |
+| `--canonical`, pre-repair | 12.1 s | 0.76 GiB | 107 046 | 37 469 |
+| `--balanced`, pre-repair | 20.4 s | 0.87 GiB | 106 817 | 37 526 |
+| `--fast`, pre-repair | 14.6 s | 0.88 GiB | 105 237 | 36 772 |
 
-The balanced and fast rows are earlier measurements and remain useful for their yield tradeoffs, but
-their absolute wall times should not be compared with the newly optimized canonical row until they
-are rerun. These measurements include writing the result files to local ext4. See
+Only the first row describes the current method. The balanced and fast rows are kept for their yield
+tradeoffs under the old methodology; their counts are not comparable to the repaired canonical row and
+their absolute wall times are not comparable to anything measured after the optimization campaign.
+These measurements include writing the result files to local ext4. See
 [`bench/OPTIMIZATION.md`](bench/OPTIMIZATION.md) for the complete candidate ledger, exact-output
 checks, and final runtime profile.
 
 ## Benchmark vs C++ Percolator 3.09 (PXD032157, 65 files, 12-core Ryzen 5 5600G)
 
-**Q1 — Can Rust hit sub-60 s with the complete default training workload (full iterations, no
-reported-q yield loss relative to its own baseline)? YES.**
+**Q1 — Can Rust hit sub-60 s with the complete default training workload (full iterations)? YES.**
 
-| implementation | settings | wall (65 files) | yield (PSM / peptide q<0.01) |
+Yield columns are each implementation's own reported-q count under its own post-processing. The
+reference run auto-detected separate-search input and used mix-max; percolator-rs uses direct
+competition. **The columns are not comparable to each other** and are listed only to show that the
+Rust speed does not come from doing less work. The matched comparison lives in
+[`validation/REPAIR.md`](validation/REPAIR.md).
+
+| implementation | settings | wall (65 files) | own reported-q count (PSM / peptide q<0.01) |
 |---|---|---|---|
-| C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 (canonical) |
-| C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%**) |
-| **percolator-rs** | complete default workload, sequential | **36.3 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
-| **percolator-rs** | **complete default workload, N=4** | **12.1 s** | **107 046 / 37 469** |
-| percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | 106 558 / 37 330 |
-| percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | 106 652 / 37 636 |
+| C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 |
+| C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%** vs its own default) |
+| **percolator-rs** | complete default workload, sequential | **51.1 s** | **106 795 / 35 866** |
+| **percolator-rs** | **complete default workload, N=4** | **16.1 s** | **106 795 / 35 866** |
+| percolator-rs (pre-repair) | complete default workload, N=4 | 12.1 s | 107 046 / 37 469 |
+| percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | not re-measured since the repair |
+| percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | not re-measured since the repair |
 
-percolator-rs reaches sub-60 s **without** cutting iterations and **without** the 12–15 % yield loss the
-C++ implementation needs to get there — and it identifies ~4% *more* than the canonical reference run.
-A single percolator-rs process (36.3 s) finishes far ahead of the reference's observed N=4 run.
+percolator-rs reaches sub-60 s **without** cutting iterations and without the 12–15% yield loss the
+C++ implementation needs to get there. A single percolator-rs process (51.1 s) still finishes ahead of
+the reference's observed N=4 run.
 
 **Q2 — Peak RSS under identical concurrency (N=4).** percolator-rs peaks at **0.76 GiB** vs the C++
 reference's **1.49 GiB**.
@@ -316,49 +392,63 @@ Performance and recorded output yield are locked in so refactors cannot silently
   across serial and three-thread execution; a unit test separately proves outer-test mutations
   cannot change that fold's selected hyperparameters.
 - **`bench/regression.sh`** (self-hosted / nightly, needs the PXD032157 data) — full 65-file `--canonical`
-  run at N=4: asserts 65/65 valid, aggregate PSM & peptide q<0.01 within ±1% of recorded (107 046 / 37 469),
-  wall < 45 s, peak RSS < 1.5 GiB.
+  run at N=4: asserts 65/65 valid, aggregate PSM & peptide q<0.01 within ±1% of recorded
+  (**106 795 / 35 866**), wall < 45 s, peak RSS < 1.5 GiB.
 - **`.github/workflows/ci.yml`** — on push/PR: `cargo build --release` → `cargo test` → `tests/regression.sh`.
   A manual `workflow_dispatch` job (self-hosted runner labelled `percolator-data`) also runs the C++ budget
   smoke test (`bench/fastrun.sh`, <60 s) and the percolator-rs full gate.
 
 Recorded references live in `tests/expected.env`; update them intentionally when a change is meant to move
-the numbers. percolator-rs is seed-deterministic, so fixture yields are exact run-to-run.
+the numbers. percolator-rs is seed-deterministic, so fixture yields are exact run-to-run. They were all
+re-recorded on the repaired method — the pre-repair values are kept in that file as history, not as an
+acceptance criterion, because the methodology that produced them failed validation. Peptide gates on the
+12,000-row fixture assert q<0.05 rather than q<0.01: with 38 target peptides above every decoy the
+corrected estimator's best possible statement is 1/38 = 0.026, so a q<0.01 peptide gate would assert 0
+and pass for any broken build.
+
+These gates lock **implementation determinism**, not scientific validity. The evidence for the latter
+is in [`validation/REPAIR.md`](validation/REPAIR.md), and it is partial.
 
 ## Fidelity notes
-percolator-rs reports **more** than the auto-mode C++ reference at the same nominal threshold (+3.9%
-PSMs, +4.5% peptides), but this comparison uses different model selection and post-processing:
-C++ auto-detects these PINs as separate search input and uses mix-max, whereas Rust uses its direct
-target-decoy estimator. A later forced-concatenated benchmark still differs in class weights,
-fold-score merging, q-values, and PEPs. Repeated pure-null and signal-present entrapment controls
-both fail to validate the Rust error probabilities. The count difference is identification yield
-only, not accuracy or sensitivity.
 
-Two standard explanations for the original ~1 % deficit were tested and **disproved by measurement**:
+Under matched post-processing percolator-rs and C++ 3.09 now agree to within ±15 PSMs at q<0.01 on
+four independent datasets (see [Results](#results)). The historical "+3.9% PSMs, +4.5% peptides"
+against the auto-mode reference was never a like-for-like comparison — C++ auto-detected those PINs
+as separate-search input and used mix-max — and the part of the gap that survived a forced-
+concatenated rerun turned out to be defects in percolator-rs, not sensitivity. Identification counts
+are not accuracy in either direction.
 
-- *Per-spectrum best-PSM competition* — the reference does **not** do it. Every scan in these inputs
-  carries 5 Comet ranks, and C++ emits all 92 989 target rows unchanged.
-- *Storey pi0* — the reference logs `pi0 = 1` on this data (peptide level `0.999168`), landing in the
-  same place as the simple decoys/targets estimate.
+Two standard explanations for the original ~1% deficit were tested by measurement. One of them was
+read the wrong way round:
+
+- *Per-spectrum best-PSM competition* — the observation was right: the reference does not compete by
+  default, and every scan in these inputs carries 5 Comet ranks, so C++ emits all 92,989 target rows
+  unchanged. The conclusion drawn from it — that percolator-rs should not compete either — was wrong.
+  Five candidates from one scan are not five independent hypotheses, and target-decoy competition
+  assumes each spectrum contributes at most a competition winner. Not competing is why *both*
+  implementations were anti-conservative on the entrapment study; competing moves both to the same,
+  better place. percolator-rs now competes by default, and the reference offers the same behaviour
+  under `--post-processing-tdc`.
+- *Storey pi0* — confirmed: the reference logs `pi0 = 1` on this data. percolator-rs fixes `pi0` at 1
+  for direct competition, for the same reason the reference does.
 
 SVM class weighting (algorithm step 4) was the largest measured cause of the historical count
 reversal. Switching to absolute `Cpos`/`Cneg` instead of the previous balance heuristic changed the
-reported-yield gap and reduced its per-file spread. It does not explain the full Rust/C++
-difference, because fold-score normalization, hyperparameter selection, q-values, PEPs, and
-post-processing also differ; without ground truth it is not an accuracy result.
+reported-yield gap and reduced its per-file spread. Without ground truth it is not an accuracy
+result.
 
-The per-file grid search (`--select-c`) was built on top of that fix and, on this dataset, does
-**not** pay for itself: 2.5x the wall time, and a coin flip per file (better on 32, worse on 28,
-tied on 5, and marginally worse in aggregate) because candidates are ranked by an abbreviated proxy
-run. It remains
-available for data where the fixed defaults may not transfer. Those defaults were themselves chosen
-by measurement on this dataset — treat them as a well-tested starting point, not a universal
-constant.
+The per-file grid search (`--select-c`) does **not** pay for itself on this dataset: 2.5x the wall
+time for a coin flip per file, because candidates are ranked by an abbreviated proxy run. It also
+remains **selection-biased and not nested** — it scores candidates on the same out-of-fold
+predictions it later reports — so its reported q-values carry an optimism this repair did not
+remove. Prefer `--auto-model` when per-file selection is actually needed.
 
-The newer `--auto-model` path removes the legacy selector's evaluation leakage: normalization,
-initialization, feature ranking, hyperparameter choice, and fitting all occur inside each outer
-training partition, and fold-specific margins are standardized from training decoys before pooling.
-It finishes 394 PSMs below but 167 peptides above fixed defaults while costing 10.3x more, then loses
-both metrics on independent extension cases. All 195 outer models keep the existing solver tolerance
-and 194 keep all features, so the added flexibility is not justified as a default here. Full design
-and held-out results: [`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md).
+`--auto-model` performs nested selection inside each outer training partition. Its recorded
+comparison against fixed defaults predates the repair and has not been re-measured; the numbers in
+[`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md) describe the rejected methodology.
+
+**Not revalidated since the repair.** `--rescore-model mlp`, `--auto-model`, `--select-c`,
+`--ensemble`, `--join`, `--rt-features`, and both protein-inference modes. They inherit the corrected
+estimators and the corrected fold isolation, which is necessary but not sufficient. Protein-level
+output in particular still carries the PrEST calibration failures recorded in
+[`bench/PROTEIN_CALIBRATION.md`](bench/PROTEIN_CALIBRATION.md).

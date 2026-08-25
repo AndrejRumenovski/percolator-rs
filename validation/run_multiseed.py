@@ -57,15 +57,36 @@ def counts(path: Path) -> dict[str, int]:
     return {f"q_lt_{threshold:g}": sum(value < threshold for value in values) for threshold in THRESHOLDS}
 
 
-def summary(values: list[float]) -> dict:
+def summary(values: list[float | None]) -> dict:
+    """Describe a metric across replicates.
+
+    Undefined replicates are reported as such rather than dropped silently:
+    Jaccard is 0/0 whenever neither implementation accepts anything at a
+    threshold, which the corrected estimator does reach on small inputs at
+    q<0.001.  `n` counts the replicates that contributed and `undefined` the
+    rest, so a summary can never be read as if it covered every seed.
+    """
+    defined = [value for value in values if value is not None]
+    if not defined:
+        return {
+            "n": 0,
+            "undefined": len(values),
+            "mean": None,
+            "median": None,
+            "sd": None,
+            "minimum": None,
+            "maximum": None,
+            "range": None,
+        }
     return {
-        "n": len(values),
-        "mean": statistics.fmean(values),
-        "median": statistics.median(values),
-        "sd": statistics.stdev(values) if len(values) > 1 else 0.0,
-        "minimum": min(values),
-        "maximum": max(values),
-        "range": max(values) - min(values),
+        "n": len(defined),
+        "undefined": len(values) - len(defined),
+        "mean": statistics.fmean(defined),
+        "median": statistics.median(defined),
+        "sd": statistics.stdev(defined) if len(defined) > 1 else 0.0,
+        "minimum": min(defined),
+        "maximum": max(defined),
+        "range": max(defined) - min(defined),
     }
 
 
@@ -225,8 +246,9 @@ def main() -> None:
             for metric in ("intersection", "rust_only", "cpp_only", "jaccard"):
                 dataset_summary["agreement"][f"{metric}_q_lt_{threshold:g}"] = summary([row[metric] for row in rows])
         for metric in ("score_spearman", "q_value_spearman", "pep_spearman"):
-            values = [item["correlations_on_matching_psms"][metric] for item in agreement_rows]
-            dataset_summary["agreement"][metric] = summary([value for value in values if value is not None])
+            dataset_summary["agreement"][metric] = summary(
+                [item["correlations_on_matching_psms"][metric] for item in agreement_rows]
+            )
         aggregate[name] = dataset_summary
 
     manifest["aggregate"] = aggregate

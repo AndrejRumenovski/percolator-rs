@@ -8,6 +8,8 @@
 
 # Scratch
 *.log
+__pycache__/
+*.py[cod]
 
 # Local working notes (not for VCS)
 /handoff.md
