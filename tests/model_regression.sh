@@ -29,12 +29,14 @@ for kind in target.psms decoy.psms target.peptides decoy.peptides; do
 done
 
 psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$TMP_MODEL_REGRESSION/serial.log")
-peptide=$(sed -n 's/.*target peptides q<0.01: \([0-9]*\).*/\1/p' "$TMP_MODEL_REGRESSION/serial.log")
+# q<0.05 at peptide level: on a fixture this small the corrected estimator's best
+# statement is 1/38, so a q<0.01 peptide gate would assert 0 for any build.
+peptide=$(awk -F'\t' 'NR>1 && $3<0.05' "$TMP_MODEL_REGRESSION/serial.target.peptides.tsv" | wc -l)
 
 echo "== percolator-rs MLP regression gate =="
-[ "$psm" -eq 150 ] || { echo "  FAIL  PSM q<0.01: $psm (expected 150)"; exit 1; }
-[ "$peptide" -eq 45 ] || { echo "  FAIL  peptide q<0.01: $peptide (expected 45)"; exit 1; }
+[ "$psm" -eq 130 ] || { echo "  FAIL  PSM q<0.01: $psm (expected 130)"; exit 1; }
+[ "$peptide" -eq 38 ] || { echo "  FAIL  peptide q<0.01: $peptide (expected 38)"; exit 1; }
 echo "  PASS  PSM q<0.01           $psm"
-echo "  PASS  peptide q<0.01       $peptide"
+echo "  PASS  peptide q<0.05       $peptide"
 echo "  PASS  serial/parallel      byte-identical outputs"
 echo "ALL CHECKS PASSED"

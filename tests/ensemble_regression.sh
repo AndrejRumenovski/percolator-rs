@@ -14,8 +14,9 @@ trap 'rm -rf "$WORK"' EXIT
 
 run_ensemble() {
   local name=$1 threads=$2 destination="$WORK/$1"
+  shift 2
   mkdir -p "$destination"
-  "$BIN" --canonical --seed 1 --num-threads "$threads" --ensemble \
+  "$BIN" --canonical --seed 1 --num-threads "$threads" --ensemble "$@" \
     "comet=$FIX" "tide=$FIX" \
     --results-psms "$destination/target.psms.tsv" \
     --decoy-results-psms "$destination/decoy.psms.tsv" \
@@ -24,11 +25,25 @@ run_ensemble() {
     >"$destination/stdout.log" 2>"$destination/stderr.log"
 }
 
-run_ensemble serial 1
-run_ensemble parallel 3
+# Spectrum-level competition is the default and subsumes candidate deduplication,
+# so the deduplication path itself is exercised with competition switched off.
+run_ensemble serial 1 --no-psm-competition
+run_ensemble parallel 3 --no-psm-competition
+run_ensemble competed 1
 for file in target.psms.tsv decoy.psms.tsv target.peptides.tsv decoy.peptides.tsv; do
   cmp "$WORK/serial/$file" "$WORK/parallel/$file"
 done
+
+# Competition keeps exactly one candidate per spectrum.
+spectra=$(awk -F'\t' '
+  NR==1 {for(i=1;i<=NF;i++){if($i=="ScanNr") scan=i} next}
+  $1 !~ /^DefaultDirection/ {seen[$scan]=1}
+  END {for(key in seen) n++; print n+0}
+' "$FIX")
+competed=$(( $(wc -l <"$WORK/competed/target.psms.tsv") + $(wc -l <"$WORK/competed/decoy.psms.tsv") - 2 ))
+[ "$competed" -eq "$spectra" ] || {
+  echo "FAIL: competition emitted $competed rows, expected one per spectrum ($spectra)"; exit 1;
+}
 
 # The two inputs are identical, so exact candidate deduplication must reduce the
 # emitted PSM set to the number of distinct (ScanNr, Label, Peptide) candidates.
@@ -51,4 +66,4 @@ if "$BIN" --ensemble "comet=$FIX" "tide=$FIX" \
   exit 1
 fi
 
-echo "PASS: ensemble candidate deduplication and serial/parallel outputs are exact ($observed candidates)"
+echo "PASS: ensemble deduplication ($observed candidates), spectrum competition ($competed rows), serial/parallel exact"

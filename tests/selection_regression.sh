@@ -41,14 +41,15 @@ fi
 
 folds=$(sed -n '/^  fold /p' "$TMP_SELECTION_REGRESSION/serial.log" | wc -l)
 psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$TMP_SELECTION_REGRESSION/serial.log")
-peptide=$(sed -n 's/.*target peptides q<0.01: \([0-9]*\).*/\1/p' "$TMP_SELECTION_REGRESSION/serial.log")
+# q<0.05 at peptide level: see tests/expected.env.
+peptide=$(awk -F'\t' 'NR>1 && $3<0.05' "$TMP_SELECTION_REGRESSION/serial.target.peptides.tsv" | wc -l)
 
 echo "== percolator-rs nested-selection regression gate =="
 [ "$folds" -eq 3 ] || { echo "  FAIL  selected outer folds: $folds"; exit 1; }
-[ "$psm" -eq 123 ] || { echo "  FAIL  PSM q<0.01: $psm (expected 123)"; exit 1; }
-[ "$peptide" -eq 34 ] || { echo "  FAIL  peptide q<0.01: $peptide (expected 34)"; exit 1; }
+[ "$psm" -eq 117 ] || { echo "  FAIL  PSM q<0.01: $psm (expected 117)"; exit 1; }
+[ "$peptide" -eq 43 ] || { echo "  FAIL  peptide q<0.01: $peptide (expected 43)"; exit 1; }
 echo "  PASS  selected outer folds  $folds"
 echo "  PASS  PSM q<0.01           $psm"
-echo "  PASS  peptide q<0.01       $peptide"
+echo "  PASS  peptide q<0.05       $peptide"
 echo "  PASS  serial/parallel      byte-identical choices and outputs"
 echo "ALL CHECKS PASSED"

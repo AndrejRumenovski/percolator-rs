@@ -22,10 +22,12 @@ TIMEV=""
 if command -v /usr/bin/time >/dev/null 2>&1; then TIMEV="/usr/bin/time -v -o /tmp/reg_time.txt"; fi
 
 err=/tmp/reg_run.err
-$TIMEV "$BIN" --canonical --seed 1 "$FIX" >/dev/null 2>"$err" || { echo "FAIL: run errored"; cat "$err"; exit 1; }
+peptides=/tmp/reg_run.peptides.tsv
+$TIMEV "$BIN" --canonical --seed 1 --results-peptides "$peptides" "$FIX" >/dev/null 2>"$err" || { echo "FAIL: run errored"; cat "$err"; exit 1; }
 
 psm=$(grep -oP 'target PSMs q<0.01: \K[0-9]+' "$err")
-pep=$(grep -oP 'target peptides q<0.01: \K[0-9]+' "$err")
+# q<0.05 at peptide level: see tests/expected.env for why not q<0.01 here.
+pep=$(awk -F'\t' 'NR>1 && $3<0.05' "$peptides" | wc -l)
 wall=$(grep -oP '\| \K[0-9.]+(?=s$)' "$err" | tail -1)   # from tool's own summary line
 rss=""
 if [ -f /tmp/reg_time.txt ]; then
@@ -52,7 +54,7 @@ assert_leq() { # name value budget unit
 
 echo "== percolator-rs regression gate (fixture: $(basename "$FIX")) =="
 assert_within "PSM q<0.01"     "${psm:-0}" "$FIXTURE_PSM_Q01" "$YIELD_TOLERANCE_PCT" || fail=1
-assert_within "peptide q<0.01" "${pep:-0}" "$FIXTURE_PEP_Q01" "$YIELD_TOLERANCE_PCT" || fail=1
+assert_within "peptide q<0.05" "${pep:-0}" "$FIXTURE_PEP_Q05" "$YIELD_TOLERANCE_PCT" || fail=1
 assert_leq    "wall time"      "${wall:-999}" "$FIXTURE_TIME_BUDGET_S" "s" || fail=1
 [ -n "$rss" ] && { assert_leq "peak RSS"  "$rss" "$FIXTURE_MEM_BUDGET_KB" "kB" || fail=1; }
 

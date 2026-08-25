@@ -70,15 +70,15 @@ assert_eq() { # name value expected
 echo "== percolator-rs protein regression gate (synthetic picked-FDR fixture) =="
 assert_eq "protein groups" "${groups:-}" 480
 assert_eq "picked entries" "${picked_entries:-}" 370
-assert_eq "picked q<0.01" "${picked_q01:-}" 276
-assert_eq "classic q<0.01" "${classic_q01:-}" 263
-assert_eq "target rows" "$(wc -l < "$tprot")" 339
-assert_eq "decoy rows" "$(wc -l < "$dprot")" 33
+assert_eq "picked q<0.01" "${picked_q01:-}" 267
+assert_eq "classic q<0.01" "${classic_q01:-}" 262
+assert_eq "target rows" "$(wc -l < "$tprot")" 336
+assert_eq "decoy rows" "$(wc -l < "$dprot")" 36
 
 np1=$(awk 'NR > 1 && $5 == 1 { c++ } END { print c + 0 }' "$tprot")
 np2=$(awk 'NR > 1 && $5 == 2 { c++ } END { print c + 0 }' "$tprot")
 assert_eq "numPeptides=1 rows" "$np1" 260
-assert_eq "numPeptides=2 rows" "$np2" 78
+assert_eq "numPeptides=2 rows" "$np2" 75
 
 assert_eq "Bayesian converged" "$(grep -oP 'converged: \K(true|false)' "$berr")" true
 assert_eq "Bayesian header" "$(head -1 "$bprot")" \

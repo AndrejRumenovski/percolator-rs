@@ -22,8 +22,8 @@ if ! cmp -s "$FIRST" "$SECOND"; then
 fi
 count=$(awk 'BEGIN { count=0 } !/^#/ && $1 != "feature_index" { count++ } END { print count }' "$FIRST")
 baseline=$(awk -F= '/^# baseline_target_psms_q<0.01=/{ print $2 }' "$FIRST")
-if [ "$count" != 21 ] || [ "$baseline" != 132 ]; then
-  echo "FAIL: expected 21 feature rows and q<0.01 baseline 132; got $count and ${baseline:-missing}"
+if [ "$count" != 21 ] || [ "$baseline" != 117 ]; then
+  echo "FAIL: expected 21 feature rows and q<0.01 baseline 117; got $count and ${baseline:-missing}"
   exit 1
 fi
 if "$BIN" --rescore-model mlp --feature-report "$FIRST" "$FIX" >/dev/null 2>"$ERR"; then
