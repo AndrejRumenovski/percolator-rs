@@ -153,36 +153,73 @@ impl Dataset {
     }
 }
 
-fn is_excluded(name: &[u8]) -> bool {
-    name == b"ExpMass" || name == b"CalcMass"
+/// Metadata column names the PIN format allows between `Label` and the first
+/// feature, matched case-insensitively.
+///
+/// The reference consumes a *contiguous prefix* of these and starts the feature
+/// block at the first unrecognized header
+/// (`SetHandler::getOptionalFields`).  percolator-rs previously took every
+/// column between `ScanNr` and `Peptide` as a feature except `ExpMass` and
+/// `CalcMass`, which meant a Sage `FileName` column was parsed as a number and a
+/// raw `retentiontime` was trained on as if it were a search score.
+const OPTIONAL_COLUMNS: [&[u8]; 7] = [
+    b"ScanNr",
+    b"ExpMass",
+    b"CalcMass",
+    b"rt",
+    b"retentiontime",
+    b"FileName",
+    b"SpectraFile",
+];
+
+fn is_optional_column(name: &[u8]) -> bool {
+    OPTIONAL_COLUMNS
+        .iter()
+        .any(|known| name.eq_ignore_ascii_case(known))
 }
 
-#[inline]
-fn atoi(b: &[u8]) -> i64 {
-    let mut i = 0;
-    let mut neg = false;
-    if !b.is_empty() && (b[0] == b'-' || b[0] == b'+') {
-        neg = b[0] == b'-';
-        i = 1;
-    }
-    let mut v: i64 = 0;
-    while i < b.len() {
-        let c = b[i];
-        if c.is_ascii_digit() {
-            v = v * 10 + (c - b'0') as i64;
-        }
-        i += 1;
-    }
-    if neg {
-        -v
+fn invalid_data(message: String) -> std::io::Error {
+    std::io::Error::new(std::io::ErrorKind::InvalidData, message)
+}
+
+fn show(field: &[u8]) -> String {
+    let text = String::from_utf8_lossy(field);
+    if text.chars().count() > 40 {
+        format!("{}...", text.chars().take(40).collect::<String>())
     } else {
-        v
+        text.into_owned()
     }
 }
 
+/// Strict base-10 integer. Anything else is a malformed file, not a zero.
 #[inline]
-fn parse_f64(b: &[u8]) -> f64 {
-    fast_float::parse(b).unwrap_or(0.0)
+fn atoi(b: &[u8]) -> Option<i64> {
+    let (negative, digits) = match b.first() {
+        Some(b'-') => (true, &b[1..]),
+        Some(b'+') => (false, &b[1..]),
+        _ => (false, b),
+    };
+    if digits.is_empty() || !digits.iter().all(u8::is_ascii_digit) {
+        return None;
+    }
+    let mut value: i64 = 0;
+    for &c in digits {
+        value = value.checked_mul(10)?.checked_add((c - b'0') as i64)?;
+    }
+    Some(if negative { -value } else { value })
+}
+
+/// Strict finite float.
+///
+/// The parser used to fall back to zero for anything it could not read and to
+/// accept NaN and infinity unchecked. A silently zeroed feature is
+/// indistinguishable from a real measurement of zero, and a non-finite feature
+/// propagates through normalization into scores, q-values and the sort order.
+/// Both now stop the run with a located diagnostic.
+#[inline]
+fn parse_f64(b: &[u8]) -> Option<f64> {
+    let value: f64 = fast_float::parse(b).ok()?;
+    value.is_finite().then_some(value)
 }
 
 /// Iterate tab-delimited field byte-slices of a line into `out` (indices reused).
@@ -231,28 +268,37 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
     let header = lines.next().unwrap_or(&[]);
     let mut hfields: Vec<&[u8]> = Vec::new();
     split_fields(header, &mut hfields);
-    let idx_label = hfields
-        .iter()
-        .position(|c| c.eq_ignore_ascii_case(b"Label"))
-        .expect("no Label column");
-    let idx_scan = hfields
-        .iter()
-        .position(|c| c.eq_ignore_ascii_case(b"ScanNr"))
-        .expect("no ScanNr column");
-    let idx_pep = hfields
-        .iter()
-        .position(|c| c.eq_ignore_ascii_case(b"Peptide"))
-        .expect("no Peptide column");
+    let required = |name: &str, bytes: &[u8]| -> std::io::Result<usize> {
+        hfields
+            .iter()
+            .position(|c| c.eq_ignore_ascii_case(bytes))
+            .ok_or_else(|| invalid_data(format!("{path}: PIN header has no {name} column")))
+    };
+    let idx_label = required("Label", b"Label")?;
+    let idx_scan = required("ScanNr", b"ScanNr")?;
+    let idx_pep = required("Peptide", b"Peptide")?;
 
-    let mut feat_cols: Vec<usize> = Vec::new();
-    let mut feature_names: Vec<String> = Vec::new();
-    for j in (idx_scan + 1)..idx_pep {
-        if !is_excluded(hfields[j]) {
-            feat_cols.push(j);
-            feature_names.push(String::from_utf8_lossy(hfields[j]).into_owned());
-        }
+    let mut feature_start = idx_label + 1;
+    while feature_start < idx_pep && is_optional_column(hfields[feature_start]) {
+        feature_start += 1;
     }
+    if idx_scan >= feature_start {
+        return Err(invalid_data(format!(
+            "{path}: ScanNr must sit in the metadata columns that follow Label, \
+             but a feature column appears before it"
+        )));
+    }
+    let feat_cols: Vec<usize> = (feature_start..idx_pep).collect();
+    let feature_names: Vec<String> = feat_cols
+        .iter()
+        .map(|&j| String::from_utf8_lossy(hfields[j]).into_owned())
+        .collect();
     let n_feat = feat_cols.len();
+    if n_feat == 0 {
+        return Err(invalid_data(format!(
+            "{path}: PIN header has no feature columns between the metadata block and Peptide"
+        )));
+    }
     #[cfg(feature = "profiling")]
     crate::profile::record(
         "parser",
@@ -298,7 +344,9 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
     let mut copied_string_bytes = 0u64;
     #[cfg(feature = "profiling")]
     let mut string_allocations = 0u64;
-    for line in lines {
+    // Header consumed above, so the first row of `lines` is file line 2.
+    for (offset, line) in lines.enumerate() {
+        let line_number = offset + 2;
         if line.is_empty() {
             continue;
         }
@@ -316,7 +364,11 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
             split_time += split_start.elapsed();
         }
         if fields.len() <= idx_pep {
-            continue;
+            return Err(invalid_data(format!(
+                "{path}:{line_number}: row has {} fields but the header needs at least {}",
+                fields.len(),
+                idx_pep + 1
+            )));
         }
         #[cfg(feature = "profiling")]
         let spec_string_start = std::time::Instant::now();
@@ -328,11 +380,27 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
         }
         #[cfg(feature = "profiling")]
         let numeric_start = std::time::Instant::now();
-        let label: i8 = if atoi(fields[idx_label]) > 0 { 1 } else { -1 };
-        ds.labels.push(label);
-        ds.scan.push(atoi(fields[idx_scan]));
-        for &j in &feat_cols {
-            ds.features.push(parse_f64(fields[j]));
+        let raw_label = atoi(fields[idx_label]).ok_or_else(|| {
+            invalid_data(format!(
+                "{path}:{line_number}: Label is not an integer: '{}'",
+                show(fields[idx_label])
+            ))
+        })?;
+        ds.labels.push(if raw_label > 0 { 1 } else { -1 });
+        ds.scan.push(atoi(fields[idx_scan]).ok_or_else(|| {
+            invalid_data(format!(
+                "{path}:{line_number}: ScanNr is not an integer: '{}'",
+                show(fields[idx_scan])
+            ))
+        })?);
+        for (feature, &j) in feat_cols.iter().enumerate() {
+            ds.features.push(parse_f64(fields[j]).ok_or_else(|| {
+                invalid_data(format!(
+                    "{path}:{line_number}: feature '{}' is not a finite number: '{}'",
+                    ds.feature_names[feature],
+                    show(fields[j])
+                ))
+            })?);
         }
         #[cfg(feature = "profiling")]
         {
@@ -470,5 +538,145 @@ mod tests {
         // Same spectrum, but a distinct decoy peptide: spectrum support remains 2;
         // exact PSM support correctly remains 1.
         assert_eq!(out.row(3), &[0.0, 1.0, 0.0, 0.9, 2.0, 1.0]);
+    }
+
+    // ----- parser fails closed ------------------------------------------------
+
+    fn write_pin(body: &str) -> std::path::PathBuf {
+        use std::io::Write;
+        let path = std::env::temp_dir().join(format!(
+            "percolator-rs-pin-{}-{:p}.pin",
+            std::process::id(),
+            body.as_ptr()
+        ));
+        let mut file = std::fs::File::create(&path).unwrap();
+        file.write_all(body.as_bytes()).unwrap();
+        path
+    }
+
+    const GOOD: &str = "SpecId\tLabel\tScanNr\tf1\tf2\tPeptide\tProteins\n\
+                        s1\t1\t10\t1.5\t2.5\tK.PEP.R\tP1\n\
+                        s2\t-1\t11\t0.5\t1.0\tK.DEP.R\tDECOY_P1\n";
+
+    fn parse_body(body: &str) -> std::io::Result<Dataset> {
+        let path = write_pin(body);
+        let result = super::parse(path.to_str().unwrap());
+        std::fs::remove_file(&path).ok();
+        result
+    }
+
+    fn rejects(body: &str, needle: &str) {
+        match parse_body(body) {
+            Ok(_) => panic!("parser accepted malformed input: {needle}"),
+            Err(error) => {
+                let message = error.to_string();
+                assert!(
+                    message.contains(needle),
+                    "diagnostic '{message}' does not mention '{needle}'"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_well_formed_pin_still_parses() {
+        let ds = parse_body(GOOD).expect("valid PIN should parse");
+        assert_eq!(ds.n_psm, 2);
+        assert_eq!(ds.n_feat, 2);
+        assert_eq!(ds.row(0), &[1.5, 2.5]);
+        assert_eq!(ds.labels, vec![1, -1]);
+        assert_eq!(ds.scan, vec![10, 11]);
+    }
+
+    /// A silently zeroed feature is indistinguishable from a real measurement of
+    /// zero, so the run must stop instead.
+    #[test]
+    fn a_malformed_feature_is_rejected() {
+        rejects(&GOOD.replace("\t1.5\t", "\tnot-a-number\t"), "not a finite number");
+    }
+
+    #[test]
+    fn a_missing_feature_is_rejected() {
+        rejects(&GOOD.replace("\t1.5\t", "\t\t"), "not a finite number");
+    }
+
+    #[test]
+    fn non_finite_features_are_rejected() {
+        for text in ["nan", "NaN", "inf", "-inf", "Infinity"] {
+            rejects(&GOOD.replace("\t1.5\t", &format!("\t{text}\t")), "not a finite number");
+        }
+    }
+
+    #[test]
+    fn the_diagnostic_locates_the_row_and_column() {
+        let body = GOOD.replace("\t0.5\t", "\tbad\t");
+        let message = match parse_body(&body) {
+            Ok(_) => panic!("parser accepted a malformed feature"),
+            Err(error) => error.to_string(),
+        };
+        assert!(message.contains(":3:"), "no line number in '{message}'");
+        assert!(message.contains("'f1'"), "no column name in '{message}'");
+        assert!(message.contains("'bad'"), "no offending text in '{message}'");
+    }
+
+    #[test]
+    fn a_malformed_label_is_rejected() {
+        rejects(&GOOD.replace("s1\t1\t", "s1\ttarget\t"), "Label is not an integer");
+    }
+
+    #[test]
+    fn a_malformed_scan_number_is_rejected() {
+        rejects(&GOOD.replace("\t10\t", "\t10a\t"), "ScanNr is not an integer");
+    }
+
+    #[test]
+    fn a_short_row_is_rejected_rather_than_skipped() {
+        rejects(&format!("{GOOD}s3\t1\t12\n"), "fields but the header needs");
+    }
+
+    #[test]
+    fn a_missing_required_column_is_rejected() {
+        rejects(
+            "SpecId\tScanNr\tf1\tPeptide\tProteins\ns1\t10\t1.0\tK.P.R\tP1\n",
+            "no Label column",
+        );
+    }
+
+    #[test]
+    fn metadata_columns_are_excluded_whatever_their_case() {
+        let body = "SpecId\tLabel\tScanNr\texpmass\tCALCMASS\tf1\tPeptide\tProteins\n\
+                    s1\t1\t10\t500.1\t500.2\t1.5\tK.PEP.R\tP1\n";
+        let ds = parse_body(body).expect("valid PIN should parse");
+        assert_eq!(ds.feature_names, vec!["f1"]);
+        assert_eq!(ds.row(0), &[1.5]);
+    }
+
+    /// Sage writes a spectrum filename and a raw retention time in the metadata
+    /// block. Neither is a search score; the filename is not even a number.
+    #[test]
+    fn the_metadata_prefix_stops_at_the_first_feature() {
+        let body = "SpecId\tLabel\tScanNr\tExpMass\tCalcMass\tFileName\tretentiontime\trank\tscore\tPeptide\tProteins\n\
+                    s1\t1\t10\t500.1\t500.2\trun_a.mzML\t12.5\t1\t3.5\tK.PEP.R\tP1\n";
+        let ds = parse_body(body).expect("valid PIN should parse");
+        assert_eq!(ds.feature_names, vec!["rank", "score"]);
+        assert_eq!(ds.row(0), &[1.0, 3.5]);
+    }
+
+    /// A metadata name appearing after the feature block starts is a feature, not
+    /// metadata: the prefix is contiguous.
+    #[test]
+    fn a_metadata_name_after_the_prefix_stays_a_feature() {
+        let body = "SpecId\tLabel\tScanNr\tscore\tretentiontime\tPeptide\tProteins\n\
+                    s1\t1\t10\t3.5\t12.5\tK.PEP.R\tP1\n";
+        let ds = parse_body(body).expect("valid PIN should parse");
+        assert_eq!(ds.feature_names, vec!["score", "retentiontime"]);
+    }
+
+    #[test]
+    fn a_pin_without_feature_columns_is_rejected() {
+        rejects(
+            "SpecId\tLabel\tScanNr\tExpMass\tPeptide\tProteins\ns1\t1\t10\t500.1\tK.P.R\tP1\n",
+            "no feature columns",
+        );
     }
 }
