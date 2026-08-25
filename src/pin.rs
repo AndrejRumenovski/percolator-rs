@@ -9,6 +9,7 @@ use memmap2::Mmap;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 
+#[derive(Clone)]
 pub struct Dataset {
     pub feature_names: Vec<String>,
     pub n_feat: usize,

@@ -39,6 +39,11 @@ pub struct Params {
     pub mlp_epochs: usize,
     pub mlp_learning_rate: f64,
     pub mlp_l2: f64,
+    /// Retention-time alignment inputs when `--rt-features` is on.
+    ///
+    /// The alignment is label-dependent, so it is refitted inside every outer
+    /// training partition rather than once over the whole dataset.
+    pub rt: Option<crate::rt::Alignment>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -77,6 +82,7 @@ impl Default for Params {
             mlp_epochs: 10,
             mlp_learning_rate: 0.02,
             mlp_l2: 0.0,
+            rt: None,
         }
     }
 }
@@ -128,7 +134,27 @@ struct Normalization {
     std: Vec<f64>,
 }
 
-fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
+/// Row features with the fold's retention-time residuals patched in.
+#[inline]
+fn feature_row<'a>(ds: &'a Dataset, row: usize, rt: Option<&RtColumns<'_>>, scratch: &'a mut [f64]) -> &'a [f64] {
+    match rt {
+        None => ds.row(row),
+        Some(rt) => {
+            scratch.copy_from_slice(ds.row(row));
+            scratch[rt.first_column] = rt.values[row * 2];
+            scratch[rt.first_column + 1] = rt.values[row * 2 + 1];
+            scratch
+        }
+    }
+}
+
+/// The two retention-time residual columns computed for one fold.
+struct RtColumns<'a> {
+    first_column: usize,
+    values: &'a [f64],
+}
+
+fn fit_normalization(ds: &Dataset, fit_rows: &[usize], rt: Option<&RtColumns<'_>>) -> Normalization {
     #[cfg(feature = "profiling")]
     let _fit = crate::profile::Scope::with_elements(
         "normalization",
@@ -139,8 +165,9 @@ fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
     let nf = ds.n_feat;
     let mut mean = vec![0.0f64; nf];
     let mut var = vec![0.0f64; nf];
+    let mut scratch = vec![0.0f64; nf];
     for &i in fit_rows {
-        let row = ds.row(i);
+        let row = feature_row(ds, i, rt, &mut scratch);
         for j in 0..nf {
             mean[j] += row[j];
         }
@@ -149,7 +176,7 @@ fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
         *m /= fit_rows.len() as f64;
     }
     for &i in fit_rows {
-        let row = ds.row(i);
+        let row = feature_row(ds, i, rt, &mut scratch);
         for j in 0..nf {
             let difference = row[j] - mean[j];
             var[j] += difference * difference;
@@ -169,7 +196,11 @@ fn fit_normalization(ds: &Dataset, fit_rows: &[usize]) -> Normalization {
     Normalization { mean, std }
 }
 
-fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, usize) {
+fn transform_matrix(
+    ds: &Dataset,
+    normalization: &Normalization,
+    rt: Option<&RtColumns<'_>>,
+) -> (Vec<f64>, usize) {
     let nf = ds.n_feat;
     let dim = nf + 1;
     #[cfg(feature = "profiling")]
@@ -192,8 +223,9 @@ fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, u
     }
     #[cfg(feature = "profiling")]
     let transform_start = std::time::Instant::now();
+    let mut scratch = vec![0.0f64; nf];
     for i in 0..ds.n_psm {
-        let row = ds.row(i);
+        let row = feature_row(ds, i, rt, &mut scratch);
         let base = i * dim;
         for j in 0..nf {
             x[base + j] = (row[j] - normalization.mean[j]) / normalization.std[j];
@@ -213,9 +245,27 @@ fn transform_matrix(ds: &Dataset, normalization: &Normalization) -> (Vec<f64>, u
 
 /// Normalize from `fit_rows` only, then transform every row. Nested selection
 /// uses this to keep outer-test and inner-validation features out of fitting.
-fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize]) -> (Vec<f64>, usize) {
-    let normalization = fit_normalization(ds, fit_rows);
-    transform_matrix(ds, &normalization)
+fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize], p: &Params) -> (Vec<f64>, usize) {
+    let rt_values = fold_rt_columns(ds, fit_rows, p);
+    let rt = rt_columns(p, rt_values.as_deref());
+    let normalization = fit_normalization(ds, fit_rows, rt.as_ref());
+    transform_matrix(ds, &normalization, rt.as_ref())
+}
+
+/// Refit the retention-time alignment inside `fit_rows` and materialize its two
+/// residual columns for every row.
+fn fold_rt_columns(ds: &Dataset, fit_rows: &[usize], p: &Params) -> Option<Vec<f64>> {
+    let alignment = p.rt.as_ref()?;
+    let mut values = vec![0.0f64; ds.n_psm * 2];
+    alignment.residuals(&ds.labels, &ds.source, fit_rows, &mut values);
+    Some(values)
+}
+
+fn rt_columns<'a>(p: &Params, values: Option<&'a [f64]>) -> Option<RtColumns<'a>> {
+    Some(RtColumns {
+        first_column: p.rt.as_ref()?.first_column,
+        values: values?,
+    })
 }
 
 fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) {
@@ -658,7 +708,7 @@ fn fold_setup(ds: &Dataset, fold: &[u8], test: u8, p: &Params, seed: u64) -> Fol
         !train_rows.is_empty(),
         "outer fold {test} left no training rows"
     );
-    let (x, dim) = build_matrix_fit(ds, &train_rows);
+    let (x, dim) = build_matrix_fit(ds, &train_rows, p);
     let w0 = initial_direction(&x, dim, &ds.labels, &train_rows, p);
     #[cfg(feature = "profiling")]
     crate::profile::record(
@@ -992,7 +1042,7 @@ fn inner_splits(
                 .copied()
                 .filter(|&row| assignments[row] == validation_fold)
                 .collect();
-            let (x, dim) = build_matrix_fit(ds, &train_rows);
+            let (x, dim) = build_matrix_fit(ds, &train_rows, p);
             let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
             InnerSplit {
                 x,
@@ -1173,7 +1223,7 @@ fn nested_cv_scores(ds: &Dataset, outer_fold: &[u8], p: &Params) -> (Vec<f64>, V
             .filter(|&row| outer_fold[row] == test_fold)
             .collect();
         let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
-        let (x, dim) = build_matrix_fit(ds, &train_rows);
+        let (x, dim) = build_matrix_fit(ds, &train_rows, p);
         let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
         let mask = feature_mask(dim, &ranking, selected.feature_count);
         let initial = ranked_initial_direction(dim, &ranking);
@@ -1391,7 +1441,12 @@ fn explain_fixed_models(
             // Rebuilt through the same seeded path as `cv_scores`, so the report
             // describes the model that actually produced the held-out scores.
             let setup = fold_setup(ds, fold, test_fold, p, p.seed);
-            let normalization = fit_normalization(ds, &setup.train_rows);
+            let rt_values = fold_rt_columns(ds, &setup.train_rows, p);
+            let normalization = fit_normalization(
+                ds,
+                &setup.train_rows,
+                rt_columns(p, rt_values.as_deref()).as_ref(),
+            );
             let mut rng = Rng(setup.seed);
             let model = train_fold(
                 &setup.x,
@@ -1433,8 +1488,14 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
                 .filter(|&row| fold[row] == test_fold)
                 .collect();
             let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
-            let normalization = fit_normalization(ds, &train_rows);
-            let (x, dim) = transform_matrix(ds, &normalization);
+            let rt_values = fold_rt_columns(ds, &train_rows, p);
+            let normalization = fit_normalization(
+                ds,
+                &train_rows,
+                rt_columns(p, rt_values.as_deref()).as_ref(),
+            );
+            let (x, dim) =
+                transform_matrix(ds, &normalization, rt_columns(p, rt_values.as_deref()).as_ref());
             let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
             let active_features = feature_mask(dim, &ranking, selected.feature_count);
             let initial = ranked_initial_direction(dim, &ranking);
@@ -1533,7 +1594,9 @@ pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureRepor
         explain_fixed_models(ds, p, output, &fold)
     };
     let baseline_q01 = target_q01(&output.score, &ds.labels, p.test_fdr);
-    let global_normalization = fit_normalization(ds, &(0..ds.n_psm).collect::<Vec<_>>());
+    // Report-only descriptive statistics over the whole input; nothing here
+    // feeds a model, so a fold-local retention-time alignment is not needed.
+    let global_normalization = fit_normalization(ds, &(0..ds.n_psm).collect::<Vec<_>>(), None);
     let label_values: Vec<f64> = ds.labels.iter().map(|&label| label as f64).collect();
     let (label_mean, label_std) = mean_and_sd(&label_values);
     let mut features = Vec::with_capacity(ds.n_feat);
@@ -1689,6 +1752,47 @@ mod tests {
         let baseline = fold_setup(&dataset, &fold, 0, &params, params.seed);
         let perturbed = fold_setup(&corrupted, &fold, 0, &params, params.seed);
 
+        // Repeat with the label-dependent retention-time alignment switched on:
+        // it is the one remaining supervised preprocessing step, so it has to be
+        // refitted per fold like everything else.
+        {
+            let mut with_rt = selection_fixture();
+            let mut corrupted_rt = corrupted.clone();
+            let rt_params = Params {
+                rt: crate::rt::augment(&mut with_rt),
+                ..Params {
+                    maxiter: params.maxiter,
+                    num_threads: 1,
+                    c_alpha: params.c_alpha,
+                    c_beta: params.c_beta,
+                    ..Params::default()
+                }
+            };
+            crate::rt::augment(&mut corrupted_rt);
+            let clean = fold_setup(&with_rt, &fold, 0, &rt_params, rt_params.seed);
+            let dirty = fold_setup(&corrupted_rt, &fold, 0, &rt_params, rt_params.seed);
+            assert_eq!(
+                dirty.w0, clean.w0,
+                "retention-time features let held-out rows move the initial direction"
+            );
+            let training_rows = |setup: &FoldSetup| -> Vec<f64> {
+                setup
+                    .train_rows
+                    .iter()
+                    .flat_map(|&row| {
+                        setup.x[row * setup.dim..(row + 1) * setup.dim]
+                            .iter()
+                            .copied()
+                    })
+                    .collect()
+            };
+            assert_eq!(
+                training_rows(&dirty),
+                training_rows(&clean),
+                "retention-time alignment moved with held-out rows"
+            );
+        }
+
         assert_eq!(
             perturbed.w0, baseline.w0,
             "initial direction moved with held-out rows"
@@ -1760,8 +1864,8 @@ mod tests {
             first.x, second.x,
             "two folds produced an identical design matrix, so normalization is not fold-local"
         );
-        let global = fit_normalization(&dataset, &all_rows);
-        let fold_local = fit_normalization(&dataset, &first.train_rows);
+        let global = fit_normalization(&dataset, &all_rows, None);
+        let fold_local = fit_normalization(&dataset, &first.train_rows, None);
         assert_ne!(
             global.mean, fold_local.mean,
             "fold normalization matched the all-rows fit"

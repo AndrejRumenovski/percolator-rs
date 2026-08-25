@@ -583,7 +583,7 @@ fn write_feature_report(path: &str, report: &percolator::FeatureReport) -> std::
 }
 
 fn main() {
-    let args = parse_args();
+    let mut args = parse_args();
     if args.pins.is_empty() {
         eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
         eprintln!();
@@ -678,14 +678,10 @@ fn main() {
     };
     let mut parts: Vec<pin::Dataset> = Vec::with_capacity(ensemble_inputs.len());
     for (_, path) in &ensemble_inputs {
-        let mut d = pin::parse(path).unwrap_or_else(|e| {
+        parts.push(pin::parse(path).unwrap_or_else(|e| {
             eprintln!("parse error ({path}): {e}");
             std::process::exit(1);
-        });
-        if args.rt_features {
-            rt::augment(&mut d); // per-file RT alignment, then pool
-        }
-        parts.push(d);
+        }));
     }
     let ds = if args.ensemble {
         pin::merge_ensemble(
@@ -704,6 +700,14 @@ fn main() {
     } else {
         pin::merge(parts)
     };
+    let mut ds = ds;
+    if args.rt_features {
+        // Reserve the residual columns now; the alignment behind them is
+        // label-dependent, so it is refitted inside every outer training
+        // partition rather than once here.
+        args.params.rt = rt::augment(&mut ds);
+    }
+    let ds = ds;
     #[cfg(feature = "profiling")]
     {
         drop(_input_loading);
