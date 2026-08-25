@@ -12,7 +12,8 @@ Read in this order:
    **rejected** that implementation, with its claim audit, limitations and verdicts.
 3. [`COMPLETION_AUDIT.md`](COMPLETION_AUDIT.md) — requirement-by-requirement closeout of that study.
 4. [`REPAIR.md`](REPAIR.md) — **current.** The verified root causes, the corrections, the tests, the
-   rerun of every predeclared experiment against a frozen build, and what still fails.
+   rerun of every predeclared experiment against a frozen build, a skeptical audit of the repair
+   itself, and what still fails.
 
 Documents 1–3 describe an implementation that no longer exists. They are the record of the failure
 that document 4 responds to, and they are deliberately unchanged.
@@ -20,7 +21,9 @@ that document 4 responds to, and they are deliberately unchanged.
 During the repair, the canonical implementation *was* changed — that was the point — but no
 experiment was altered after its results were seen. Two arms were added afterwards to test a
 hypothesis the results raised (spectrum-level competition), and both are labelled as new experiments
-in [`REPAIR.md`](REPAIR.md) §11 rather than folded into the predeclared ones.
+in [`REPAIR.md`](REPAIR.md) §11 rather than folded into the predeclared ones. A third new experiment,
+[`run_null_variants.py`](run_null_variants.py), exists purely to try to falsify the repaired
+estimator on null constructions it was never checked against.
 
 `psm_agreement.py` compares matching target and decoy PSM outputs at the row level. It accepts
 either individual TSV files or run directories containing matching relative paths. Example:

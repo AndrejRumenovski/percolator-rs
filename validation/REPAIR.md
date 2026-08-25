@@ -682,7 +682,7 @@ NOT YET TESTED.
 | Dimension | Pre-repair | Repaired | Basis |
 |---|---|---|---|
 | **IMPLEMENTATION CORRECTNESS** | FAILED VALIDATION | **MODERATE EVIDENCE** | Estimators now match the documented method and the reference's structure; each defect has a regression test verified to fail against the old behaviour; agreement with C++ under matched post-processing is within ±15 PSMs on four datasets. Not STRONG: no independent reimplementation checks these numbers. |
-| **CROSS-VALIDATION ISOLATION** | FAILED VALIDATION | **STRONG EVIDENCE** | Corrupting every held-out feature and flipping every held-out label leaves the fold's direction, normalization and weights bit-identical, with and without `--rt-features`; folds are spectrum-grouped; the property is falsifiable and the test fails against the previous code. `--select-c` is excluded and documented as non-nested. |
+| **CROSS-VALIDATION ISOLATION** (default path) | FAILED VALIDATION | **STRONG EVIDENCE** | Corrupting every held-out feature and flipping every held-out label leaves the fold's direction, normalization and weights bit-identical, with and without `--rt-features`; folds are spectrum-grouped; the property is falsifiable and the test fails against the previous code. Scoped to the default path: `--select-c` remains non-nested by construction, and `--ensemble` builds a label-keyed agreement feature over all rows (§18). |
 | **Q-VALUE VALIDITY** | FAILED VALIDATION | **MODERATE EVIDENCE** | Tie-invariant, bounded, monotone, with the finite-sample safeguard and a declared opportunity ratio; matches the reference formula; 0/30 complete-null rejections. Not STRONG: still anti-conservative on the signal-present study. |
 | **FDR CALIBRATION** | FAILED VALIDATION | **WEAK EVIDENCE** | Complete null is clean at every threshold, but entrapment sits at 1.8× nominal at q<0.01 and above. Improved by a third, not calibrated. |
 | **PEP VALIDITY** | FAILED VALIDATION | **WEAK EVIDENCE** | Derived from a published identity, strictly positive by construction, zero known-false matches at PEP=0, weighted calibration error 0.063 → 0.017 and slightly better than the reference. Every bin is still anti-conservative. |
@@ -774,3 +774,103 @@ qualification that the README now carries.
 | Protein inference is calibrated | **FAILED VALIDATION** | Not revalidated; PrEST failures stand and the README says so |
 | `--rescore-model mlp`, `--auto-model`, `--ensemble`, `--join`, `--rt-features` are validated | **NOT YET TESTED** | Listed by name in the README as not revalidated |
 | Scientific validity generalizes across datasets | **INSUFFICIENT EVIDENCE** | Calibration tested on one signal-present design and one null construction |
+
+## 18. Skeptical audit of the repair
+
+An attempt to falsify each claim, made after the work was finished.
+
+### 18.1 Is an exact-zero q-value or PEP still reachable?
+
+Scanned every target and decoy PSM row produced by the repaired build across the null, entrapment and
+multi-seed studies: **200 files, 2,546,082 rows, zero q-values equal to 0 and zero PEPs equal to 0.**
+This is a check of the printed output at six decimals, which is the precision the pathological
+pre-repair values were measured at.
+
+### 18.2 Do ties still leak row order into the result, end to end?
+
+The unit tests cover the estimator. The pipeline was checked separately: the yeast PIN was rewritten
+with its 19,674 data rows in a different random order and rerun. Every one of the 3,946 output PSMs
+has an identical printed score, q-value and PEP, and the q<0.01 count is 665 either way. Fold
+assignment is permutation-invariant by construction — spectra are collected into a `BTreeMap` and
+shuffled from the seed, not from file order — so this checks the estimator, the competition
+tie-break and the reporting path together. It compares printed values; floating-point summation
+order inside normalization does change with the permutation, so this bounds the effect below the
+printed precision rather than proving bit-equality.
+
+### 18.3 Does the complete-null result survive a construction it was not checked against?
+
+Two additional constructions, declared in [`run_null_variants.py`](run_null_variants.py) before
+running and labelled there as new experiments. Ten relabeling seeds (2001–2010) on each of two
+PXD032157 PINs, twenty replicates per arm:
+
+| Arm | rows relabelled | pseudo target:decoy | discoveries |
+|---|---|---|---:|
+| `decoy_balanced` | original decoys | 1:1 | 0/20 at every threshold |
+| `target_balanced` | **original targets** | 1:1 | 0/20 at every threshold |
+| `decoy_2to1_default_p` | original decoys | **2:1**, `p` left at 0.5 | 0/20 at every threshold |
+| `decoy_2to1_declared_p` | original decoys | 2:1, `p` declared 2/3 | 0/20 at every threshold |
+
+The target-derived null is the informative one: those rows are heterogeneous in quality, unlike the
+decoy rows the predeclared study uses, and a random label on them is still exchangeable with the
+features. It behaves the same.
+
+**The imbalance contrast has no power and should not be read as evidence.** The two 2:1 arms both
+report zero because the smallest q-value anywhere in those runs is 0.276 (default `p`) and 0.552
+(declared `p`) — an order of magnitude above the loosest threshold tested. A complete null cannot
+discriminate an opportunity-ratio error, because the ratio only scales an FDP that is already near
+0.5. What the pair does show is that the parameter does the arithmetic it claims: declaring `p = 2/3`
+multiplies every q-value by exactly 2.0000, which is `lambda = p/(1-p)` for a 2:1 competition.
+Whether the *right* value has been declared for a given search is the user's responsibility, and no
+experiment here tests that.
+
+### 18.4 Is there leakage left?
+
+Yes, in two places, both outside the default path and both now named rather than implied:
+
+- **`--select-c`** selects class weights by ranking candidates on the same out-of-fold predictions it
+  later reports. This is structural, not a bug, and was not repaired. `--auto-model` is the nested
+  alternative.
+- **`--ensemble`** builds its `ensemble_psm_engine_count` feature from a map keyed by
+  `(ScanNr, Label, Peptide)` over every row, so a label-dependent feature is constructed across the
+  whole dataset before folds exist. Ensemble mode was already on the not-revalidated list; this is
+  the specific reason it must stay there.
+
+Everything else that reads a label — the peptide rollup, the reported statistics, the per-source
+summary — runs after training and is reporting, not preprocessing.
+
+### 18.5 Do the tests encode methodology or the current implementation?
+
+Mostly methodology, with two honest exceptions.
+
+`qvalues_match_the_documented_closed_form` asserts 0.2 and 1.0, both derived by hand from the
+documented formula rather than read off a run. The isolation, tie, permutation, positivity and
+monotonicity tests assert properties that any correct implementation must have, and the two
+leakage tests were confirmed to fail against the previous code.
+
+The exceptions: `dropping_the_safeguard_is_confined_to_the_training_estimator` asserts that
+`Tdc::training` *can* report zero, which encodes a deliberate design choice rather than a
+methodological necessity; and `a_leading_target_run_never_receives_zero_pep` asserts a floor of
+`0.5/n`, which is the specific prior this implementation chose. Both are documented at the assertion.
+The yield gates in `tests/` and `bench/` encode current output values by design and prove
+determinism, not validity — the README now says so.
+
+### 18.6 Is the improvement seed- or dataset-specific?
+
+Complete null: 0/30 across three source PINs and ten relabelings each, plus 0/20 in each of four
+variant arms across two PINs. Entrapment: five seeds, standard deviation 0.059 percentage points, all
+five between 1.730% and 1.884%. Multi-seed agreement: five seeds on four datasets, per-dataset PSM
+standard deviation 11.5–25.9, comparable to the reference's own 4.0–38.1. The MSFragger arm moved
+from Rust reporting +130 PSMs to −2.8 under matched post-processing, which is the largest
+single-dataset swing and is explained by the metadata-column correction plus competition.
+
+No seed or dataset was excluded from any table above.
+
+### 18.7 What would falsify the remaining claims?
+
+- An independent signal-present dataset with partial truth on which the repaired q<0.01 exceeds
+  roughly 2% adjusted FDP would show the entrapment result does not generalize.
+- A complete-null construction with enough leading-target runs to reach q<0.01 — a much larger input,
+  or one where the learner has real signal to exploit — would test the safeguard at a resolution
+  30 replicates cannot.
+- A PEP calibration on a dataset with individual PSM truth would replace the bin-level entrapment
+  estimate that every PEP statement here rests on.
