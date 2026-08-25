@@ -6,6 +6,18 @@
 A from-scratch Rust reimplementation of the [Percolator](https://github.com/percolator/percolator)
 semi-supervised PSM rescoring algorithm, built to benchmark against the reference C++ Percolator 3.09.
 
+> **Scientific-validation warning (2026-08-25):** the canonical/default workflow has failed
+> adversarial validation. Its initial direction uses labels from all folds, its fold margins are
+> pooled without reference-style score normalization, its q-value estimator omits the final decoy
+> pseudocount and tie grouping, and its PEP estimator is not the C++ 3.09 procedure. In 30 repeated
+> exchangeable-label null experiments, Rust made at least one false discovery at every tested q
+> threshold in 17/30 runs (empirical complete-null FDR 56.7%); C++ made none in 29 successful runs
+> and failed closed once. On the signal-present entrapment data, 87 known-false PSMs have a reported
+> Rust PEP rounded to exactly zero. **Do not interpret the current Rust q-values or PEPs as validated
+> probabilities, or its additional reported-q yield as improved accuracy or sensitivity.** See the
+> read-only [`implementation audit`](validation/IMPLEMENTATION_AUDIT.md) and complete
+> [`scientific validation report`](validation/SCIENTIFIC_VALIDATION.md).
+
 ## Results
 
 Benchmarked against **C++ Percolator 3.09** on five search configurations spanning mosquito,
@@ -23,8 +35,10 @@ yield: on PXD032157 it reports 1.42% fewer PSMs and 2.73% fewer peptides while t
 four independent extension cases are also slightly lower in aggregate. The SVM remains the default.
 See the [small-MLP benchmark](bench/DEEP_LEARNING.md).
 
-The large-scale headline remains PXD032157 — 65 Comet `.pin` files, 2.3 GB — on a 12-core Ryzen 5
-5600G. Identical inputs, matched settings, same machine.
+The large-scale performance benchmark remains PXD032157 — 65 Comet `.pin` files, 2.3 GB — on a
+12-core Ryzen 5 5600G. Inputs and machine are matched, but model selection and statistical
+post-processing are materially different; the identification counts are not a scientific accuracy
+comparison.
 
 | | C++ Percolator 3.09 | percolator-rs |
 |---|---|---|
@@ -38,13 +52,14 @@ bought by doing less work. A sequential percolator-rs run takes 36.3 s, while th
 376.2 s even with four-file concurrency. To get under 60 s here, the reference must enable speed
 flags that cost it 12–15% of its identifications.
 
-Results are bit-deterministic under a fixed seed and guarded by CI regression gates. A pure-null
-control is strongly conservative, but a six-run foreign-proteome entrapment experiment finds that
-signal-present q-values from **both** implementations are anti-conservative on this search; see
-[FDR calibration](#fdr-calibration).
+Results are bit-deterministic under a fixed seed and guarded by regression gates. Repeated
+pure-null experiments and a six-run foreign-proteome entrapment experiment both reject calibrated
+FDR control for the current Rust estimator; see [FDR calibration](#fdr-calibration).
 
-## Algorithm
-Faithful to the Percolator method:
+## Current algorithm
+
+The implementation is Percolator-style, but the validation audit found material departures from
+C++ 3.09 and from leakage-free cross-validation:
 1. **PIN parse** — streaming tab-delimited reader (`ExpMass`/`CalcMass` excluded from features by name).
 2. **Feature normalization** — per-feature z-score, bias column appended.
 3. **Initial direction** — best single feature (either orientation) by target-decoy yield at q<0.01.
@@ -54,25 +69,30 @@ Faithful to the Percolator method:
    Newton-CG solver, the same L2-loss family as the reference L2-SVM-MFN). An experimental small MLP
    is available with `--rescore-model mlp`.
    The class weights are **absolute** (`Cpos=1`, `Cneg=4`), not derived from the target/decoy class
-   balance. This is the single largest accuracy win here: the obvious heuristic
+   balance. This is the single largest reported-yield change here: the heuristic
    `Cpos = max(n_neg/n_pos, 1)` explodes (~300x) when confident targets are scarce and swamps the
    decoys — measured, it is the *worst* corner of the weight space. Pin the weights with
    `--cpos/--cneg`, or search them per file with `--select-c` (see [Fidelity notes](#fidelity-notes)).
    For leakage-free selection of C, class ratio, feature count, and solver tolerance, use the
    experimental nested `--auto-model` path.
-5. **3-fold nested cross-validation** — each PSM scored by a model trained without its fold (no overfitting
-   of the FDR estimate).
-6. **Target-decoy q-values** + monotone (PAVA isotonic) PEP; PSM- and peptide-level output in the reference
-   tab format.
+5. **3-fold out-of-fold scoring** — each PSM is scored by an SVM objective that excluded its fold,
+   but default normalization uses all feature rows and default initial-direction selection uses all
+   labels. The default is therefore **not leakage-free or nested**. Only the experimental
+   `--auto-model` path isolates those base-feature steps.
+6. **Experimental target-decoy q-values and PAVA PEPs** — these are bounded and monotone in the
+   implementation's score ordering, but repeated null and entrapment validation shows that they are
+   not calibrated probabilities. They are not equivalent to the C++ 3.09 estimators.
 
 ## FDR calibration
-`bench/null_calibration.sh` runs a pure-null experiment: keep only the decoy rows of a real `.pin`
-and randomly relabel half as targets, so **every** reported identification is false by construction.
-A calibrated method must report ~0 at `q<0.01`. Measured on PXD032157: **0–5 false IDs out of
-8k–49k randomly relabelled null targets** (at most ~0.01% against a nominal 1%). Turning on the
-class-weight grid search (`--select-c`) changes the three counts from 0/5/1 to 0/5/3 — neither
-setting buys yield by loosening the FDR. Machine-readable results are in
-[`bench/null-calibration-results.tsv`](bench/null-calibration-results.tsv).
+The earlier `bench/null_calibration.sh` result was interpreted incorrectly by dividing a small
+number of accepted targets by the large number of null targets. Under a complete null every
+discovery is false, so the realized FDP is 1 whenever there is any rejection and 0 otherwise; FDR
+is the probability of any rejection across repeated null datasets. The corrected repeated study
+uses ten exact-balance relabelings of each of three PINs. Rust rejects at least one false target in
+**17/30 runs at every threshold from q<0.001 through q<0.10** (empirical FDR 56.7%; counts are
+unchanged across thresholds because the accepted PSMs have q=0). C++ rejects none in 29 successful
+runs and terminates without an initial direction in one. This is a failed Rust FDR validation, not
+conservative behavior. The versioned runner is [`validation/run_null.py`](validation/run_null.py).
 
 The stronger signal-present check is `bench/entrapment/run.sh`: six deposited mzML runs are
 re-searched against the native database plus an equally sized foreign plant proteome. At reported
@@ -102,8 +122,9 @@ and 3.93 s → 1.85 s at `--num-threads 9` with `--select-c`; outputs are byte-i
 Learner class weights: `--cpos F` / `--cneg F` pin them; `--select-c` opts into the per-file grid
 search, which is **off by default for every profile** (it costs ~2.5x wall time without beating the
 fixed defaults on this dataset — see [Fidelity notes](#fidelity-notes)).
-`--auto-model` instead performs true per-outer-fold nested validation of SVM C, class ratio,
-training-only feature subsets, and Newton tolerance. It avoids test-fold contamination but is 10.3x
+For base PIN features, `--auto-model` instead performs per-outer-fold nested validation of SVM C,
+class ratio, training-only feature subsets, and Newton tolerance. Pre-fold supervised options such
+as `--rt-features` remain outside that isolation. The base path avoids test-fold contamination but is 10.3x
 slower, with 0.37% fewer PSMs and 0.45% more peptides on PXD032157; see the complete
 [automatic-selection evaluation](bench/AUTOMATIC_SELECTION.md).
 
@@ -131,7 +152,7 @@ Presets so you don't have to memorize flag combinations. Pass one of `--fast` / 
 |---|---|---|
 | `--fast` | `--subset-max-train 20000 --maxiter 5` | quick QA / test pipelines |
 | `--balanced` | `--subset-max-train 40000 --maxiter 10` | fast with near-full yield |
-| `--canonical` (default) | full defaults (maxiter 10, no subsetting) | max sensitivity for publication/production |
+| `--canonical` (default) | full defaults (maxiter 10, no subsetting) | maximum current reported-q yield; statistics are not validated |
 
 Measured across all 65 PXD032157 files at N=4 concurrency (percolator-rs). The canonical row is the
 median of three portable `x86-64-v3` runs from the 2026-08-24 optimization campaign; the noncanonical
@@ -151,14 +172,15 @@ checks, and final runtime profile.
 
 ## Benchmark vs C++ Percolator 3.09 (PXD032157, 65 files, 12-core Ryzen 5 5600G)
 
-**Q1 — Can Rust hit sub-60 s at full fidelity (full iterations, no yield loss)?  YES.**
+**Q1 — Can Rust hit sub-60 s with the complete default training workload (full iterations, no
+reported-q yield loss relative to its own baseline)? YES.**
 
 | implementation | settings | wall (65 files) | yield (PSM / peptide q<0.01) |
 |---|---|---|---|
 | C++ reference | default, N=4 | 376.2 s | 103 038 / 35 852 (canonical) |
 | C++ reference | **fast flags**, N=5 | 59.4 s | 90 395 / 30 530 (**−12% / −15%**) |
-| **percolator-rs** | default full fidelity, sequential | **36.3 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
-| **percolator-rs** | **default full fidelity, N=4** | **12.1 s** | **107 046 / 37 469** |
+| **percolator-rs** | complete default workload, sequential | **36.3 s** | **107 046 / 37 469 (+3.9% / +4.5%)** |
+| **percolator-rs** | **complete default workload, N=4** | **12.1 s** | **107 046 / 37 469** |
 | percolator-rs | `--select-c` per-file weight search, N=4 | 49.7 s | 106 558 / 37 330 |
 | percolator-rs | `--auto-model` nested selection, N=4 | 206.4 s | 106 652 / 37 636 |
 
@@ -274,16 +296,16 @@ Making the Rust build faster *without* subset flags or yield loss:
 | **Vectorized `axpy`** | Hessian outer-product accumulation uses 4-wide `wide::f64x4` (exact, elementwise) | feeds the solver's hot loop |
 | **`target-cpu`** | `.cargo/config.toml` | `x86-64-v3` baseline (AVX2/FMA) so binaries stay portable; `RUSTFLAGS="-C target-cpu=native"` for benchmark builds |
 
-Net: **~1.8× faster end-to-end** (40.1 → 22.8 s at N=4) at full fidelity. These figures are from the
+Net: **~1.8× faster end-to-end** (40.1 → 22.8 s at N=4) on the complete default workload. These figures are from the
 optimization work itself, measured *before* the class-weight change; the current default runs the same
 workload in 19.4 s at N=4.
 
 Notes on what *didn't* help and why (measured, not assumed):
 - **SIMD dot-product** over length-22 vectors gave no speedup (lane-load + horizontal-reduce overhead ≈ the scalar cost) and its reassociation perturbed borderline q<0.01 counts, so `dot` is kept as an exact sequential sum. The vectorization payoff is in `axpy` (exact), not `dot`.
-- The Cholesky Newton step is *more* accurate than the old truncated CG, which shifted aggregate yield by 128 PSMs (102 094 → 101 966, −0.13%) against the baselines of the time; re-recorded then. Both figures predate the class-weight fix that took the current default to 107 046.
+- The Cholesky Newton step converges more precisely than the old truncated CG, which shifted aggregate yield by 128 PSMs (102 094 → 101 966, −0.13%) against the baselines of the time; re-recorded then. Both figures predate the class-weight fix that took the current default to 107 046.
 
 ## CI / regression gates
-Performance and accuracy are locked in so refactors can't silently drift:
+Performance and recorded output yield are locked in so refactors cannot silently drift:
 
 - **`tests/regression.sh`** (hosted CI, no data needed) — runs percolator-rs on the committed
   deterministic fixture `tests/fixtures/sample.pin` and asserts q<0.01 yield within **±1%** of the
@@ -304,10 +326,13 @@ Recorded references live in `tests/expected.env`; update them intentionally when
 the numbers. percolator-rs is seed-deterministic, so fixture yields are exact run-to-run.
 
 ## Fidelity notes
-percolator-rs identifies **more** than the C++ reference at the same reported threshold (+3.9 %
-PSMs, +4.5 % peptides). The pure-null control rules out hallucinated signal on pure noise, but the
-signal-present entrapment experiment above shows that it does not establish exact q-value
-calibration: both implementations exceed the nominal FDR on the entrapment search.
+percolator-rs reports **more** than the auto-mode C++ reference at the same nominal threshold (+3.9%
+PSMs, +4.5% peptides), but this comparison uses different model selection and post-processing:
+C++ auto-detects these PINs as separate search input and uses mix-max, whereas Rust uses its direct
+target-decoy estimator. A later forced-concatenated benchmark still differs in class weights,
+fold-score merging, q-values, and PEPs. Repeated pure-null and signal-present entrapment controls
+both fail to validate the Rust error probabilities. The count difference is identification yield
+only, not accuracy or sensitivity.
 
 Two standard explanations for the original ~1 % deficit were tested and **disproved by measurement**:
 
@@ -316,10 +341,11 @@ Two standard explanations for the original ~1 % deficit were tested and **dispro
 - *Storey pi0* — the reference logs `pi0 = 1` on this data (peptide level `0.999168`), landing in the
   same place as the simple decoys/targets estimate.
 
-The actual cause was the SVM class weighting (Algorithm step 4). Switching to absolute `Cpos`/`Cneg`
-instead of scaling by the target/decoy balance closed the gap and reversed it, and collapsed the
-per-file spread: files below the reference went 36 → 11, worst single-file deficit −507 → −82. The
-original "1 % gap" was never a bias — it was two-sided variance that happened to nearly cancel.
+SVM class weighting (algorithm step 4) was the largest measured cause of the historical count
+reversal. Switching to absolute `Cpos`/`Cneg` instead of the previous balance heuristic changed the
+reported-yield gap and reduced its per-file spread. It does not explain the full Rust/C++
+difference, because fold-score normalization, hyperparameter selection, q-values, PEPs, and
+post-processing also differ; without ground truth it is not an accuracy result.
 
 The per-file grid search (`--select-c`) was built on top of that fix and, on this dataset, does
 **not** pay for itself: 2.5x the wall time, and a coin flip per file (better on 32, worse on 28,

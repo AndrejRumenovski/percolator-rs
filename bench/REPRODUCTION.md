@@ -22,7 +22,7 @@ passed exactly at 107,046 PSMs and 37,469 peptides.
 | PXD032157 C++ trimmed, N=5 | 59.398 s; 1,219,140 KiB; 90,395 / 30,530 | Repaired driver rerun, 65/65 valid; `$HOME/percolator_fast_out/PXD032157` |
 | Manifest runner, sequential | Rust 61.972 s, 269,368 KiB, 107,046 / 37,469; C++ 1,034.110 s, 497,112 KiB, 102,781 / 35,765 | 65/65 each, no failures; explicit C++ `--search-input concatenated`; versioned JSON and comparison under `$HOME/percolator_rs_out/benchmark-dataset-reproduction-20260824/PXD032157` |
 | Four compact datasets | Rust/C++ PSMs: Tide 29,264/27,617; MSFragger 1,554/1,388; Sage 26,624/25,795; yeast 1,126/1,147 | All source/generated checksums passed; `bench/multidataset/recorded-results.tsv` |
-| Pure null, three default files | Select-C/fixed false targets: 0/0, 5/5, 3/1 | Conservative at reported q<0.01; `bench/null-calibration-results.tsv` |
+| Pure null, three default files | Select-C/fixed false targets: 0/0, 5/5, 3/1 | Historical single relabeling per file; not an FDR estimate. The corrected 30-run study finds Rust rejects in 17/30 complete-null replicates; `validation/SCIENTIFIC_VALIDATION.md` |
 | Retention-time features, three deterministic files | PSM deltas −4.81%, +3.98%, +2.00% | Three repeats; pinned inputs and hashes; `bench/advanced-feature-results.tsv` |
 | Joint training, four smallest files | 1,524 → 1,606 PSMs (+82, +5.38%); 3/4 improved | Pinned size rule and hashes; `bench/ADVANCED_FEATURES.md` |
 | Intra-file threading, largest file | Fixed 2.05 → 1.39 s; select-C 3.93 → 1.85 s | Three-run medians; outputs byte-identical |

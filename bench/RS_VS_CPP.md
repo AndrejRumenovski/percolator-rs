@@ -2,9 +2,9 @@
 
 Dataset: PXD032157, 65 Comet `.pin` files (2.30 GB). Host: 12-core AMD Ryzen 5 5600G, 32 GB.
 Both run per-file single-threaded (`--num-threads 1`), parallelized across files at concurrency N.
-percolator-rs uses **default full-fidelity settings** (maxiter 10, full 3-fold CV, no subsetting).
+percolator-rs uses the **complete default workload** (maxiter 10, full 3-fold CV, no subsetting).
 
-## Q1 — Sub-60 s at full fidelity (no cut iterations, no yield loss)?
+## Q1 — Sub-60 s with the complete default workload (no cut iterations, no reported-q yield loss)?
 
 | implementation | config | wall (65 files) | PSM q<0.01 | peptide q<0.01 |
 |---|---|--:|--:|--:|
@@ -16,7 +16,7 @@ percolator-rs uses **default full-fidelity settings** (maxiter 10, full 3-fold C
 | percolator-rs (pre-optimization) | default, N=4 | 41.2 s | 102 094 | 35 951 |
 
 Optimizations (see README "Native optimizations"): explicit-Hessian Newton solver (vs matrix-free CG),
-mmap + fast-float parsing, vectorized `axpy`, `target-cpu=native` — **~1.8× faster** at full fidelity.
+mmap + fast-float parsing, vectorized `axpy`, `target-cpu=native` — **~1.8× faster** on the complete default workload.
 
 **Answer: YES.** percolator-rs reaches 20.768 s at N=4 with full iterations and CV. The C++
 reference's observed full-setting N=4 run takes 376.233 s; the sub-60 trimmed run drops 12–15% of
@@ -34,7 +34,7 @@ At identical file concurrency, percolator-rs is **18.1× faster** and the observ
 entrapment study, rather than count agreement, evaluates calibration.
 
 ## Summary
-- **Speed:** 18.1× faster at N=4; sub-60 s at full fidelity where the observed C++ run is not.
+- **Speed:** 18.1× faster at N=4; sub-60 s on the complete default workload where the observed C++ run is not.
 - **Memory:** 1.71× lower observed aggregate peak RSS at N=4.
 - **Yield and calibration:** +3.9% PSMs and +4.5% peptides; see the README fidelity notes and
   signal-present entrapment study before treating nominal q-values as equivalent error rates.

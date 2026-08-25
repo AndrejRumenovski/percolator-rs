@@ -1,10 +1,12 @@
-# Leakage-free automatic SVM selection
+# Nested automatic SVM selection for base PIN features
 
 ## Outcome
 
-`--auto-model` implements genuine nested validation, but it does **not** improve aggregate
-identification yield on the current benchmarks. It remains opt-in; fixed SVM defaults remain the
-production default.
+`--auto-model` implements nested validation for normalization, initialization, base-feature
+selection, and SVM hyperparameters, but it does **not** isolate supervised features constructed
+before the path (notably `--rt-features`) and does not repair the final q-value or PEP estimators.
+It does **not** improve aggregate identification yield on the current benchmarks. It remains
+opt-in; fixed SVM defaults remain the production default.
 
 On the 65-file PXD032157 benchmark, nested selection reports 106,652 PSMs and 37,636 peptides at
 reported q<0.01 versus 107,046 and 37,469 with fixed defaults: -0.37% PSMs but +0.45% distinct

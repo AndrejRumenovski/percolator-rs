@@ -43,10 +43,10 @@ see [`RS_VS_CPP.md`](RS_VS_CPP.md).
 **Recommendation:** N=5 meets the target on this host, but the 59.398 s repeat leaves little timing
 margin; treat the exact yields and 65/65 validation as stable, and the wall budget as host-sensitive.
 
-## Accuracy tradeoff
+## Reported-q yield tradeoff
 The speed flags cost identifications: **−12% PSMs, −15% peptides** at q<0.01 vs the canonical default run.
 These fast outputs are therefore **not canonical** — the canonical reference stays in `reference/PXD032157/`.
-The historical exploration also found a smaller accuracy hit (−5.6% PSMs) with
+The historical exploration also found a smaller reported-q yield reduction (−5.6% PSMs) with
 `--subset-max-train 40000`; that configuration was not part of the 2026-08-24 clean rerun.
 
 Run it: `bash bench/fastrun.sh` (writes to `$HOME/percolator_fast_out`).

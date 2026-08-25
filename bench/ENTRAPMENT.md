@@ -23,9 +23,11 @@ bounds.
 The nominal-q yield lead remains (+540 PSMs, +2.82% at q ≤ 0.01), but it cannot be described as
 validated at an actual 1% FDR. The extra yield is accompanied by about 47 more empirically estimated
 false PSMs after method-specific search-space correction. This experiment therefore closes the
-previous uncertainty with a negative result: the pure-null control is conservative, while
-signal-present target-decoy q-values are not exactly calibrated for either implementation on this
-search. Rust is slightly more anti-conservative at the 1% cutoff, although the absolute difference
+previous uncertainty with a negative result: signal-present target-decoy q-values are not exactly
+calibrated for either implementation on this search. A corrected 30-run complete-null study also
+fails Rust calibration: it makes at least one false discovery in 17/30 replicates at every tested
+threshold; see [`../validation/SCIENTIFIC_VALIDATION.md`](../validation/SCIENTIFIC_VALIDATION.md).
+Rust is slightly more anti-conservative at the 1% cutoff, although the absolute difference
 between implementations is much smaller than their shared departure from nominal.
 
 ## Design
