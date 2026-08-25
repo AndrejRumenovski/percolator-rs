@@ -918,44 +918,52 @@ fn ranked_initial_direction(dim: usize, ranking: &[RankedFeature]) -> Vec<f64> {
     initial
 }
 
-fn assign_folds(rows: &[usize], fold_count: u8, seed: u64, total_rows: usize) -> Vec<u8> {
-    let mut shuffled = rows.to_vec();
-    let mut rng = Rng(seed.max(1));
-    for i in (1..shuffled.len()).rev() {
-        let j = rng.below(i + 1);
-        shuffled.swap(i, j);
-    }
-    let mut fold = vec![u8::MAX; total_rows];
-    for (rank, &row) in shuffled.iter().enumerate() {
-        fold[row] = (rank % fold_count as usize) as u8;
-    }
-    fold
-}
-
-/// Keep reports of the same candidate from different engines together.  Otherwise
-/// an engine-A report could appear in training while its engine-B counterpart is
-/// scored in the held-out fold, which would leak the candidate's label and agreement
-/// signal into cross validation.
+/// Split `rows` into `fold_count` folds, keeping every candidate from one
+/// spectrum together.
+///
+/// Candidates from the same spectrum are not independent observations: they come
+/// from one measurement, compete with each other, and a target and its decoy
+/// counterpart share almost everything except the label.  Splitting them across
+/// folds lets a model train on one candidate of a spectrum and then score its
+/// sibling, which is how a spectrum's label reaches its own held-out score.  The
+/// reference splits by spectrum for the same reason
+/// (`Scores::createXvalSetsBySpectrum`).
+///
+/// Grouping is by `(source, scan)` so that joined files with colliding scan
+/// numbers stay separate.  Ensemble input is the exception: there the same
+/// spectrum is deliberately reported by several engines under different sources,
+/// so it groups by scan alone.
 fn assign_dataset_folds(ds: &Dataset, rows: &[usize], fold_count: u8, seed: u64) -> Vec<u8> {
-    if !ds.ensemble {
-        return assign_folds(rows, fold_count, seed, ds.n_psm);
-    }
-    let mut by_candidate: BTreeMap<(i64, i8, String), Vec<usize>> = BTreeMap::new();
+    let mut by_spectrum: BTreeMap<(u32, i64), Vec<usize>> = BTreeMap::new();
     for &row in rows {
-        by_candidate
-            .entry((ds.scan[row], ds.labels[row], ds.peptide[row].clone()))
-            .or_default()
-            .push(row);
+        let key = if ds.ensemble {
+            (0, ds.scan[row])
+        } else {
+            (ds.source[row], ds.scan[row])
+        };
+        by_spectrum.entry(key).or_default().push(row);
     }
-    let mut candidates: Vec<Vec<usize>> = by_candidate.into_values().collect();
+    let mut spectra: Vec<Vec<usize>> = by_spectrum.into_values().collect();
     let mut rng = Rng(seed.max(1));
-    for index in (1..candidates.len()).rev() {
-        candidates.swap(index, rng.below(index + 1));
+    for index in (1..spectra.len()).rev() {
+        spectra.swap(index, rng.below(index + 1));
     }
+
+    // Spectra hold different numbers of candidates, so deal each to whichever
+    // fold is currently smallest rather than round-robin; ties go to the lowest
+    // fold index, which keeps the assignment deterministic.
     let mut fold = vec![u8::MAX; ds.n_psm];
-    for (rank, candidate) in candidates.into_iter().enumerate() {
-        for row in candidate {
-            fold[row] = (rank % fold_count as usize) as u8;
+    let mut sizes = vec![0usize; fold_count as usize];
+    for spectrum in spectra {
+        let mut target = 0usize;
+        for candidate in 1..sizes.len() {
+            if sizes[candidate] < sizes[target] {
+                target = candidate;
+            }
+        }
+        sizes[target] += spectrum.len();
+        for row in spectrum {
+            fold[row] = target as u8;
         }
     }
     fold
@@ -1631,7 +1639,7 @@ mod tests {
             ..Params::default()
         };
         let all_rows: Vec<usize> = (0..dataset.n_psm).collect();
-        let outer_fold = assign_folds(&all_rows, 3, params.seed, dataset.n_psm);
+        let outer_fold = assign_dataset_folds(&dataset, &all_rows, 3, params.seed);
         let outer_train: Vec<usize> = all_rows
             .iter()
             .copied()
@@ -1859,6 +1867,54 @@ mod tests {
             assert!(centred_mean.abs() < 1e-9, "training null not centred");
             assert!((centred_sd - 1.0).abs() < 1e-9, "training null not scaled");
         }
+    }
+
+    /// Every candidate of one spectrum -- including a target and its decoy
+    /// counterpart -- must land in the same fold, or a spectrum trains the model
+    /// that scores it.
+    #[test]
+    fn all_candidates_of_a_spectrum_share_a_fold() {
+        let mut dataset = selection_fixture();
+        // Give each spectrum four candidates: two targets, two decoys.
+        for row in 0..dataset.n_psm {
+            dataset.scan[row] = (row / 4) as i64;
+            dataset.labels[row] = if row % 4 < 2 { 1 } else { -1 };
+        }
+        let rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &rows, 3, 1);
+        for row in 0..dataset.n_psm {
+            let first = (row / 4) * 4;
+            assert_eq!(
+                fold[row], fold[first],
+                "row {row} split away from its spectrum"
+            );
+        }
+        assert!(fold.iter().all(|&f| f < 3), "every row must get a fold");
+        // Folds stay usable: greedy smallest-first keeps them within one
+        // spectrum's worth of each other.
+        let mut sizes = [0usize; 3];
+        for &f in &fold {
+            sizes[f as usize] += 1;
+        }
+        let spread = sizes.iter().max().unwrap() - sizes.iter().min().unwrap();
+        assert!(spread <= 4, "fold sizes drifted apart: {sizes:?}");
+    }
+
+    /// Joined files reuse scan numbers, so grouping must be per source.
+    #[test]
+    fn joined_files_with_colliding_scans_are_not_merged_into_one_spectrum() {
+        let mut dataset = selection_fixture();
+        dataset.source_names = vec!["a.pin".to_string(), "b.pin".to_string()];
+        for row in 0..dataset.n_psm {
+            dataset.source[row] = (row % 2) as u32;
+            dataset.scan[row] = (row / 2) as i64;
+        }
+        let rows: Vec<usize> = (0..dataset.n_psm).collect();
+        let fold = assign_dataset_folds(&dataset, &rows, 3, 1);
+        assert!(
+            (0..dataset.n_psm / 2).any(|pair| fold[pair * 2] != fold[pair * 2 + 1]),
+            "same scan number in different files was treated as one spectrum"
+        );
     }
 
     #[test]
