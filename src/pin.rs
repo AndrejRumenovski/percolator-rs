@@ -17,11 +17,37 @@ pub struct Dataset {
     pub labels: Vec<i8>,
     pub spec_id: Vec<String>,
     pub scan: Vec<i64>,
+    /// Experimental precursor mass, when the PIN supplies an `ExpMass` column.
+    ///
+    /// Not a feature: it identifies the precursor. Together with `(source, scan)`
+    /// it separates the distinct precursors a single scan can produce, which is
+    /// the unit spectrum-level target-decoy competition runs over. `0.0` when the
+    /// column is absent, which collapses a scan to one precursor.
+    pub exp_mass: Vec<f64>,
     pub peptide: Vec<String>,
     pub proteins: Vec<String>,
     pub source: Vec<u32>,          // index into source_names, per PSM
     pub source_names: Vec<String>, // input file basenames
     pub ensemble: bool,
+}
+
+impl Dataset {
+    /// The precursor a row was matched to: the unit that target-decoy
+    /// competition runs over.
+    ///
+    /// `(source, scan)` separates joined files that reuse scan numbers, and
+    /// `ExpMass` separates the distinct precursors one scan can yield -- the
+    /// experimental neutral mass differs between charge assignments of the same
+    /// peak, so it stands in for the charge the reference also keys on. Ensemble
+    /// input drops `source`, because there the same spectrum is deliberately
+    /// reported by several engines.
+    pub fn spectrum_key(&self, row: usize) -> (u32, i64, u64) {
+        let source = if self.ensemble { 0 } else { self.source[row] };
+        let mass = self.exp_mass[row];
+        // -0.0 and 0.0 are the same precursor.
+        let bits = if mass == 0.0 { 0 } else { mass.to_bits() };
+        (source, self.scan[row], bits)
+    }
 }
 
 /// Concatenate datasets into one pooled dataset for cross-run joint training.
@@ -41,6 +67,7 @@ pub fn merge(mut parts: Vec<Dataset>) -> Dataset {
         out.labels.append(&mut p.labels);
         out.spec_id.append(&mut p.spec_id);
         out.scan.append(&mut p.scan);
+        out.exp_mass.append(&mut p.exp_mass);
         out.peptide.append(&mut p.peptide);
         out.proteins.append(&mut p.proteins);
         for _ in 0..p.n_psm {
@@ -98,6 +125,7 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
         labels: Vec::with_capacity(total_rows),
         spec_id: Vec::with_capacity(total_rows),
         scan: Vec::with_capacity(total_rows),
+        exp_mass: Vec::with_capacity(total_rows),
         peptide: Vec::with_capacity(total_rows),
         proteins: Vec::with_capacity(total_rows),
         source: Vec::with_capacity(total_rows),
@@ -117,6 +145,7 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
             out.labels.push(part.labels[row]);
             out.spec_id.push(part.spec_id[row].clone());
             out.scan.push(part.scan[row]);
+            out.exp_mass.push(part.exp_mass[row]);
             out.peptide.push(part.peptide[row].clone());
             out.proteins.push(part.proteins[row].clone());
             out.source.push(engine_idx as u32);
@@ -277,6 +306,9 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
     let idx_label = required("Label", b"Label")?;
     let idx_scan = required("ScanNr", b"ScanNr")?;
     let idx_pep = required("Peptide", b"Peptide")?;
+    let idx_exp_mass = hfields
+        .iter()
+        .position(|c| c.eq_ignore_ascii_case(b"ExpMass"));
 
     let mut feature_start = idx_label + 1;
     while feature_start < idx_pep && is_optional_column(hfields[feature_start]) {
@@ -318,6 +350,7 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
         labels: Vec::with_capacity(approx_rows),
         spec_id: Vec::with_capacity(approx_rows),
         scan: Vec::with_capacity(approx_rows),
+        exp_mass: Vec::with_capacity(approx_rows),
         peptide: Vec::with_capacity(approx_rows),
         proteins: Vec::with_capacity(approx_rows),
         source: Vec::new(),
@@ -393,6 +426,15 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
                 show(fields[idx_scan])
             ))
         })?);
+        ds.exp_mass.push(match idx_exp_mass {
+            Some(column) => parse_f64(fields[column]).ok_or_else(|| {
+                invalid_data(format!(
+                    "{path}:{line_number}: ExpMass is not a finite number: '{}'",
+                    show(fields[column])
+                ))
+            })?,
+            None => 0.0,
+        });
         for (feature, &j) in feat_cols.iter().enumerate() {
             ds.features.push(parse_f64(fields[j]).ok_or_else(|| {
                 invalid_data(format!(
@@ -496,6 +538,7 @@ mod tests {
             labels: rows.iter().map(|row| row.1).collect(),
             spec_id: (0..rows.len()).map(|row| format!("psm{row}")).collect(),
             scan: rows.iter().map(|row| row.0).collect(),
+            exp_mass: vec![0.0; rows.len()],
             peptide: rows.iter().map(|row| row.2.to_string()).collect(),
             proteins: vec![String::new(); rows.len()],
             source: vec![0; rows.len()],

@@ -50,6 +50,9 @@ struct Args {
     protein_bayes: protein_bayes::Params,
     join: bool,
     ensemble: bool,
+    /// Perform spectrum-level target-decoy competition on the rescored values
+    /// before reporting PSM statistics.
+    psm_competition: bool,
     rt_features: bool,
     #[cfg(feature = "profiling")]
     profile_json: Option<String>,
@@ -104,6 +107,7 @@ fn parse_args() -> Args {
         #[cfg(feature = "profiling")]
         profile_allocations: false,
         params: Params::default(),
+        psm_competition: true,
         profile: "canonical",
     };
     let argv: Vec<String> = std::env::args().skip(1).collect();
@@ -170,6 +174,8 @@ fn parse_args() -> Args {
             "--no-auto-model" => a.params.nested_selection = false,
             "--svm-tolerance" => a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN),
             "--join" => a.join = true,
+            "--psm-competition" => a.psm_competition = true,
+            "--no-psm-competition" => a.psm_competition = false,
             "--ensemble" => a.ensemble = true,
             "--rt-features" => a.rt_features = true,
             #[cfg(feature = "profiling")]
@@ -303,6 +309,42 @@ fn parse_args() -> Args {
         std::process::exit(2);
     }
     a
+}
+
+/// Spectrum-level target-decoy competition on the rescored values: keep the
+/// best-scoring candidate of each precursor and drop the rest.
+///
+/// A search that reports its top N matches per spectrum hands over N candidates
+/// that are not independent hypotheses. They come from one measurement, they
+/// compete with each other, and several of them can be accepted together. The
+/// target-decoy estimator assumes each spectrum contributes at most the winner
+/// of a competition against the decoy database -- that assumption is what makes
+/// one observed decoy stand for one incorrect target. Keeping every candidate
+/// breaks it, and the reported q-value stops being an FDR estimate.
+///
+/// This is the reference's `--post-processing-tdc`
+/// (`Scores::weedOutRedundantTDC`), which likewise keeps one row per
+/// (scan, mass, charge) and erases the rest, and it runs after training on the
+/// same rescored values. It is on by default here because percolator-rs makes a
+/// calibration claim about its q-values, and that claim is only available on
+/// competed input.
+fn competition_winners(ds: &pin::Dataset, score: &[f64]) -> Vec<usize> {
+    let mut best: std::collections::BTreeMap<(u32, i64, u64), usize> =
+        std::collections::BTreeMap::new();
+    for i in 0..ds.n_psm {
+        let key = ds.spectrum_key(i);
+        match best.get(&key) {
+            // Ties keep the earlier row, so a winner never depends on anything
+            // beyond the file's own order.
+            Some(&previous) if score[previous] >= score[i] => {}
+            _ => {
+                best.insert(key, i);
+            }
+        }
+    }
+    let mut winners: Vec<usize> = best.into_values().collect();
+    winners.sort_unstable();
+    winners
 }
 
 fn ensemble_input(value: &str) -> Result<(String, String), String> {
@@ -545,11 +587,14 @@ fn main() {
     if args.pins.is_empty() {
         eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
         eprintln!();
-        eprintln!("Input contract: a concatenated target-decoy search whose rows are the");
-        eprintln!("winners of a spectrum-level competition. --null-target-win-prob P (default");
-        eprintln!("0.5) declares the probability that an incorrect target outranks its paired");
-        eprintln!("decoy; use 1/(1+k) for k decoys per target. Separate target/decoy searches");
-        eprintln!("(mix-max) are not supported.");
+        eprintln!("Input contract: a concatenated target-decoy search against a decoy database");
+        eprintln!("of the same size as the target database. Spectrum-level target-decoy");
+        eprintln!("competition is performed on the rescored values before PSM statistics, so a");
+        eprintln!("PIN reporting several candidates per spectrum is handled; --no-psm-competition");
+        eprintln!("reports every candidate instead, and its q-values are then not FDR estimates.");
+        eprintln!("--null-target-win-prob P (default 0.5) declares the probability that an");
+        eprintln!("incorrect target outranks its paired decoy; use 1/(1+k) for k decoys per");
+        eprintln!("target. Separate target/decoy searches (mix-max) are not supported.");
         std::process::exit(2);
     }
     if args.pins.len() > 1 && !args.join && !args.ensemble {
@@ -758,7 +803,9 @@ fn main() {
     let _psm_context = profile::context(Some("psm_level_processing"), None, None, None);
     #[cfg(feature = "profiling")]
     let _psm_processing = profile::Scope::new("stage", "psm_level_processing");
-    let reported_indices: Vec<usize> = if args.ensemble {
+    let reported_indices: Vec<usize> = if args.psm_competition {
+        competition_winners(&ds, &out.score)
+    } else if args.ensemble {
         let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
             std::collections::BTreeMap::new();
         for i in 0..ds.n_psm {
@@ -774,7 +821,12 @@ fn main() {
     } else {
         (0..ds.n_psm).collect()
     };
-    let (reported_qvals, reported_peps) = if args.ensemble {
+    // Statistics belong to the list that is actually reported. Whenever
+    // competition or ensemble deduplication has removed rows, the q-values
+    // computed over the full training list no longer describe it.
+    let (reported_qvals, reported_peps) = if reported_indices.len() == ds.n_psm {
+        (out.qval.clone(), out.pep.clone())
+    } else {
         let reported_scores: Vec<f64> = reported_indices.iter().map(|&i| out.score[i]).collect();
         let reported_labels: Vec<i8> = reported_indices.iter().map(|&i| ds.labels[i]).collect();
         stats::qvalues_and_peps(
@@ -782,8 +834,6 @@ fn main() {
             &reported_labels,
             stats::Tdc::reported(args.params.null_target_win_prob),
         )
-    } else {
-        (out.qval.clone(), out.pep.clone())
     };
 
     // PSM-level output
@@ -1156,5 +1206,90 @@ mod output_tests {
     #[test]
     fn borrowed_row_preserves_sort_layout_size() {
         assert_eq!(std::mem::size_of::<Row<'_>>(), 96);
+    }
+}
+
+#[cfg(test)]
+mod competition_tests {
+    use super::*;
+
+    fn dataset(rows: &[(u32, i64, f64, i8)]) -> pin::Dataset {
+        pin::Dataset {
+            feature_names: vec!["f".to_string()],
+            n_feat: 1,
+            n_psm: rows.len(),
+            features: vec![0.0; rows.len()],
+            labels: rows.iter().map(|r| r.3).collect(),
+            spec_id: (0..rows.len()).map(|i| format!("s{i}")).collect(),
+            scan: rows.iter().map(|r| r.1).collect(),
+            exp_mass: rows.iter().map(|r| r.2).collect(),
+            peptide: (0..rows.len()).map(|i| format!("K.P{i}.R")).collect(),
+            proteins: (0..rows.len()).map(|i| format!("P{i}")).collect(),
+            source: rows.iter().map(|r| r.0).collect(),
+            source_names: vec!["a.pin".to_string(), "b.pin".to_string()],
+            ensemble: false,
+        }
+    }
+
+    #[test]
+    fn one_winner_per_precursor() {
+        // Two spectra, five candidates each, mixed targets and decoys.
+        let rows: Vec<(u32, i64, f64, i8)> = (0..10)
+            .map(|i| (0u32, (i / 5) as i64, 800.0, if i % 2 == 0 { 1i8 } else { -1 }))
+            .collect();
+        let ds = dataset(&rows);
+        let score: Vec<f64> = vec![1.0, 5.0, 2.0, 3.0, 4.0, 9.0, 8.0, 7.0, 6.0, 5.5];
+        let winners = competition_winners(&ds, &score);
+        assert_eq!(winners, vec![1, 5]);
+    }
+
+    /// Distinct precursors from one scan must not be collapsed: their
+    /// experimental neutral masses differ.
+    #[test]
+    fn distinct_precursors_of_one_scan_compete_separately() {
+        let ds = dataset(&[
+            (0, 42, 800.0, 1),
+            (0, 42, 800.0, -1),
+            (0, 42, 1600.0, 1),
+            (0, 42, 1600.0, -1),
+        ]);
+        let winners = competition_winners(&ds, &[1.0, 2.0, 5.0, 4.0]);
+        assert_eq!(winners, vec![1, 2]);
+    }
+
+    #[test]
+    fn joined_files_reusing_scan_numbers_compete_separately() {
+        let ds = dataset(&[(0, 7, 900.0, 1), (1, 7, 900.0, 1)]);
+        assert_eq!(competition_winners(&ds, &[1.0, 2.0]), vec![0, 1]);
+    }
+
+    #[test]
+    fn ties_are_resolved_by_input_order_not_by_map_iteration() {
+        let ds = dataset(&[(0, 1, 500.0, 1), (0, 1, 500.0, -1), (0, 1, 500.0, 1)]);
+        let winners = competition_winners(&ds, &[3.0, 3.0, 3.0]);
+        assert_eq!(winners, vec![0]);
+        for _ in 0..16 {
+            assert_eq!(competition_winners(&ds, &[3.0, 3.0, 3.0]), winners);
+        }
+    }
+
+    /// Input that already holds one candidate per spectrum must pass through
+    /// untouched, so competition cannot silently drop rows from a competed file.
+    #[test]
+    fn already_competed_input_is_unchanged() {
+        let rows: Vec<(u32, i64, f64, i8)> = (0..6)
+            .map(|i| (0u32, i as i64, 700.0 + i as f64, if i % 2 == 0 { 1i8 } else { -1 }))
+            .collect();
+        let ds = dataset(&rows);
+        let score = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        assert_eq!(competition_winners(&ds, &score), (0..6).collect::<Vec<_>>());
+    }
+
+    /// A PIN without an ExpMass column reports 0.0 for every row, which must
+    /// collapse a scan to one precursor rather than split it by float noise.
+    #[test]
+    fn a_pin_without_expmass_competes_per_scan() {
+        let ds = dataset(&[(0, 3, 0.0, 1), (0, 3, -0.0, -1), (0, 4, 0.0, 1)]);
+        assert_eq!(competition_winners(&ds, &[1.0, 2.0, 0.5]), vec![1, 2]);
     }
 }

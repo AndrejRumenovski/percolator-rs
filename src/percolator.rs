@@ -1621,6 +1621,7 @@ mod tests {
             labels,
             spec_id: (0..n_psm).map(|row| format!("psm{row}")).collect(),
             scan: (0..n_psm as i64).collect(),
+            exp_mass: vec![0.0; n_psm],
             peptide: (0..n_psm).map(|row| format!("K.PEP{row}.R")).collect(),
             proteins: (0..n_psm).map(|row| format!("P{row}")).collect(),
             source: vec![0; n_psm],
