@@ -913,10 +913,11 @@ fn rank_features(
     dim: usize,
     labels: &[i8],
     rows: &[usize],
-    test_fdr: f64,
+    p: &Params,
 ) -> Vec<RankedFeature> {
+    let test_fdr = p.test_fdr;
     let subset_labels: Vec<i8> = rows.iter().map(|&row| labels[row]).collect();
-    let tdc = stats::Tdc::training(0.5);
+    let tdc = stats::Tdc::training(p.null_target_win_prob);
     let mut scores = vec![0.0; rows.len()];
     let mut ranking = Vec::with_capacity(dim.saturating_sub(1));
     for feature in 0..dim - 1 {
@@ -1043,7 +1044,7 @@ fn inner_splits(
                 .filter(|&row| assignments[row] == validation_fold)
                 .collect();
             let (x, dim) = build_matrix_fit(ds, &train_rows, p);
-            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p);
             InnerSplit {
                 x,
                 train_rows,
@@ -1224,7 +1225,7 @@ fn nested_cv_scores(ds: &Dataset, outer_fold: &[u8], p: &Params) -> (Vec<f64>, V
             .collect();
         let selected = select_outer_hyperparameters(ds, &train_rows, test_fold, p);
         let (x, dim) = build_matrix_fit(ds, &train_rows, p);
-        let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+        let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p);
         let mask = feature_mask(dim, &ranking, selected.feature_count);
         let initial = ranked_initial_direction(dim, &ranking);
         let hp = Hp {
@@ -1496,7 +1497,7 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
             );
             let (x, dim) =
                 transform_matrix(ds, &normalization, rt_columns(p, rt_values.as_deref()).as_ref());
-            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p.test_fdr);
+            let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p);
             let active_features = feature_mask(dim, &ranking, selected.feature_count);
             let initial = ranked_initial_direction(dim, &ranking);
             let hp = Hp {
@@ -1569,8 +1570,9 @@ fn score_explanation_fold(
     }
 }
 
-fn target_q01(scores: &[f64], labels: &[i8], test_fdr: f64) -> usize {
-    let qvalues = stats::qvalues(scores, labels, stats::Tdc::reported(0.5));
+fn target_q01(scores: &[f64], labels: &[i8], p: &Params) -> usize {
+    let test_fdr = p.test_fdr;
+    let qvalues = stats::qvalues(scores, labels, stats::Tdc::reported(p.null_target_win_prob));
     qvalues
         .iter()
         .zip(labels)
@@ -1593,7 +1595,7 @@ pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureRepor
     } else {
         explain_fixed_models(ds, p, output, &fold)
     };
-    let baseline_q01 = target_q01(&output.score, &ds.labels, p.test_fdr);
+    let baseline_q01 = target_q01(&output.score, &ds.labels, p);
     // Report-only descriptive statistics over the whole input; nothing here
     // feeds a model, so a fold-local retention-time alignment is not needed.
     let global_normalization = fit_normalization(ds, &(0..ds.n_psm).collect::<Vec<_>>(), None);
@@ -1631,7 +1633,7 @@ pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureRepor
                 &mut permuted_scores,
             );
         }
-        let permuted_q01 = target_q01(&permuted_scores, &ds.labels, p.test_fdr);
+        let permuted_q01 = target_q01(&permuted_scores, &ds.labels, p);
         features.push(FeatureStat {
             index: feature,
             name: ds.feature_names[feature].clone(),

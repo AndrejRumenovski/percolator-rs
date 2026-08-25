@@ -501,6 +501,9 @@ pub fn classic_target_q01(groups: &[ProtGroup]) -> usize {
         .iter()
         .map(|g| if g.is_decoy { -1 } else { 1 })
         .collect();
+    // Protein-level competition is between a target protein group and its own
+    // reversed decoy group, one for one, independently of how many decoy
+    // peptides the PSM-level search used.
     let q = stats::qvalues(&scores, &labels, stats::Tdc::reported(0.5));
     q.iter()
         .zip(labels.iter())
