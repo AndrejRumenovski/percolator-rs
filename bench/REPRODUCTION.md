@@ -1,5 +1,11 @@
 # Reproduction ledger
 
+> **These measurements predate the 2026-08-25 statistical repair** and describe commit `d83a7ba`,
+> whose q-value and PEP estimators, cross-validation isolation and PIN feature selection were all
+> subsequently found defective and replaced. They are kept as the record of what was measured then.
+> For what the current implementation does and what it has been revalidated against, see
+> [`../validation/REPAIR.md`](../validation/REPAIR.md).
+
 This ledger records the complete rerun performed on 2026-08-24 from Git commit
 `59b68bb3791f7bf8b4c1dbe2453150045d956f96`. The host was Linux 7.0.0-30 on an AMD Ryzen 5
 5600G with 12 hardware threads. Rust was 1.97.0; the reference executable reported C++ Percolator

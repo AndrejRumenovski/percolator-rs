@@ -1,5 +1,11 @@
 # Multi-dataset benchmark
 
+> **These measurements predate the 2026-08-25 statistical repair** and describe commit `d83a7ba`,
+> whose q-value and PEP estimators, cross-validation isolation and PIN feature selection were all
+> subsequently found defective and replaced. They are kept as the record of what was measured then.
+> For what the current implementation does and what it has been revalidated against, see
+> [`../validation/REPAIR.md`](../validation/REPAIR.md).
+
 The speed advantage generalizes across all five tested search configurations; the identification
 delta does not. On the four compact extension cases, percolator-rs is **7.3–14.6x faster** and uses
 **37–67% of the C++ peak RSS**, while its PSM count at reported q≤0.01 ranges from **−1.8% to

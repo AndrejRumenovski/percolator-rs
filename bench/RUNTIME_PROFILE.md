@@ -1,5 +1,11 @@
 # Runtime profile: PXD032157
 
+> **These measurements predate the 2026-08-25 statistical repair** and describe commit `d83a7ba`,
+> whose q-value and PEP estimators, cross-validation isolation and PIN feature selection were all
+> subsequently found defective and replaced. They are kept as the record of what was measured then.
+> For what the current implementation does and what it has been revalidated against, see
+> [`../validation/REPAIR.md`](../validation/REPAIR.md).
+
 This is a measurement-only profile of the canonical `percolator-rs` workload. No scoring,
 solver, FDR, iteration, fold, or output behavior was optimized. The measurements were made on
 2026-08-24 from `d15438da3041a3b379b7a6b50b44b50d7e3a7c7d` plus the feature-gated

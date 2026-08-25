@@ -1,5 +1,11 @@
 # percolator-rs vs C++ Percolator 3.09 — benchmark
 
+> **These measurements predate the 2026-08-25 statistical repair** and describe commit `d83a7ba`,
+> whose q-value and PEP estimators, cross-validation isolation and PIN feature selection were all
+> subsequently found defective and replaced. They are kept as the record of what was measured then.
+> For what the current implementation does and what it has been revalidated against, see
+> [`../validation/REPAIR.md`](../validation/REPAIR.md).
+
 Dataset: PXD032157, 65 Comet `.pin` files (2.30 GB). Host: 12-core AMD Ryzen 5 5600G, 32 GB.
 Both run per-file single-threaded (`--num-threads 1`), parallelized across files at concurrency N.
 percolator-rs uses the **complete default workload** (maxiter 10, full 3-fold CV, no subsetting).
