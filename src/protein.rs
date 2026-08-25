@@ -170,7 +170,13 @@ mod tests {
             .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
             .count();
         let classic = classic_target_q01(&groups);
-        assert_eq!(classic, 81, "classic q<0.01 count drifted");
+        // Counts under the corrected target-decoy estimator.  Classic FDR used
+        // to report 81 here only because the pre-repair estimator let a leading
+        // decoy-free run reach q = 0; with the finite-sample safeguard the best
+        // achievable estimate on this fixture is 1/81 = 0.0123, above the
+        // threshold.  Picking removes the paired decoys, so the picked list still
+        // clears 1% at 1/121 = 0.0083.
+        assert_eq!(classic, 0, "classic q<0.01 count drifted");
         assert_eq!(picked, 121, "picked q<0.01 count drifted");
         assert!(
             picked > classic,
@@ -495,7 +501,7 @@ pub fn classic_target_q01(groups: &[ProtGroup]) -> usize {
         .iter()
         .map(|g| if g.is_decoy { -1 } else { 1 })
         .collect();
-    let q = stats::qvalues(&scores, &labels, 1.0);
+    let q = stats::qvalues(&scores, &labels, stats::Tdc::reported(0.5));
     q.iter()
         .zip(labels.iter())
         .filter(|(qi, &l)| l > 0 && **qi < 0.01)
@@ -589,7 +595,7 @@ fn picked_fdr(groups: &mut [ProtGroup]) {
     // q-values over the picked list (pi0 = 1)
     let scores: Vec<f64> = picks.iter().map(|p| p.1).collect();
     let labels: Vec<i8> = picks.iter().map(|p| if p.2 { -1 } else { 1 }).collect();
-    let q = stats::qvalues(&scores, &labels, 1.0);
+    let q = stats::qvalues(&scores, &labels, stats::Tdc::reported(0.5));
     for (pk, qi) in picks.iter().zip(q.into_iter()) {
         groups[pk.0].picked = true;
         groups[pk.0].qval = qi;

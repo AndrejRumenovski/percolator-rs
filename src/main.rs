@@ -187,6 +187,9 @@ fn parse_args() -> Args {
                 std::process::exit(2);
             }
             "--seed" => a.params.seed = take().parse().unwrap_or(1),
+            "--null-target-win-prob" => {
+                a.params.null_target_win_prob = take().parse().unwrap_or(f64::NAN)
+            }
             "--maxiter" => maxiter_opt = take().parse().ok(),
             "--subset-max-train" | "-N" => subset_opt = take().parse().ok(),
             "--cpos" => alpha_opt = take().parse().ok(),
@@ -291,6 +294,12 @@ fn parse_args() -> Args {
     }
     if !a.params.svm_tolerance.is_finite() || a.params.svm_tolerance <= 0.0 {
         eprintln!("invalid --svm-tolerance (must be finite and >0)");
+        std::process::exit(2);
+    }
+    if !a.params.null_target_win_prob.is_finite()
+        || !(0.0..1.0).contains(&a.params.null_target_win_prob)
+    {
+        eprintln!("invalid --null-target-win-prob (must be finite and in [0, 1))");
         std::process::exit(2);
     }
     a
@@ -535,6 +544,12 @@ fn main() {
     let args = parse_args();
     if args.pins.is_empty() {
         eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
+        eprintln!();
+        eprintln!("Input contract: a concatenated target-decoy search whose rows are the");
+        eprintln!("winners of a spectrum-level competition. --null-target-win-prob P (default");
+        eprintln!("0.5) declares the probability that an incorrect target outranks its paired");
+        eprintln!("decoy; use 1/(1+k) for k decoys per target. Separate target/decoy searches");
+        eprintln!("(mix-max) are not supported.");
         std::process::exit(2);
     }
     if args.pins.len() > 1 && !args.join && !args.ensemble {
@@ -762,8 +777,11 @@ fn main() {
     let (reported_qvals, reported_peps) = if args.ensemble {
         let reported_scores: Vec<f64> = reported_indices.iter().map(|&i| out.score[i]).collect();
         let reported_labels: Vec<i8> = reported_indices.iter().map(|&i| ds.labels[i]).collect();
-        let reported_pi0 = stats::estimate_pi0(&reported_labels);
-        stats::qvalues_and_peps(&reported_scores, &reported_labels, reported_pi0)
+        stats::qvalues_and_peps(
+            &reported_scores,
+            &reported_labels,
+            stats::Tdc::reported(args.params.null_target_win_prob),
+        )
     } else {
         (out.qval.clone(), out.pep.clone())
     };
@@ -858,8 +876,11 @@ fn main() {
     );
     let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
     let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
-    let ppi0 = stats::estimate_pi0(&plabel);
-    let (pq, ppep) = stats::qvalues_and_peps(&pscore, &plabel, ppi0);
+    let (pq, ppep) = stats::qvalues_and_peps(
+        &pscore,
+        &plabel,
+        stats::Tdc::reported(args.params.null_target_win_prob),
+    );
 
     let peptide_target_capacity = pep_idx
         .iter()

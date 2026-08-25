@@ -11,6 +11,10 @@ use std::collections::BTreeMap;
 pub struct Params {
     pub maxiter: usize,          // semi-supervised iterations
     pub test_fdr: f64,           // FDR to pick positive training examples
+    /// Probability that an incorrect target outranks its paired decoy under the
+    /// null.  0.5 for a 1:1 concatenated target-decoy competition; see
+    /// [`crate::stats`] for the supported input contract.
+    pub null_target_win_prob: f64,
     pub subset_max_train: usize, // 0 = use all
     pub seed: u64,
     pub max_newton: usize,
@@ -57,6 +61,7 @@ impl Default for Params {
         Params {
             maxiter: 10,
             test_fdr: 0.01,
+            null_target_win_prob: 0.5,
             subset_max_train: 0,
             seed: 1,
             max_newton: 30,
@@ -301,14 +306,18 @@ fn standardized_heldout_scores(
 }
 
 /// Pick the single best-separating feature (either orientation) as the initial direction.
-fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec<f64> {
+fn initial_direction(x: &[f64], dim: usize, labels: &[i8], p: &Params) -> Vec<f64> {
     #[cfg(feature = "profiling")]
     let _context = crate::profile::context(Some("initial_direction"), None, None, None);
     #[cfg(feature = "profiling")]
     let _initial =
         crate::profile::Scope::with_elements("stage", "initial_direction_selection", labels.len());
     let n = labels.len();
-    let pi0 = stats::estimate_pi0(labels);
+    // Selecting a direction is a heuristic, not an error-rate claim: the
+    // reference likewise drops the finite-sample safeguard here because it is
+    // too restrictive on small partitions.
+    let tdc = stats::Tdc::training(p.null_target_win_prob);
+    let test_fdr = p.test_fdr;
     let mut order = Vec::new();
     let mut best_w = vec![0.0f64; dim];
     best_w[dim - 1] = 0.0;
@@ -335,7 +344,7 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
             scoring_time += scoring_start.elapsed();
         }
         let count =
-            stats::target_count_at_fdr_into(&scores, labels, pi0, test_fdr, &mut order) as i64;
+            stats::target_count_at_fdr_into(&scores, labels, tdc, test_fdr, &mut order) as i64;
         if count > best_count {
             best_count = count;
             for v in best_w.iter_mut() {
@@ -355,7 +364,7 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
                 }
                 ranks[order[position]] = rank;
             }
-            stats::target_count_at_reversed_ranks_into(&ranks, labels, pi0, test_fdr, &mut order)
+            stats::target_count_at_reversed_ranks_into(&ranks, labels, tdc, test_fdr, &mut order)
                 as i64
         } else {
             #[cfg(feature = "profiling")]
@@ -367,7 +376,7 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], test_fdr: f64) -> Vec
             {
                 scoring_time += scoring_start.elapsed();
             }
-            stats::target_count_at_fdr_into(&scores, labels, pi0, test_fdr, &mut order) as i64
+            stats::target_count_at_fdr_into(&scores, labels, tdc, test_fdr, &mut order) as i64
         };
         if count > best_count {
             best_count = count;
@@ -416,7 +425,7 @@ fn train_fold(
     };
     let mut scores = vec![0.0f64; train_rows.len()];
     let sub_labels: Vec<i8> = train_rows.iter().map(|&r| labels[r]).collect();
-    let pi0 = stats::estimate_pi0(&sub_labels);
+    let tdc = stats::Tdc::training(p.null_target_win_prob);
     let mut qvalue_workspace = stats::QValueWorkspace::default();
     let mut accepted = Vec::new();
     let mut svm_workspace = SvmWorkspace::default();
@@ -455,7 +464,7 @@ fn train_fold(
         stats::target_mask_at_fdr_into(
             &scores,
             &sub_labels,
-            pi0,
+            tdc,
             p.test_fdr,
             &mut qvalue_workspace,
             &mut accepted,
@@ -729,9 +738,8 @@ fn cv_scores(
 }
 
 /// Number of target PSMs below `test_fdr`, computed on out-of-fold scores.
-fn yield_at_fdr(scores: &[f64], labels: &[i8], test_fdr: f64) -> usize {
-    let pi0 = stats::estimate_pi0(labels);
-    let q = stats::qvalues(scores, labels, pi0);
+fn yield_at_fdr(scores: &[f64], labels: &[i8], test_fdr: f64, p: &Params) -> usize {
+    let q = stats::qvalues(scores, labels, stats::Tdc::reported(p.null_target_win_prob));
     q.iter()
         .zip(labels.iter())
         .filter(|(qi, &l)| l > 0 && **qi < test_fdr)
@@ -770,7 +778,7 @@ fn select_c(
             tolerance: p.svm_tolerance,
         };
         let sc = cv_scores(x, dim, labels, fold, w0, p, hp, p.seed);
-        yield_at_fdr(&sc, labels, p.test_fdr)
+        yield_at_fdr(&sc, labels, p.test_fdr, p)
     };
 
     let yields: Vec<usize> = if p.num_threads > 1 {
@@ -823,7 +831,7 @@ fn rank_features(
     test_fdr: f64,
 ) -> Vec<RankedFeature> {
     let subset_labels: Vec<i8> = rows.iter().map(|&row| labels[row]).collect();
-    let pi0 = stats::estimate_pi0(&subset_labels);
+    let tdc = stats::Tdc::training(0.5);
     let mut scores = vec![0.0; rows.len()];
     let mut ranking = Vec::with_capacity(dim.saturating_sub(1));
     for feature in 0..dim - 1 {
@@ -836,7 +844,7 @@ fn rank_features(
             for (k, &row) in rows.iter().enumerate() {
                 scores[k] = sign * x[row * dim + feature];
             }
-            let qvalues = stats::qvalues(&scores, &subset_labels, pi0);
+            let qvalues = stats::qvalues(&scores, &subset_labels, tdc);
             let count = qvalues
                 .iter()
                 .zip(&subset_labels)
@@ -1003,7 +1011,7 @@ fn evaluate_nested_candidate(
         validation_scores.extend(scores);
         validation_labels.extend(split.validation_rows.iter().map(|&row| labels[row]));
     }
-    yield_at_fdr(&validation_scores, &validation_labels, p.test_fdr)
+    yield_at_fdr(&validation_scores, &validation_labels, p.test_fdr, p)
 }
 
 fn select_stage(
@@ -1208,8 +1216,11 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
             Ok(pool) if p.num_threads > 1 => pool.install(nested),
             _ => nested(),
         };
-        let pi0 = stats::estimate_pi0(&ds.labels);
-        let (qval, pep) = stats::qvalues_and_peps(&final_score, &ds.labels, pi0);
+        let (qval, pep) = stats::qvalues_and_peps(
+            &final_score,
+            &ds.labels,
+            stats::Tdc::reported(p.null_target_win_prob),
+        );
         return Output {
             score: final_score,
             qval,
@@ -1223,7 +1234,7 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
 
     let (x, dim) = build_matrix(ds);
 
-    let w0 = initial_direction(&x, dim, &ds.labels, p.test_fdr);
+    let w0 = initial_direction(&x, dim, &ds.labels, p);
 
     let selected = p.c_alpha.is_none() || p.c_beta.is_none();
     let (alpha, beta) = if selected {
@@ -1251,10 +1262,13 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     };
     let final_score = cv_scores(&x, dim, &ds.labels, &fold, &w0, p, hp, p.seed);
 
-    let pi0 = stats::estimate_pi0(&ds.labels);
     #[cfg(feature = "profiling")]
     let _final_context = crate::profile::context(Some("final_psm_statistics"), None, None, None);
-    let (qval, pep) = stats::qvalues_and_peps(&final_score, &ds.labels, pi0);
+    let (qval, pep) = stats::qvalues_and_peps(
+        &final_score,
+        &ds.labels,
+        stats::Tdc::reported(p.null_target_win_prob),
+    );
     Output {
         score: final_score,
         qval,
@@ -1351,7 +1365,7 @@ fn explain_fixed_models(
     let all_rows: Vec<usize> = (0..ds.n_psm).collect();
     let normalization = fit_normalization(ds, &all_rows);
     let (x, dim) = transform_matrix(ds, &normalization);
-    let initial = initial_direction(&x, dim, &ds.labels, p.test_fdr);
+    let initial = initial_direction(&x, dim, &ds.labels, p);
     let hp = Hp {
         alpha: output.c_alpha,
         beta: output.c_beta,
@@ -1488,7 +1502,7 @@ fn score_explanation_fold(
 }
 
 fn target_q01(scores: &[f64], labels: &[i8], test_fdr: f64) -> usize {
-    let qvalues = stats::qvalues(scores, labels, stats::estimate_pi0(labels));
+    let qvalues = stats::qvalues(scores, labels, stats::Tdc::reported(0.5));
     qvalues
         .iter()
         .zip(labels)
