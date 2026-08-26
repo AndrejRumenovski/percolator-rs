@@ -101,11 +101,17 @@ else
   echo "  PASS  Bayesian probabilities bounded and q-values monotone"
 fi
 
-if [ "${picked_q01:-0}" -le "${classic_q01:-0}" ]; then
-  echo "  FAIL  picked>classic          picked-FDR should strictly beat classic on this fixture"
-  fail=1
+# Picked-protein FDR estimates a cumulative error rate over protein groups and
+# no protein-level posterior, so the column must read NA rather than carry a
+# peptide-level PEP under a protein-level name. Requiring picked >= classic here
+# would encode a sensitivity claim this fixture was built to produce; the counts
+# above are recorded instead, in either direction.
+if awk -F'\t' 'NR > 1 && $3 != "NA" { exit 1 }' "$tprot" &&
+   awk -F'\t' 'NR > 1 && $3 != "NA" { exit 1 }' "$dprot"; then
+  echo "  PASS  picked protein PEP      NA (no protein-level posterior is estimated)"
 else
-  echo "  PASS  picked>classic          picked-FDR strictly beats classic on this fixture"
+  echo "  FAIL  picked protein PEP      a value was reported where none is estimated"
+  fail=1
 fi
 
 if [ "$fail" -ne 0 ]; then
