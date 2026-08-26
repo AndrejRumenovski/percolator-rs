@@ -732,6 +732,57 @@ mod tests {
         }
     }
 
+    /// **Frozen requirement.** Every row at the same score shares one rejection
+    /// boundary: a threshold cannot admit some members of a tie and not others.
+    ///
+    /// Three targets and one decoy at score 5, one decoy at score 1. The tie
+    /// group is evaluated once, after all four rows have been counted:
+    /// `1 * (1 + 1) / 3 = 2/3`. Ending the group after each row instead lets the
+    /// leading targets be scored before their tied decoy has been counted, and
+    /// the reverse cumulative minimum then hands them 1/3 -- half the estimate,
+    /// from the same data.
+    #[test]
+    fn equal_scores_share_one_rejection_boundary() {
+        let scores = vec![5.0, 5.0, 5.0, 5.0, 1.0];
+        let labels = vec![1i8, 1, 1, -1, -1];
+        let q = qvalues(&scores, &labels, reported());
+        for (index, value) in q.iter().take(4).enumerate() {
+            assert!(
+                (value - 2.0 / 3.0).abs() < 1e-12,
+                "row {index} q = {value}, expected 2/3"
+            );
+        }
+        // Same requirement under every permutation of the tie group.
+        for rotation in 0..4usize {
+            let mut permuted_scores = scores.clone();
+            let mut permuted_labels = labels.clone();
+            permuted_labels[..4].rotate_left(rotation);
+            permuted_scores[..4].rotate_left(rotation);
+            let permuted = qvalues(&permuted_scores, &permuted_labels, reported());
+            for value in permuted.iter().take(4) {
+                assert!(
+                    (value - 2.0 / 3.0).abs() < 1e-12,
+                    "rotation {rotation}: q = {value}, expected 2/3"
+                );
+            }
+        }
+    }
+
+    /// The same requirement for PEPs: tied targets must receive one shared
+    /// increment of the estimated false-discovery count, not one each.
+    #[test]
+    fn equal_scores_share_one_pep_increment() {
+        let scores = vec![5.0, 5.0, 5.0, 5.0, 1.0];
+        let labels = vec![1i8, 1, 1, -1, -1];
+        let pep = peps(&scores, &labels, reported());
+        for (index, value) in pep.iter().take(3).enumerate() {
+            assert!(
+                (value - 2.0 / 3.0).abs() < 1e-12,
+                "target {index} PEP = {value}, expected 2/3"
+            );
+        }
+    }
+
     #[test]
     fn all_identical_scores_collapse_to_one_qvalue() {
         let scores = vec![1.0; 8];
