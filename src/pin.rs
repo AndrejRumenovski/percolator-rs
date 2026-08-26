@@ -154,24 +154,40 @@ pub fn merge_ensemble(parts: Vec<Dataset>, engine_names: Vec<String>) -> Result<
         feature_offset += part.n_feat;
     }
 
+    // Cross-engine agreement features.
+    //
+    // Both keys are deliberately label-free.  Keying the per-candidate count on
+    // `(ScanNr, Label, Peptide)` -- the previous behaviour -- built a training
+    // feature out of the labels of every row in the file, including the rows
+    // that later become held-out.  Whether two engines reported the same
+    // candidate for the same spectrum is a property of the searches, and a
+    // peptide sequence already determines whether it came from the target or the
+    // decoy database, so the label adds nothing except the leak.
     let mut spectrum_engines: BTreeMap<i64, BTreeSet<u32>> = BTreeMap::new();
-    let mut psm_engines: BTreeMap<(i64, i8, String), BTreeSet<u32>> = BTreeMap::new();
+    let mut psm_engines: BTreeMap<(i64, &str), BTreeSet<u32>> = BTreeMap::new();
     for row in 0..out.n_psm {
         spectrum_engines
             .entry(out.scan[row])
             .or_default()
             .insert(out.source[row]);
         psm_engines
-            .entry((out.scan[row], out.labels[row], out.peptide[row].clone()))
+            .entry((out.scan[row], out.peptide[row].as_str()))
             .or_default()
             .insert(out.source[row]);
     }
     let spectrum_count = n_feat - 2;
     let psm_count = n_feat - 1;
-    for row in 0..out.n_psm {
-        out.features[row * n_feat + spectrum_count] = spectrum_engines[&out.scan[row]].len() as f64;
-        out.features[row * n_feat + psm_count] =
-            psm_engines[&(out.scan[row], out.labels[row], out.peptide[row].clone())].len() as f64;
+    let counts: Vec<(f64, f64)> = (0..out.n_psm)
+        .map(|row| {
+            (
+                spectrum_engines[&out.scan[row]].len() as f64,
+                psm_engines[&(out.scan[row], out.peptide[row].as_str())].len() as f64,
+            )
+        })
+        .collect();
+    for (row, (spectrum, psm)) in counts.into_iter().enumerate() {
+        out.features[row * n_feat + spectrum_count] = spectrum;
+        out.features[row * n_feat + psm_count] = psm;
     }
     Ok(out)
 }
@@ -545,6 +561,56 @@ mod tests {
             source: vec![0; rows.len()],
             source_names: vec!["input.pin".to_string()],
             ensemble: false,
+        }
+    }
+
+    /// **Frozen failure case (independent audit M5).**
+    ///
+    /// The cross-engine agreement features are built once over every row, before
+    /// folds exist.  They must therefore be a function of the search results
+    /// alone: flipping any labels, including the labels of rows that later land
+    /// in a held-out fold, must leave every feature value untouched.
+    #[test]
+    fn ensemble_features_do_not_depend_on_any_label() {
+        let rows_a = [
+            (10, 1, "A.PEPTIDE.B", 4.0),
+            (10, -1, "A.YTIDEPEP.B", 1.0),
+            (11, 1, "A.OTHER.B", 2.0),
+        ];
+        let rows_b = [
+            (10, 1, "A.PEPTIDE.B", 0.01),
+            (10, -1, "A.YTIDEPEP.B", 0.9),
+            (12, 1, "A.THIRD.B", 0.5),
+        ];
+        let clean = merge_ensemble(
+            vec![dataset("xcorr", &rows_a), dataset("exact_p_value", &rows_b)],
+            vec!["comet".to_string(), "tide".to_string()],
+        )
+        .unwrap();
+
+        // Every assignment of labels, held fixed in features.
+        for mask in 0..(1u32 << 6) {
+            let flip = |rows: &[(i64, i8, &'static str, f64)], offset: u32| {
+                rows.iter()
+                    .enumerate()
+                    .map(|(index, row)| {
+                        let bit = 1u32 << (offset + index as u32);
+                        (row.0, if mask & bit != 0 { -row.1 } else { row.1 }, row.2, row.3)
+                    })
+                    .collect::<Vec<_>>()
+            };
+            let flipped = merge_ensemble(
+                vec![
+                    dataset("xcorr", &flip(&rows_a, 0)),
+                    dataset("exact_p_value", &flip(&rows_b, 3)),
+                ],
+                vec!["comet".to_string(), "tide".to_string()],
+            )
+            .unwrap();
+            assert_eq!(
+                flipped.features, clean.features,
+                "label mask {mask:#08b} changed an ensemble feature"
+            );
         }
     }
 

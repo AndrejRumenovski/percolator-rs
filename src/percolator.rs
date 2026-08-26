@@ -821,15 +821,38 @@ fn yield_at_fdr(scores: &[f64], labels: &[i8], test_fdr: f64, p: &Params) -> usi
         .count()
 }
 
-/// Pick (alpha, beta) by cross-validation: for each candidate, run an abbreviated
-/// 3-fold pass and keep the one with the highest out-of-fold yield at `test_fdr`.
-/// Mirrors the reference's "Selecting Cpos/Cneg by cross-validation" step.
+/// Pick this outer fold's `(alpha, beta)` inside its own training partition.
 ///
-/// The grid is scored on the same out-of-fold predictions that are later
-/// reported, so this remains a selection-biased, non-nested procedure; use
-/// `--auto-model` for nested selection.  Folds are the outer loop so each fold's
-/// training-only preprocessing is fitted once and reused by every candidate.
-fn select_c(ds: &Dataset, fold: &[u8], p: &Params) -> (f64, f64) {
+/// # Why this is nested
+///
+/// The previous implementation scored the whole `C` grid on the *out-of-fold*
+/// predictions that were then reported.  Every held-out row therefore took part
+/// in choosing the hyperparameters of the model that scored it: flipping only
+/// the labels of one outer fold moved the selected class weights from 4:1 to
+/// 0.25:1 and changed every one of that fold's reported scores.  That is
+/// selection leakage regardless of how well the folds themselves are isolated,
+/// because the selection step sits outside them.
+///
+/// Selection is therefore nested.  For one outer fold:
+///
+/// ```text
+/// outer training rows
+///   -> inner split into training / validation partitions
+///   -> each grid candidate trained on inner training, scored on inner validation
+///   -> the candidate with the highest pooled inner-validation yield
+///   -> final model trained on the whole outer training partition with that C
+///   -> the untouched outer held-out fold is scored
+/// ```
+///
+/// The outer held-out fold appears nowhere above, so neither its labels nor its
+/// features can reach the selection or the model.
+fn select_c_for_fold(
+    ds: &Dataset,
+    outer_train: &[usize],
+    outer_fold: u8,
+    p: &Params,
+) -> (f64, f64, usize) {
+    let dim = ds.n_feat + 1;
     let cands: Vec<(f64, f64)> = C_POS_GRID
         .iter()
         .flat_map(|&a| C_NEG_GRID.iter().map(move |&b| (a, b)))
@@ -839,13 +862,16 @@ fn select_c(ds: &Dataset, fold: &[u8], p: &Params) -> (f64, f64) {
     } else {
         p.c_select_subset
     };
+    let splits = inner_splits(ds, outer_train, outer_fold, p);
 
-    // Every candidate re-seeds from the fold seed, so its score is independent of
-    // evaluation order — the parallel and serial paths return bit-identical results.
-    let mut candidate_scores: Vec<Vec<f64>> = vec![vec![0.0f64; ds.n_psm]; cands.len()];
-    for &test in OUTER_FOLDS.iter() {
-        let setup = fold_setup(ds, fold, test, p, p.seed);
-        let evaluate = |(index, &(alpha, beta)): (usize, &(f64, f64))| -> (usize, Vec<f64>) {
+    // Every candidate re-seeds from the inner-fold seed, so its score is
+    // independent of evaluation order -- the parallel and serial paths return
+    // bit-identical results.
+    let evaluate = |(index, &(alpha, beta)): (usize, &(f64, f64))| -> (usize, usize) {
+        let mut validation_scores: Vec<f64> = Vec::new();
+        let mut validation_labels: Vec<i8> = Vec::new();
+        for (inner_fold, split) in splits.iter().enumerate() {
+            let initial = ranked_initial_direction(dim, &split.ranking);
             let hp = Hp {
                 alpha,
                 beta,
@@ -853,24 +879,47 @@ fn select_c(ds: &Dataset, fold: &[u8], p: &Params) -> (f64, f64) {
                 subset,
                 tolerance: p.svm_tolerance,
             };
-            (index, setup.train_and_score(ds, p, hp))
-        };
-        let parts: Vec<(usize, Vec<f64>)> = if p.num_threads > 1 {
-            cands.par_iter().enumerate().map(evaluate).collect()
-        } else {
-            cands.iter().enumerate().map(evaluate).collect()
-        };
-        for (index, scores) in parts {
-            for (k, &row) in setup.test_rows.iter().enumerate() {
-                candidate_scores[index][row] = scores[k];
-            }
+            let fold_seed = p.seed
+                ^ ((outer_fold as u64 + 1).wrapping_mul(0xD6E8_FD50_1A4B_8C27))
+                ^ ((inner_fold as u64 + 1).wrapping_mul(0x9E37_79B9_7F4A_7C15));
+            let mut rng = Rng(fold_seed.max(1));
+            let model = train_fold(
+                &split.x,
+                dim,
+                &ds.labels,
+                &split.train_rows,
+                &initial,
+                p,
+                &mut rng,
+                hp,
+                fold_seed ^ 0x94D0_49BB_1331_11EB,
+                None,
+            );
+            validation_scores.extend(standardized_heldout_scores(
+                &model,
+                &split.x,
+                dim,
+                &ds.labels,
+                &split.train_rows,
+                &split.validation_rows,
+            ));
+            validation_labels.extend(split.validation_rows.iter().map(|&row| ds.labels[row]));
         }
-    }
+        (
+            index,
+            yield_at_fdr(&validation_scores, &validation_labels, p.test_fdr, p),
+        )
+    };
 
-    let yields: Vec<usize> = candidate_scores
-        .iter()
-        .map(|scores| yield_at_fdr(scores, &ds.labels, p.test_fdr, p))
-        .collect();
+    let mut yields = vec![0usize; cands.len()];
+    let parts: Vec<(usize, usize)> = if p.num_threads > 1 {
+        cands.par_iter().enumerate().map(evaluate).collect()
+    } else {
+        cands.iter().enumerate().map(evaluate).collect()
+    };
+    for (index, value) in parts {
+        yields[index] = value;
+    }
 
     // First maximum wins, so ties resolve by grid order regardless of threading.
     let mut best_i = 0;
@@ -879,10 +928,60 @@ fn select_c(ds: &Dataset, fold: &[u8], p: &Params) -> (f64, f64) {
             best_i = i;
         }
     }
-    cands
+    let (alpha, beta) = cands
         .get(best_i)
         .copied()
-        .unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT))
+        .unwrap_or((C_POS_DEFAULT, C_NEG_DEFAULT));
+    (alpha, beta, yields.get(best_i).copied().unwrap_or(0))
+}
+
+/// Three-fold pass in which each outer fold first selects its own class weights
+/// inside its training partition, then trains and scores its held-out rows.
+fn cv_scores_with_selected_c(
+    ds: &Dataset,
+    fold: &[u8],
+    p: &Params,
+) -> (Vec<f64>, Vec<FoldSelection>) {
+    let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>, FoldSelection) {
+        let setup = fold_setup(ds, fold, test, p, p.seed);
+        let (alpha, beta, inner_yield) = select_c_for_fold(ds, &setup.train_rows, test, p);
+        let hp = Hp {
+            alpha,
+            beta,
+            maxiter: p.maxiter,
+            subset: p.subset_max_train,
+            tolerance: p.svm_tolerance,
+        };
+        let scores = setup.train_and_score(ds, p, hp);
+        (
+            setup.test_rows,
+            scores,
+            FoldSelection {
+                outer_fold: test,
+                c: 1.0,
+                positive_weight: alpha,
+                negative_weight: beta,
+                feature_count: ds.n_feat,
+                tolerance: p.svm_tolerance,
+                inner_yield,
+            },
+        )
+    };
+    let parts: Vec<(Vec<usize>, Vec<f64>, FoldSelection)> = if p.num_threads > 1 {
+        OUTER_FOLDS.par_iter().map(per_fold).collect()
+    } else {
+        OUTER_FOLDS.iter().map(per_fold).collect()
+    };
+    let mut final_score = vec![0.0f64; ds.n_psm];
+    let mut selections = Vec::with_capacity(parts.len());
+    for (test_rows, scores, selection) in parts {
+        for (k, &row) in test_rows.iter().enumerate() {
+            final_score[row] = scores[k];
+        }
+        selections.push(selection);
+    }
+    selections.sort_by_key(|selection| selection.outer_fold);
+    (final_score, selections)
 }
 
 #[derive(Clone)]
@@ -1327,19 +1426,33 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     }
 
     let selected = p.c_alpha.is_none() || p.c_beta.is_none();
-    let (alpha, beta) = if selected {
+    if selected {
         // A private pool keeps thread count under this run's control, so callers that
         // already parallelize across files (the benchmark harness) stay single-threaded.
-        match rayon::ThreadPoolBuilder::new()
+        let select = || cv_scores_with_selected_c(ds, &fold, p);
+        let (final_score, selections) = match rayon::ThreadPoolBuilder::new()
             .num_threads(p.num_threads)
             .build()
         {
-            Ok(pool) if p.num_threads > 1 => pool.install(|| select_c(ds, &fold, p)),
-            _ => select_c(ds, &fold, p),
-        }
-    } else {
-        (p.c_alpha.unwrap(), p.c_beta.unwrap())
-    };
+            Ok(pool) if p.num_threads > 1 => pool.install(select),
+            _ => select(),
+        };
+        let (qval, pep) = stats::qvalues_and_peps(
+            &final_score,
+            &ds.labels,
+            stats::Tdc::reported(p.null_target_win_prob),
+        );
+        return Output {
+            score: final_score,
+            qval,
+            pep,
+            c_alpha: f64::NAN,
+            c_beta: f64::NAN,
+            c_selected: true,
+            nested_folds: selections,
+        };
+    }
+    let (alpha, beta) = (p.c_alpha.unwrap(), p.c_beta.unwrap());
 
     let hp = Hp {
         alpha,
