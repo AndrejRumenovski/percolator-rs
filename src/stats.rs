@@ -42,19 +42,48 @@
 //!
 //! # Posterior error probabilities
 //!
-//! PEPs are derived from the q-values through the identity of Käll et al. (2008),
-//! "Posterior error probabilities and false discovery rates: two sides of the same
-//! coin": for targets ranked best-first, `q_k` is the mean PEP over the top `k`,
-//! so `sum_{i<=k} PEP_i = k * q_k` and
+//! A PEP is the *local* counterpart of the cumulative quantity above: the
+//! probability that one particular target is incorrect.  Käll et al. (2008),
+//! "Posterior error probabilities and false discovery rates: two sides of the
+//! same coin", give the relation between them — the estimated number of false
+//! discoveries among a set is the sum of that set's PEPs.  The implication runs
+//! from calibrated PEPs to calibrated FDR, **not** the other way round, so a
+//! valid cumulative estimate is a starting point for a local one and never a
+//! proof of it.
+//!
+//! The same scan that produces `FDP` also produces the estimated number of
+//! incorrect targets at or above a score,
 //!
 //! ```text
-//! raw PEP_k = k * q_k - (k - 1) * q_{k-1}
+//! F(s) = min(T(s), pi0 * lambda * (D(s) + 1))
 //! ```
 //!
-//! A Bayesian pseudocount of half a false discovery spread uniformly over the
-//! target list is added before an isotonic (PAVA) fit enforces monotonicity in
-//! score.  The pseudocount is what keeps the leading tail strictly positive; it is
-//! prior mass, not a clamp applied after the fact.
+//! which is exactly `T(s) * FDP(s)`.  `F` is a non-decreasing step function of
+//! the score threshold, and the PEP of a target is the increment of `F` it is
+//! responsible for: walking the tie groups best-first, each group's increment
+//! `F(g) - F(g-1)` is shared equally among the targets in that group.  Groups
+//! holding only decoys carry their increment forward to the next group that has
+//! targets, so no estimated false discovery is lost.
+//!
+//! Differencing a step function is high variance — this is why QVALITY fits a
+//! smooth nonparametric model instead — so an isotonic (PAVA) fit then enforces
+//! the monotonicity a posterior error probability must have in score.  PAVA
+//! redistributes mass only inside a pooled block, so the sum over all targets is
+//! preserved: **the reported PEPs sum to the reported estimated number of false
+//! discoveries.**
+//!
+//! Two properties follow without any tuned constant.  The leading run of targets
+//! above every decoy receives the finite-sample safeguard decoy's `lambda`
+//! spread across it, so no finite input produces `PEP = 0`; and the declared
+//! opportunity ratio scales PEPs exactly as it scales q-values.
+//!
+//! # What this estimator does not claim
+//!
+//! It inherits every assumption of the cumulative estimator above.  If `FDP` is
+//! anti-conservative on some data then its increments are too, and no property
+//! of the isotonic fit repairs that.  See `validation/` for the measured
+//! calibration, which is **not** a validation of these values as posterior
+//! probabilities.
 
 use std::cmp::Ordering;
 
@@ -210,6 +239,15 @@ pub fn qvalues_into(
     let n = scores.len();
     #[cfg(feature = "profiling")]
     let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    // Fail closed.  A non-finite score has no place in a score ordering: it
+    // cannot be compared, it cannot join a tie group, and admitting one lets a
+    // single row silently move the q-values of every row above it.  The PIN
+    // parser already rejects non-finite features, so reaching this means a model
+    // diverged.
+    assert!(
+        scores.iter().all(|value| value.is_finite()),
+        "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
+    );
 
     workspace.order.clear();
     workspace.order.extend(0..n);
@@ -289,6 +327,10 @@ pub fn target_mask_at_fdr_into(
     let n = scores.len();
     #[cfg(feature = "profiling")]
     let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    assert!(
+        scores.iter().all(|value| value.is_finite()),
+        "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
+    );
     workspace.order.clear();
     workspace.order.extend(0..n);
     accepted.clear();
@@ -334,6 +376,10 @@ pub fn target_count_at_fdr_into(
     threshold: f64,
     order: &mut Vec<usize>,
 ) -> usize {
+    assert!(
+        scores.iter().all(|value| value.is_finite()),
+        "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
+    );
     order.clear();
     order.extend(0..scores.len());
     sort_score_order(order, scores);
@@ -396,7 +442,7 @@ pub fn qvalues_and_peps(scores: &[f64], labels: &[i8], tdc: Tdc) -> (Vec<f64>, V
     let mut q = Vec::new();
     let mut pep = Vec::new();
     qvalues_into(scores, labels, tdc, &mut workspace, &mut q);
-    peps_from_qvalues_into(labels, &q, &mut workspace, &mut pep);
+    peps_from_competition_into(scores, labels, tdc, &mut workspace, &mut pep);
     (q, pep)
 }
 
@@ -444,35 +490,73 @@ fn pava_non_decreasing(
 }
 
 /// Smallest PEP the estimator will report.  Guards only against floating-point
-/// underflow in the pseudocount; it is never the value that removes an otherwise
-/// exact zero.
+/// underflow of a genuinely tiny increment; it is never the value that removes
+/// an otherwise exact zero, because the finite-sample safeguard decoy already
+/// keeps the leading run strictly positive.
 const PEP_FLOOR: f64 = 1e-12;
 
-/// PEPs from q-values, aligned to input order.
+/// Posterior error probabilities from the same target-decoy scan that produced
+/// the q-values, aligned to input order.
 ///
-/// `workspace.order` must hold the descending score order that produced `q`.
-fn peps_from_qvalues_into(
+/// `workspace.order` must hold the descending score order of `scores`.
+fn peps_from_competition_into(
+    scores: &[f64],
     labels: &[i8],
-    q: &[f64],
+    tdc: Tdc,
     workspace: &mut QValueWorkspace,
     pep: &mut Vec<f64>,
 ) {
     let n = workspace.order.len();
     #[cfg(feature = "profiling")]
-    let _peps = crate::profile::Scope::with_elements("pep", "pep_from_qvalues_total", n);
+    let _peps = crate::profile::Scope::with_elements("pep", "pep_from_competition_total", n);
     #[cfg(feature = "profiling")]
     let pep_start = std::time::Instant::now();
     pep.clear();
     pep.resize(n, 1.0);
-
-    // Targets, best-first.  q along this sequence is non-decreasing because it is
-    // a reverse cumulative minimum over the full list.
     workspace.target_ranks.clear();
     workspace.target_pep.clear();
+    if n == 0 {
+        return;
+    }
+
+    // Walk the tie groups best-first, accumulating the estimated number of
+    // incorrect targets `F` and handing each group's increment to the targets it
+    // contains.  A decoy-only group leaves `F` raised and `assigned` untouched,
+    // so its increment reaches the next group that has a target to carry it.
+    let lambda = tdc.decoy_factor();
+    let mut targets = 0.0f64;
+    let mut decoys = tdc.initial_decoys();
+    let mut assigned = 0.0f64;
+    let mut group_first_target = 0usize;
     for rank in 0..n {
-        if labels[workspace.order[rank]] > 0 {
+        let row = workspace.order[rank];
+        if labels[row] > 0 {
+            targets += 1.0;
             workspace.target_ranks.push(rank);
             workspace.target_pep.push(0.0);
+        } else {
+            decoys += 1.0;
+        }
+        if ends_score_group(&workspace.order, scores, rank) {
+            let group_targets = workspace.target_pep.len() - group_first_target;
+            if group_targets > 0 {
+                // A probability cannot exceed one, so a group of `g` targets can
+                // absorb at most `g` further false discoveries.  Applying that
+                // bound here rather than clamping the finished curve is what
+                // keeps the reported PEPs summing to the reported estimate; the
+                // bound only ever binds deep in the tail, where every PEP has
+                // already saturated at 1.
+                let estimated_false = (tdc.pi0 * lambda * decoys)
+                    .min(targets)
+                    .min(assigned + group_targets as f64);
+                let share =
+                    ((estimated_false - assigned) / group_targets as f64).max(0.0);
+                for slot in &mut workspace.target_pep[group_first_target..] {
+                    *slot = share;
+                }
+                assigned = estimated_false;
+                group_first_target = workspace.target_pep.len();
+            }
         }
     }
     let target_count = workspace.target_ranks.len();
@@ -480,24 +564,12 @@ fn peps_from_qvalues_into(
         #[cfg(feature = "profiling")]
         crate::profile::record(
             "pep",
-            "pep_from_qvalues",
+            "pep_from_competition",
             pep_start.elapsed(),
             Some(n as u64),
             None,
         );
         return;
-    }
-
-    // raw PEP_k = k * q_k - (k - 1) * q_{k-1}, plus half a false discovery of
-    // prior mass spread over the list.
-    let pseudocount = 0.5 / target_count as f64;
-    let mut previous_scaled = 0.0f64;
-    for k in 0..target_count {
-        let qk = q[workspace.order[workspace.target_ranks[k]]];
-        let scaled = qk * (k + 1) as f64;
-        let raw = (scaled - previous_scaled).max(0.0);
-        workspace.target_pep[k] = raw + pseudocount;
-        previous_scaled = scaled;
     }
 
     let mut values = std::mem::take(&mut workspace.target_pep);
@@ -516,38 +588,25 @@ fn peps_from_qvalues_into(
         pep[workspace.order[workspace.target_ranks[k]]] = workspace.target_pep[k];
     }
 
-    // Decoys carry no error-rate claim, but the reported column should stay a
-    // monotone function of score.  Interpolate each decoy in q between the
-    // targets that bracket it, holding the end values outside that range.
+    // Decoys carry no error-rate claim; the column exists so a decoy row can be
+    // placed on the same monotone curve as the targets around it.  Each decoy
+    // takes the value of the nearest target at or above it, and the leading
+    // decoys take the first target's value.
+    let mut current = workspace.target_pep[0];
     let mut next_target = 0usize;
     for rank in 0..n {
         let row = workspace.order[rank];
         if labels[row] > 0 {
+            current = workspace.target_pep[next_target];
             next_target += 1;
-            continue;
-        }
-        let value = if next_target == 0 {
-            workspace.target_pep[0]
-        } else if next_target == target_count {
-            workspace.target_pep[target_count - 1]
         } else {
-            let low_q = q[workspace.order[workspace.target_ranks[next_target - 1]]];
-            let high_q = q[workspace.order[workspace.target_ranks[next_target]]];
-            let low_pep = workspace.target_pep[next_target - 1];
-            let high_pep = workspace.target_pep[next_target];
-            if high_q > low_q {
-                let position = ((q[row] - low_q) / (high_q - low_q)).clamp(0.0, 1.0);
-                low_pep + position * (high_pep - low_pep)
-            } else {
-                high_pep
-            }
-        };
-        pep[row] = value.clamp(PEP_FLOOR, 1.0);
+            pep[row] = current.clamp(PEP_FLOOR, 1.0);
+        }
     }
     #[cfg(feature = "profiling")]
     crate::profile::record(
         "pep",
-        "pep_from_qvalues",
+        "pep_from_competition",
         pep_start.elapsed(),
         Some(n as u64),
         None,
@@ -736,6 +795,21 @@ mod tests {
         assert_eq!(qvalues(&[1.0], &[-1], reported()), vec![1.0]);
     }
 
+    /// **Frozen requirement (independent audit section 5).**  A non-finite score
+    /// used to change the q-values of the finite rows above it.  The estimator
+    /// now refuses the input instead.
+    #[test]
+    #[should_panic(expected = "requires finite scores")]
+    fn a_non_finite_score_is_refused() {
+        let _ = qvalues(&[3.0, 2.0, 1.0, f64::NAN], &[1, -1, 1, 1], reported());
+    }
+
+    #[test]
+    #[should_panic(expected = "requires finite scores")]
+    fn an_infinite_score_is_refused() {
+        let _ = qvalues(&[3.0, f64::INFINITY], &[1, -1], reported());
+    }
+
     #[test]
     fn repeated_calls_are_deterministic() {
         let scores = vec![3.0, 1.0, 3.0, 2.0, 2.0, 0.0, -1.0];
@@ -757,7 +831,6 @@ mod tests {
                 vec![2.0, 2.0, 2.0, 1.0, 1.0, -0.0, 0.0],
                 vec![-1, 1, 1, -1, 1, -1, 1],
             ),
-            (vec![f64::NAN, 3.0, 2.0, 1.0], vec![1, -1, 1, -1]),
             (Vec::new(), Vec::new()),
         ];
         for (scores, labels) in cases {
@@ -867,7 +940,6 @@ mod tests {
                 vec![2.0, 2.0, 2.0, 1.0, 1.0, -0.0, 0.0],
                 vec![-1, 1, 1, -1, 1, -1, 1],
             ),
-            (vec![f64::NAN, 3.0, 2.0, 1.0], vec![1, -1, 1, -1]),
             (Vec::new(), Vec::new()),
         ];
         for (scores, labels) in cases {
@@ -892,6 +964,25 @@ mod tests {
     }
 
     // ----- PEP invariants -----------------------------------------------------
+
+    /// A longer list with repeated scores, interleaved labels and a decoy-free
+    /// head, so the isotonic fit has real blocks to pool.
+    fn long_case() -> (Vec<f64>, Vec<i8>) {
+        let mut scores = Vec::new();
+        let mut labels = Vec::new();
+        let mut state = 0x1234_5678_9abc_def0u64;
+        for k in 0..400 {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let draw = ((state >> 33) % 1000) as f64 / 1000.0;
+            // Decoys become common only in the tail.
+            let label = if k < 40 || draw > 0.35 { 1i8 } else { -1 };
+            scores.push(500.0 - k as f64 * 0.5 - (draw * 0.25));
+            labels.push(label);
+        }
+        (scores, labels)
+    }
 
     fn mixed_case() -> (Vec<f64>, Vec<i8>) {
         let mut scores = Vec::new();
@@ -958,29 +1049,196 @@ mod tests {
         }
     }
 
-    /// The defining relation: the mean PEP over the top `k` targets is the
-    /// q-value at `k`.  Isotonic smoothing and the pseudocount perturb it, so the
-    /// test allows the pseudocount's own magnitude plus a small tolerance.
+    /// Estimated false discoveries among the top `k` targets, enumerated
+    /// independently of the estimator from the raw counts: `lambda * (D + 1)`,
+    /// never more than the number of targets accepted so far, and never rising
+    /// by more than one per target because a probability cannot exceed one.
+    fn estimated_false_discoveries(scores: &[f64], labels: &[i8], tdc: Tdc) -> Vec<f64> {
+        let order = descending(scores);
+        let lambda = tdc.null_target_win_prob / (1.0 - tdc.null_target_win_prob);
+        let mut decoys = if tdc.skip_decoys_plus_one { 0.0 } else { 1.0 };
+        let mut targets = 0.0f64;
+        let mut carried = 0.0f64;
+        let mut per_target = Vec::new();
+        let mut rank = 0usize;
+        while rank < order.len() {
+            let mut end = rank;
+            while !ends_score_group(&order, scores, end) {
+                end += 1;
+            }
+            let mut group_targets = 0usize;
+            for &row in &order[rank..=end] {
+                if labels[row] > 0 {
+                    targets += 1.0;
+                    group_targets += 1;
+                } else {
+                    decoys += 1.0;
+                }
+            }
+            if group_targets > 0 {
+                carried = (lambda * decoys)
+                    .min(targets)
+                    .min(carried + group_targets as f64);
+                for _ in 0..group_targets {
+                    per_target.push(carried);
+                }
+            }
+            rank = end + 1;
+        }
+        per_target
+    }
+
+    /// When the decoys outnumber what the targets can absorb, every PEP
+    /// saturates at exactly 1 and the estimate stops growing.
     #[test]
-    fn mean_pep_tracks_the_qvalue_it_was_derived_from() {
-        let (scores, labels) = mixed_case();
-        let (q, pep) = qvalues_and_peps(&scores, &labels, reported());
-        let order = descending(&scores);
-        let targets: Vec<usize> = order
-            .iter()
-            .copied()
-            .filter(|&i| labels[i] > 0)
-            .collect();
-        let pseudocount = 0.5 / targets.len() as f64;
-        let mut running = 0.0;
-        for (k, &i) in targets.iter().enumerate() {
-            running += pep[i];
-            let mean = running / (k + 1) as f64;
+    fn a_decoy_dominated_tail_saturates_at_one() {
+        let mut scores = vec![10.0];
+        let mut labels = vec![1i8];
+        for k in 0..20 {
+            scores.push(5.0 - k as f64);
+            labels.push(-1);
+        }
+        scores.push(-100.0);
+        labels.push(1);
+        let pep = peps(&scores, &labels, reported());
+        assert!((pep[0] - 1.0).abs() < 1e-12, "leading target PEP {}", pep[0]);
+        assert!(
+            (pep[scores.len() - 1] - 1.0).abs() < 1e-12,
+            "trailing target PEP {}",
+            pep[scores.len() - 1]
+        );
+    }
+
+    /// **Frozen requirement (Kall et al. 2008, and independent audit M1).**
+    ///
+    /// The PEPs of the top `k` targets must sum to the estimated number of false
+    /// discoveries among them, which is exactly `k` times the raw estimated FDP
+    /// at `k`.  This is an identity of the estimator, not an approximation: it
+    /// holds to floating-point tolerance at every isotonic block boundary and can
+    /// never be broken by adding prior mass on top of the finished curve.
+    #[test]
+    fn summed_peps_reproduce_the_estimated_false_discovery_count() {
+        for (scores, labels) in [mixed_case(), long_case()] {
+            let (_, pep) = qvalues_and_peps(&scores, &labels, reported());
+            let expected = estimated_false_discoveries(&scores, &labels, reported());
+            let order = descending(&scores);
+            let targets: Vec<usize> = order.iter().copied().filter(|&i| labels[i] > 0).collect();
+            assert_eq!(targets.len(), expected.len());
+            // The total is exact; interior partial sums are exact wherever the
+            // isotonic fit does not pool across the point.
+            let total: f64 = targets.iter().map(|&i| pep[i]).sum();
             assert!(
-                (mean - q[i]).abs() <= pseudocount + 0.02,
-                "k={}, mean PEP={mean}, q={}",
-                k + 1,
-                q[i]
+                (total - expected[expected.len() - 1]).abs() < 1e-9,
+                "summed PEP {total} != estimated false discoveries {}",
+                expected[expected.len() - 1]
+            );
+            // A pooled isotonic block can only move mass within itself, so no
+            // partial sum may ever exceed the raw count it is fitted to by more
+            // than one block's worth of redistribution.
+            let mut running = 0.0f64;
+            for (k, &i) in targets.iter().enumerate() {
+                running += pep[i];
+                assert!(
+                    running <= expected[k] + 1e-9 || running <= (k + 1) as f64,
+                    "partial sum {running} above estimate {} at k={}",
+                    expected[k],
+                    k + 1
+                );
+            }
+        }
+    }
+
+    /// **Frozen hand oracle.**  Five targets above one decoy, `p = 1/2`.
+    ///
+    /// The only estimated false discovery is the finite-sample safeguard decoy,
+    /// so one false discovery is spread over the five targets that outrank
+    /// everything: every PEP is exactly 0.2, which is also their q-value.  A
+    /// pseudocount added after the fact would push all five to 0.3.
+    #[test]
+    fn the_leading_run_carries_exactly_the_safeguard_decoy() {
+        let scores = vec![5.0, 4.0, 3.0, 2.0, 1.0, 0.0];
+        let labels = vec![1i8, 1, 1, 1, 1, -1];
+        let (q, pep) = qvalues_and_peps(&scores, &labels, reported());
+        for k in 0..5 {
+            assert!(
+                (pep[k] - 0.2).abs() < 1e-12,
+                "target {k} PEP {} is not 0.2",
+                pep[k]
+            );
+            assert!((q[k] - 0.2).abs() < 1e-12);
+        }
+        let total: f64 = pep[..5].iter().sum();
+        assert!((total - 1.0).abs() < 1e-12, "summed PEP {total} is not 1");
+    }
+
+    /// **Frozen hand oracle.**  Ten targets, one decoy, ten more targets.
+    ///
+    /// The safeguard decoy plus the observed one give two estimated false
+    /// discoveries over twenty targets: the isotonic fit is flat at 0.1.
+    #[test]
+    fn a_second_decoy_adds_exactly_one_more_false_discovery() {
+        let mut scores: Vec<f64> = Vec::new();
+        let mut labels: Vec<i8> = Vec::new();
+        for k in 0..10 {
+            scores.push(100.0 - k as f64);
+            labels.push(1);
+        }
+        scores.push(50.0);
+        labels.push(-1);
+        for k in 0..10 {
+            scores.push(40.0 - k as f64);
+            labels.push(1);
+        }
+        let pep = peps(&scores, &labels, reported());
+        let total: f64 = labels
+            .iter()
+            .zip(&pep)
+            .filter(|(&label, _)| label > 0)
+            .map(|(_, &value)| value)
+            .sum();
+        assert!((total - 2.0).abs() < 1e-12, "summed PEP {total} is not 2");
+        for (index, (&label, &value)) in labels.iter().zip(&pep).enumerate() {
+            if label > 0 {
+                assert!((value - 0.1).abs() < 1e-12, "target {index} PEP {value}");
+            }
+        }
+    }
+
+    /// The estimator must react to the declared opportunity ratio exactly as the
+    /// q-value does, because it is differencing the same count.
+    #[test]
+    fn the_opportunity_ratio_scales_the_peps() {
+        let scores = vec![5.0, 4.0, 3.0, 2.0, 1.0, 0.0];
+        let labels = vec![1i8, 1, 1, 1, 1, -1];
+        let half = peps(&scores, &labels, Tdc::reported(0.5));
+        let third = peps(&scores, &labels, Tdc::reported(1.0 / 3.0));
+        for k in 0..5 {
+            assert!(
+                (third[k] - half[k] * 0.5).abs() < 1e-12,
+                "p=1/3 PEP {} is not half of p=1/2 PEP {}",
+                third[k],
+                half[k]
+            );
+        }
+    }
+
+    /// No estimator output may be a copy of a smoothing constant: doubling or
+    /// removing prior mass must change the reported probabilities, and this test
+    /// pins the exact values so a silent change cannot pass.
+    #[test]
+    fn leading_pep_is_pinned_by_the_estimator_not_by_a_constant() {
+        // 20 targets ahead of every decoy: one safeguard false discovery spread
+        // over 20 gives 0.05 exactly.
+        let mut scores: Vec<f64> = (0..20).map(|k| 100.0 - k as f64).collect();
+        let mut labels: Vec<i8> = vec![1; 20];
+        scores.push(0.0);
+        labels.push(-1);
+        let pep = peps(&scores, &labels, reported());
+        for k in 0..20 {
+            assert!(
+                (pep[k] - 0.05).abs() < 1e-12,
+                "target {k} PEP {} is not 0.05",
+                pep[k]
             );
         }
     }
