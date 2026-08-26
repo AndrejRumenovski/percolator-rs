@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "study": "independent_adversarial_audit",
+  "audit_date": "2026-08-25",
+  "repository_head": "b38c0db",
+  "frozen_repaired_commit": "1348b0f4696c407af2dea17b1cf97935c35c1f19",
+  "release_binary_sha256": "d233c18c9c74915be4789e6754af37dfc64a55be484da440f742851651152a2e",
+  "production_code_modified": false,
+  "critical_attacks": {
+    "psm_competition_exact_ties": {
+      "spectra": 200,
+      "target_first": {
+        "target_winners": 200,
+        "decoy_winners": 0,
+        "targets_q_lt_0.01": 200,
+        "minimum_target_q": 0.005
+      },
+      "decoy_first": {
+        "target_winners": 0,
+        "decoy_winners": 200
+      },
+      "invariant_violated": "winner labels and discoveries must not be determined by target/decoy row order when competition scores tie"
+    },
+    "protein": {
+      "distinguishable_fixture_groups": 1,
+      "distinguishable_fixture_expected_groups": 2,
+      "picked_tie_spectra": 200,
+      "picked_tie_target_winners": 200,
+      "picked_tie_targets_q_lt_0.01": 200,
+      "picked_tie_minimum_q": 0.005,
+      "input_peptide_pep": 0.123456,
+      "reported_protein_pep": 0.123456
+    }
+  },
+  "qvalue_oracle": {
+    "hand_calculated_cases_passed": 12,
+    "finite_sample_plus_one_present_for_reported_values": true,
+    "exact_numeric_score_ties_grouped": true,
+    "reverse_cumulative_minimum_present": true,
+    "reported_q_zero_seen_in_finite_hand_cases": false,
+    "internal_nan_attack": {
+      "finite_prefix_labels": [1, -1, 1],
+      "finite_prefix_q": [1.0, 1.0, 1.0],
+      "q_after_trailing_nan_target": [0.6666666666666666, 0.6666666666666666, 0.6666666666666666, 0.6666666666666666]
+    }
+  },
+  "cross_validation_attacks": {
+    "default_fixed_c": {
+      "heldout_label_flip_changed_training_weights": false,
+      "heldout_label_flip_changed_heldout_scores": false
+    },
+    "select_c": {
+      "heldout_label_flip_changed_class_weights_from": [4.0, 1.0],
+      "heldout_label_flip_changed_class_weights_to": [0.25, 1.0],
+      "heldout_scores_changed": 200,
+      "heldout_scores_total": 200
+    },
+    "ensemble": {
+      "global_feature_key_includes_label": true,
+      "constructed_before_outer_folds": true
+    }
+  },
+  "complete_null": {
+    "thresholds": [0.001, 0.005, 0.01, 0.02, 0.05, 0.1],
+    "pre_repair_rust_runs": 30,
+    "pre_repair_rust_runs_with_any_discovery": 17,
+    "post_repair_rust_runs": 30,
+    "post_repair_rust_runs_with_any_discovery": 0,
+    "cpp_completed_runs": 29,
+    "cpp_runs_with_any_discovery": 0,
+    "post_repair_current_binary_exactly_reproduced": true,
+    "two_sided_clopper_pearson_upper_95_for_0_of_30": 0.1157
+  },
+  "entrapment_post_repair_rust": {
+    "seeds": 5,
+    "threshold_curve": [
+      {"q": 0.001, "mean_accepted": 12946.4, "mean_adjusted_fdp": 0.006146332175905635},
+      {"q": 0.005, "mean_accepted": 17982.4, "mean_adjusted_fdp": 0.01206959989044499},
+      {"q": 0.01, "mean_accepted": 19533.0, "mean_adjusted_fdp": 0.018162464216462396},
+      {"q": 0.02, "mean_accepted": 21139.6, "mean_adjusted_fdp": 0.02753140097418058},
+      {"q": 0.05, "mean_accepted": 23823.8, "mean_adjusted_fdp": 0.05848227878794028},
+      {"q": 0.1, "mean_accepted": 26846.2, "mean_adjusted_fdp": 0.1087259585741285}
+    ],
+    "q_0.01": {
+      "accepted_mean": 19533.0,
+      "accepted_median": 19532,
+      "accepted_sd": 36.53765181289022,
+      "accepted_minimum": 19488,
+      "accepted_maximum": 19586,
+      "adjusted_fdp_mean": 0.018162464216462396,
+      "adjusted_fdp_median": 0.01837820665554761,
+      "adjusted_fdp_sd": 0.000593526541811785,
+      "adjusted_fdp_minimum": 0.017299351959788916,
+      "adjusted_fdp_maximum": 0.01883839310755228
+    }
+  },
+  "pep_entrapment": {
+    "pre_repair": {
+      "targets": 435261,
+      "exact_zero": 9155,
+      "known_false_exact_zero": 87,
+      "weighted_absolute_calibration_error": 0.063361,
+      "weighted_signed_observed_minus_reported": 0.061933
+    },
+    "post_repair_competed": {
+      "targets": 98680,
+      "exact_zero": 0,
+      "known_false_exact_zero": 0,
+      "weighted_absolute_calibration_error": 0.0185144,
+      "weighted_signed_observed_minus_reported": 0.0185144,
+      "every_nonempty_bin_observed_false_fraction_above_mean_reported_pep": true
+    }
+  },
+  "mutation_tests": [
+    {"mutation": "remove_reported_decoy_plus_one", "full_suite_passed": false, "failing_tests": 7},
+    {"mutation": "break_score_tie_grouping", "full_suite_passed": false, "failing_tests": 1},
+    {"mutation": "remove_reverse_cumulative_minimum", "full_suite_passed": false, "failing_tests": 7},
+    {"mutation": "use_global_normalization", "full_suite_passed": false, "failing_tests": 1},
+    {"mutation": "use_global_initial_direction", "full_suite_passed": false, "failing_tests": 1},
+    {"mutation": "change_pep_prior_from_0.5_over_n_to_1_over_n", "full_suite_passed": true, "tests_passed": 82},
+    {"mutation": "change_pep_floor_from_1e-12_to_0.01", "full_suite_passed": true, "tests_passed": 82}
+  ],
+  "multi_seed_q_0.01": {
+    "PXD020243_msfragger": {"rust_psm": [1367, 1377, 1312, 1361, 1340], "cpp_psm": [1321, 1403, 1357, 1358, 1332], "mean_jaccard": 0.9235210128887577},
+    "PXD060954_sage": {"rust_psm": [25806, 25803, 25804, 25791, 25779], "cpp_psm": [25787, 25780, 25776, 25782, 25782], "mean_jaccard": 0.9962071883037475},
+    "hogrebe_tide": {"rust_psm": [27640, 27665, 27616, 27624, 27624], "cpp_psm": [27617, 27656, 27610, 27612, 27670], "mean_jaccard": 0.992975314897836},
+    "percolator_yeast": {"rust_psm": [1150, 1144, 1124, 1180, 1159], "cpp_psm": [1182, 1192, 1055, 1133, 1118], "mean_jaccard": 0.9200855528470082}
+  },
+  "final_verdicts": {
+    "implementation_correctness": "FAILED VALIDATION",
+    "cross_validation_isolation": "FAILED VALIDATION",
+    "q_value_implementation": "FAILED VALIDATION",
+    "fdr_calibration": "FAILED VALIDATION",
+    "pep_implementation": "FAILED VALIDATION",
+    "pep_calibration": "FAILED VALIDATION",
+    "multi_seed_reproducibility": "STRONG EVIDENCE",
+    "reference_agreement": "STRONG EVIDENCE",
+    "cross_dataset_generalization": "WEAK EVIDENCE",
+    "validation_suite_quality": "WEAK EVIDENCE",
+    "performance_correctness_equivalence": "MODERATE EVIDENCE"
+  }
+}
