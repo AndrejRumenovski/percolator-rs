@@ -38,6 +38,48 @@ fn core_peptide(p: &str) -> &str {
     }
 }
 
+/// Build one protein-inference entry per reported peptide while retaining the
+/// complete peptide-to-protein association observed across repeated PSM rows.
+///
+/// Peptide score and PEP still come from the existing best-PSM selection.  The
+/// protein mapping is a property of the peptide identity, however, and must not
+/// depend on which equal-scoring occurrence happened to be encountered first.
+fn protein_entries(
+    ds: &pin::Dataset,
+    reported_indices: &[usize],
+    peptide_indices: &[usize],
+    peptide_scores: &[f64],
+    peptide_peps: &[f64],
+) -> Vec<(f64, f64, String)> {
+    use std::collections::{BTreeMap, BTreeSet};
+
+    debug_assert_eq!(peptide_indices.len(), peptide_scores.len());
+    debug_assert_eq!(peptide_indices.len(), peptide_peps.len());
+
+    let mut proteins_by_peptide: BTreeMap<(i8, &str), BTreeSet<&str>> = BTreeMap::new();
+    for &index in reported_indices {
+        let key = (ds.labels[index], core_peptide(&ds.peptide[index]));
+        let proteins = proteins_by_peptide.entry(key).or_default();
+        proteins.extend(protein::split_proteins(&ds.proteins[index]));
+    }
+
+    peptide_indices
+        .iter()
+        .enumerate()
+        .map(|(peptide, &index)| {
+            let key = (ds.labels[index], core_peptide(&ds.peptide[index]));
+            let proteins = proteins_by_peptide
+                .get(&key)
+                .expect("reported peptide is missing its protein associations")
+                .iter()
+                .copied()
+                .collect::<Vec<_>>()
+                .join(" ");
+            (peptide_scores[peptide], peptide_peps[peptide], proteins)
+        })
+        .collect()
+}
+
 struct Args {
     pins: Vec<String>,
     results_psms: Option<String>,
@@ -1092,15 +1134,12 @@ fn main() {
         }
     }
 
-    // Protein inference uses the best PSM for each peptide sequence.
+    // Protein inference uses the best score/PEP for each peptide sequence and
+    // the union of its protein mappings across all reported PSM occurrences.
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
         #[cfg(feature = "profiling")]
         let _protein_inference = profile::Scope::new("stage", "protein_inference_and_output");
-        let entries: Vec<(f64, f64, String)> = pep_idx
-            .iter()
-            .enumerate()
-            .map(|(k, &i)| (pscore[k], ppep[k], ds.proteins[i].clone()))
-            .collect();
+        let entries = protein_entries(&ds, &reported_indices, &pep_idx, &pscore, &ppep);
         #[cfg(feature = "profiling")]
         profile::allocation_site(
             "main::protein inference entries",
@@ -1305,6 +1344,53 @@ mod output_tests {
     #[test]
     fn borrowed_row_preserves_sort_layout_size() {
         assert_eq!(std::mem::size_of::<Row<'_>>(), 96);
+    }
+}
+
+#[cfg(test)]
+mod protein_entry_tests {
+    use super::*;
+
+    fn two_row_dataset(order: [usize; 2]) -> pin::Dataset {
+        let proteins = ["PROT_A", "PROT_B"];
+        pin::Dataset {
+            feature_names: vec!["score".to_string()],
+            n_feat: 1,
+            n_psm: 2,
+            features: vec![5.0, f64::from_bits(5.0f64.to_bits() - 1)],
+            labels: vec![1, 1],
+            spec_id: order.iter().map(|&i| format!("AMB_{i}")).collect(),
+            scan: vec![1, 1],
+            exp_mass: vec![500.0, 500.0],
+            peptide: vec!["K.AMBIGUOUS.R".to_string(); 2],
+            proteins: order.iter().map(|&i| proteins[i].to_string()).collect(),
+            source: vec![0, 0],
+            source_names: vec!["fixture.pin".to_string()],
+            ensemble: false,
+        }
+    }
+
+    /// The two-row minimum for the upstream defect. Protein association is a
+    /// set-valued property of peptide identity, independent of which exact- or
+    /// near-tied occurrence supplied the peptide score.
+    #[test]
+    fn complete_peptide_association_survives_representative_and_row_order() {
+        for order in [[0, 1], [1, 0]] {
+            let ds = two_row_dataset(order);
+            for representative in [0, 1] {
+                let entries = protein_entries(
+                    &ds,
+                    &[0, 1],
+                    &[representative],
+                    &[5.0],
+                    &[0.25],
+                );
+                assert_eq!(
+                    entries,
+                    vec![(5.0, 0.25, "PROT_A PROT_B".to_string())]
+                );
+            }
+        }
     }
 }
 

@@ -4,10 +4,12 @@
 //!
 //! # What a protein group is here
 //!
-//! Two proteins are **indistinguishable** when the observed peptide evidence
-//! cannot tell them apart — that is, when the set of identified peptides mapping
-//! to one is *exactly* the set mapping to the other (Nesvizhskii & Aebersold
-//! 2005).  Only those proteins are collapsed into a single reported group.
+//! Two proteins of the same target/decoy class are **indistinguishable** when
+//! the observed peptide evidence cannot tell them apart — that is, when the set
+//! of identified peptides mapping to one is *exactly* the set mapping to the
+//! other (Nesvizhskii & Aebersold 2005).  Only those proteins are collapsed
+//! into a single reported group.  A target and a decoy with identical evidence
+//! remain separate groups so that they can enter target/decoy competition.
 //!
 //! Grouping by connected components of the peptide-sharing graph is a different
 //! and much coarser operation, and it was the previous behaviour of this module.
@@ -121,16 +123,22 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
         }
     }
 
-    // Indistinguishability: proteins with the *same* observed peptide set.
+    // Indistinguishability: proteins of the same target/decoy class with the
+    // *same* observed peptide set.  Keeping the class in the key prevents a
+    // target and a decoy from disappearing into a single mixed group before
+    // target/decoy competition.
     for peptides in evidence.iter_mut() {
         peptides.sort_unstable();
         peptides.dedup();
     }
-    let mut group_of: HashMap<Vec<u32>, usize> = HashMap::new();
+    let mut group_of: HashMap<(bool, Vec<u32>), usize> = HashMap::new();
     let mut group_members: Vec<Vec<usize>> = Vec::new();
-    let mut group_evidence: Vec<Vec<u32>> = Vec::new();
+    let mut group_evidence: Vec<(bool, Vec<u32>)> = Vec::new();
     for protein in 0..names.len() {
-        let key = std::mem::take(&mut evidence[protein]);
+        let key = (
+            is_decoy_protein(names[protein]),
+            std::mem::take(&mut evidence[protein]),
+        );
         match group_of.get(&key) {
             Some(&group) => group_members[group].push(protein),
             None => {
@@ -144,7 +152,7 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
     let mut out: Vec<ProtGroup> = group_members
         .iter()
         .zip(&group_evidence)
-        .map(|(members, peptides)| {
+        .map(|(members, (is_decoy, peptides))| {
             let mut proteins: Vec<String> =
                 members.iter().map(|&index| names[index].to_string()).collect();
             proteins.sort();
@@ -156,7 +164,7 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
                 // Best-peptide score (Savitski picked FDR): the group's best
                 // peptide discriminant, continuous and robust to group size.
                 score,
-                is_decoy: proteins.iter().any(|name| is_decoy_protein(name)),
+                is_decoy: *is_decoy,
                 proteins,
                 qval: 1.0,
                 // Picked-protein FDR estimates no protein-level posterior.
@@ -293,6 +301,186 @@ mod tests {
         let mut sets: Vec<Vec<String>> = groups.iter().map(|g| g.proteins.clone()).collect();
         sets.sort();
         sets
+    }
+
+    #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+    struct GroupSignature {
+        proteins: Vec<String>,
+        is_decoy: bool,
+        score_bits: u64,
+        qval_bits: u64,
+        pep_bits: Option<u64>,
+        n_peptides: usize,
+        picked: bool,
+    }
+
+    fn inference_signature(groups: &[ProtGroup]) -> Vec<GroupSignature> {
+        let mut signature: Vec<_> = groups
+            .iter()
+            .map(|group| GroupSignature {
+                proteins: group.proteins.clone(),
+                is_decoy: group.is_decoy,
+                score_bits: group.score.to_bits(),
+                qval_bits: group.qval.to_bits(),
+                pep_bits: group.pep.map(f64::to_bits),
+                n_peptides: group.n_peptides,
+                picked: group.picked,
+            })
+            .collect();
+        signature.sort();
+        signature
+    }
+
+    fn deterministic_shuffle<T>(values: &mut [T], mut state: u64) {
+        for index in (1..values.len()).rev() {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            values.swap(index, (state % (index as u64 + 1)) as usize);
+        }
+    }
+
+    /// Check a hand-derived graph under every scientifically irrelevant entry
+    /// layout used by the protein audit.
+    fn assert_graph(name: &str, entries: Vec<(f64, f64, String)>, expected: Vec<Vec<&str>>) {
+        let mut expected: Vec<Vec<String>> = expected
+            .into_iter()
+            .map(|group| group.into_iter().map(str::to_string).collect())
+            .collect();
+        expected.sort();
+
+        let mut reversed = entries.clone();
+        reversed.reverse();
+        let mut shuffled_17 = entries.clone();
+        deterministic_shuffle(&mut shuffled_17, 17);
+        let mut shuffled_91 = entries.clone();
+        deterministic_shuffle(&mut shuffled_91, 91);
+        let mut target_first = entries.clone();
+        target_first.sort_by_key(|entry| {
+            split_proteins(&entry.2)
+                .iter()
+                .all(|protein| is_decoy_protein(protein))
+        });
+        let mut decoy_first = target_first.clone();
+        decoy_first.reverse();
+        let reference = inference_signature(&infer(&entries, 31));
+
+        for (arm, arranged) in [
+            ("original", entries),
+            ("reversed", reversed),
+            ("shuffle-17", shuffled_17),
+            ("shuffle-91", shuffled_91),
+            ("target-first", target_first),
+            ("decoy-first", decoy_first),
+        ] {
+            let groups = infer(&arranged, 31);
+            assert_eq!(
+                group_sets(&groups),
+                expected,
+                "{name}/{arm}: grouping does not match the hand-derived evidence graph"
+            );
+            assert_eq!(
+                inference_signature(&groups),
+                reference,
+                "{name}/{arm}: score, q-value, PEP availability, peptide count, or pick changed"
+            );
+        }
+    }
+
+    /// Independent hand graphs defining the grouping relation. A group is an
+    /// equivalence class of proteins with the same observed peptide set and the
+    /// same target/decoy class. Sharing, subset relations, or connectedness are
+    /// not equivalence.
+    #[test]
+    fn hand_derived_grouping_graphs_survive_all_entry_permutations() {
+        assert_graph(
+            "identical peptide evidence",
+            vec![entry(10.0, "A B"), entry(9.0, "A B")],
+            vec![vec!["A", "B"]],
+        );
+        assert_graph(
+            "partially shared evidence",
+            vec![entry(10.0, "A B"), entry(9.0, "B C")],
+            vec![vec!["A"], vec!["B"], vec!["C"]],
+        );
+        assert_graph(
+            "one unique peptide",
+            vec![entry(10.0, "A B"), entry(9.0, "A")],
+            vec![vec!["A"], vec!["B"]],
+        );
+        assert_graph(
+            "multiple unique peptides",
+            vec![
+                entry(10.0, "A B"),
+                entry(9.0, "A"),
+                entry(8.0, "A"),
+                entry(7.0, "B"),
+                entry(6.0, "B"),
+            ],
+            vec![vec!["A"], vec!["B"]],
+        );
+        assert_graph(
+            "strict subset",
+            vec![entry(10.0, "SUB SUPER"), entry(9.0, "SUPER")],
+            vec![vec!["SUB"], vec!["SUPER"]],
+        );
+        assert_graph(
+            "disjoint proteins",
+            vec![entry(10.0, "A"), entry(9.0, "B")],
+            vec![vec!["A"], vec!["B"]],
+        );
+        assert_graph(
+            "target-target indistinguishability",
+            vec![entry(10.0, "TARGET_A TARGET_B")],
+            vec![vec!["TARGET_A", "TARGET_B"]],
+        );
+        assert_graph(
+            "decoy-decoy indistinguishability",
+            vec![entry(10.0, "DECOY_A DECOY_B")],
+            vec![vec!["DECOY_A", "DECOY_B"]],
+        );
+        assert_graph(
+            "target-decoy evidence",
+            vec![entry(10.0, "MIXED DECOY_MIXED")],
+            vec![vec!["DECOY_MIXED"], vec!["MIXED"]],
+        );
+        assert_graph(
+            "exact target-decoy score tie",
+            vec![entry(5.0, "PAIR"), entry(5.0, "DECOY_PAIR")],
+            vec![vec!["DECOY_PAIR"], vec!["PAIR"]],
+        );
+        assert_graph(
+            "near target-decoy score tie",
+            vec![
+                entry(5.0, "NEAR"),
+                entry(f64::from_bits(5.0f64.to_bits() - 1), "DECOY_NEAR"),
+            ],
+            vec![vec!["DECOY_NEAR"], vec!["NEAR"]],
+        );
+    }
+
+    /// A target and decoy with identical peptide evidence are competitors, not
+    /// indistinguishable members of one group. Collapsing them destroys the
+    /// target/decoy axis before picked competition can operate.
+    #[test]
+    fn target_and_decoy_proteins_never_collapse_into_one_group() {
+        let groups = infer(&[entry(11.0, "MIXED DECOY_MIXED")], 31);
+        assert_eq!(
+            group_sets(&groups),
+            vec![vec!["DECOY_MIXED".to_string()], vec!["MIXED".to_string()]]
+        );
+        assert_eq!(groups.iter().filter(|group| group.picked).count(), 1);
+        assert!(groups.iter().all(|group| {
+            group
+                .proteins
+                .iter()
+                .all(|protein| is_decoy_protein(protein) == group.is_decoy)
+        }));
+        assert_eq!(
+            inference_signature(&infer(&[entry(11.0, "DECOY_MIXED MIXED")], 31)),
+            inference_signature(&groups),
+            "protein order within a peptide mapping changed the competition"
+        );
     }
 
     /// Proteins whose observed peptide sets are identical cannot be told apart
