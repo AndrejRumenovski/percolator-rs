@@ -13,6 +13,7 @@ mod rt;
 mod simd;
 mod stats;
 mod svm;
+mod tiebreak;
 
 use percolator::{Model, Params};
 use std::borrow::Cow;
@@ -302,10 +303,15 @@ fn parse_args() -> Args {
         eprintln!("invalid --svm-tolerance (must be finite and >0)");
         std::process::exit(2);
     }
+    // p = 0 would declare that an incorrect target never outranks its decoy, so
+    // every decoy count would convert to zero expected false targets and every
+    // q-value and PEP would be exactly zero. That is not a conservative setting,
+    // it is a disabled estimator, so the open interval is the contract.
     if !a.params.null_target_win_prob.is_finite()
-        || !(0.0..1.0).contains(&a.params.null_target_win_prob)
+        || a.params.null_target_win_prob <= 0.0
+        || a.params.null_target_win_prob >= 1.0
     {
-        eprintln!("invalid --null-target-win-prob (must be finite and in [0, 1))");
+        eprintln!("invalid --null-target-win-prob (must be finite and in (0, 1))");
         std::process::exit(2);
     }
     a
@@ -328,21 +334,103 @@ fn parse_args() -> Args {
 /// same rescored values. It is on by default here because percolator-rs makes a
 /// calibration claim about its q-values, and that claim is only available on
 /// competed input.
-fn competition_winners(ds: &pin::Dataset, score: &[f64]) -> Vec<usize> {
-    let mut best: std::collections::BTreeMap<(u32, i64, u64), usize> =
-        std::collections::BTreeMap::new();
+///
+/// # Exact ties
+///
+/// A precursor whose best score is attained by more than one candidate has no
+/// winner on the evidence. Choosing the earlier or the later row would make the
+/// surviving label a property of the file's layout: a PIN listing the target
+/// candidate first would report every target as a winner, and the same PIN with
+/// the two rows swapped would report none. Ties are therefore drawn with a fair
+/// coin keyed on the precursor's own identity and the run seed
+/// ([`tiebreak`]), which is the resolution the target-decoy literature
+/// prescribes and the only one that keeps the null win probability at the
+/// declared `p`. Permuting the rows of the input cannot move the coin.
+fn competition_winners(ds: &pin::Dataset, score: &[f64], seed: u64) -> Vec<usize> {
+    #[derive(Clone, Copy)]
+    struct Best {
+        score: f64,
+        tied: u32,
+        row: usize,
+    }
+
+    let mut best: ahash::AHashMap<(u32, i64, u64), Best> =
+        ahash::AHashMap::with_capacity(ds.n_psm / 2 + 1);
     for i in 0..ds.n_psm {
         let key = ds.spectrum_key(i);
-        match best.get(&key) {
-            // Ties keep the earlier row, so a winner never depends on anything
-            // beyond the file's own order.
-            Some(&previous) if score[previous] >= score[i] => {}
-            _ => {
-                best.insert(key, i);
+        match best.entry(key) {
+            std::collections::hash_map::Entry::Vacant(slot) => {
+                slot.insert(Best {
+                    score: score[i],
+                    tied: 1,
+                    row: i,
+                });
+            }
+            std::collections::hash_map::Entry::Occupied(mut slot) => {
+                let current = slot.get_mut();
+                if score[i] > current.score {
+                    *current = Best {
+                        score: score[i],
+                        tied: 1,
+                        row: i,
+                    };
+                } else if score[i] == current.score {
+                    current.tied += 1;
+                }
             }
         }
     }
-    let mut winners: Vec<usize> = best.into_values().collect();
+
+    // Exact ties are rare, so only the tied rows are materialized and ordered.
+    // `canonical` describes a row by its own content, never by its position, so
+    // the sort below is a function of the data alone.
+    let canonical = |row: usize| -> (i8, &str, &str, &str, usize) {
+        (
+            ds.labels[row],
+            ds.peptide[row].as_str(),
+            ds.proteins[row].as_str(),
+            ds.spec_id[row].as_str(),
+            // Reached only between rows that agree in every identifying field
+            // and are therefore interchangeable.
+            row,
+        )
+    };
+    let mut contested: Vec<((u32, i64, u64), usize)> = Vec::new();
+    for i in 0..ds.n_psm {
+        let key = ds.spectrum_key(i);
+        let entry = best[&key];
+        if entry.tied > 1 && score[i] == entry.score {
+            contested.push((key, i));
+        }
+    }
+    contested.sort_unstable_by(|(left_key, left), (right_key, right)| {
+        left_key
+            .cmp(right_key)
+            .then_with(|| canonical(*left).cmp(&canonical(*right)))
+    });
+
+    let mut winners: Vec<usize> = Vec::with_capacity(best.len());
+    for entry in best.values() {
+        if entry.tied == 1 {
+            winners.push(entry.row);
+        }
+    }
+    let mut start = 0usize;
+    while start < contested.len() {
+        let key = contested[start].0;
+        let mut end = start;
+        while end + 1 < contested.len() && contested[end + 1].0 == key {
+            end += 1;
+        }
+        let group = &contested[start..=end];
+        let draw = tiebreak::Coin::new(seed)
+            .u32(key.0)
+            .i64(key.1)
+            .u64(key.2)
+            .draw(group.len());
+        winners.push(group[draw].1);
+        start = end + 1;
+    }
     winners.sort_unstable();
     winners
 }
@@ -808,7 +896,7 @@ fn main() {
     #[cfg(feature = "profiling")]
     let _psm_processing = profile::Scope::new("stage", "psm_level_processing");
     let reported_indices: Vec<usize> = if args.psm_competition {
-        competition_winners(&ds, &out.score)
+        competition_winners(&ds, &out.score, args.params.seed)
     } else if args.ensemble {
         let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
             std::collections::BTreeMap::new();
@@ -1235,6 +1323,204 @@ mod competition_tests {
         }
     }
 
+    /// A dataset whose rows carry explicit peptide/protein/spectrum identity, so
+    /// a permutation can be described by content rather than by position.
+    struct Rows {
+        rows: Vec<(u32, i64, f64, i8, String, f64)>, // source, scan, mass, label, peptide, score
+    }
+
+    impl Rows {
+        fn build(&self, order: &[usize]) -> (pin::Dataset, Vec<f64>) {
+            let n = order.len();
+            let mut ds = pin::Dataset {
+                feature_names: vec!["f".to_string()],
+                n_feat: 1,
+                n_psm: n,
+                features: vec![0.0; n],
+                labels: Vec::with_capacity(n),
+                spec_id: Vec::with_capacity(n),
+                scan: Vec::with_capacity(n),
+                exp_mass: Vec::with_capacity(n),
+                peptide: Vec::with_capacity(n),
+                proteins: Vec::with_capacity(n),
+                source: Vec::with_capacity(n),
+                source_names: vec!["a.pin".to_string()],
+                ensemble: false,
+            };
+            let mut score = Vec::with_capacity(n);
+            for &index in order {
+                let row = &self.rows[index];
+                ds.source.push(row.0);
+                ds.scan.push(row.1);
+                ds.exp_mass.push(row.2);
+                ds.labels.push(row.3);
+                ds.spec_id.push(format!("scan{}_{}", row.1, row.4));
+                ds.peptide.push(format!("K.{}.R", row.4));
+                ds.proteins.push(row.4.clone());
+                score.push(row.5);
+            }
+            (ds, score)
+        }
+
+        /// The winner set described by content, so it can be compared across
+        /// permutations that assign different row indices to the same PSM.
+        fn winner_identities(&self, order: &[usize], seed: u64) -> Vec<(i64, String)> {
+            let (ds, score) = self.build(order);
+            let mut identities: Vec<(i64, String)> = competition_winners(&ds, &score, seed)
+                .into_iter()
+                .map(|row| (ds.scan[row], ds.peptide[row].clone()))
+                .collect();
+            identities.sort();
+            identities
+        }
+    }
+
+    /// One target and one decoy candidate per spectrum, scoring exactly the same.
+    fn tied_pairs(spectra: i64) -> Rows {
+        let mut rows = Vec::new();
+        for scan in 1..=spectra {
+            rows.push((0u32, scan, 500.0, 1i8, format!("TARGET{scan}"), 7.5));
+            rows.push((0u32, scan, 500.0, -1i8, format!("DECOY{scan}"), 7.5));
+        }
+        Rows { rows }
+    }
+
+    fn permutation(n: usize, seed: u64) -> Vec<usize> {
+        let mut order: Vec<usize> = (0..n).collect();
+        let mut state = seed.max(1);
+        for index in (1..n).rev() {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            order.swap(index, (state % (index as u64 + 1)) as usize);
+        }
+        order
+    }
+
+    /// **Frozen failure case (independent audit C1).**
+    ///
+    /// 200 spectra, each with one target and one decoy candidate carrying the
+    /// exact same score.  The multiset of scores, labels, features and peptides
+    /// is identical in every arm; only the order of the rows in the file
+    /// changes.  Any competition rule that reads row order turns that metadata
+    /// choice into a different scientific result.
+    #[test]
+    fn exact_ties_survive_every_equivalent_row_permutation() {
+        let fixture = tied_pairs(200);
+        let n = fixture.rows.len();
+
+        let target_first: Vec<usize> = (0..n).collect();
+        let reference = fixture.winner_identities(&target_first, 1);
+
+        // Decoy row before target row, within every pair.
+        let pair_reversed: Vec<usize> = (0..n).map(|i| if i % 2 == 0 { i + 1 } else { i - 1 }).collect();
+        assert_eq!(
+            fixture.winner_identities(&pair_reversed, 1),
+            reference,
+            "reversing each tied target/decoy pair changed the winners"
+        );
+
+        // Whole file reversed.
+        let reversed: Vec<usize> = (0..n).rev().collect();
+        assert_eq!(
+            fixture.winner_identities(&reversed, 1),
+            reference,
+            "reversing the file changed the winners"
+        );
+
+        // All targets first, then all decoys, and the other way round.
+        let grouped: Vec<usize> = (0..n).step_by(2).chain((1..n).step_by(2)).collect();
+        assert_eq!(
+            fixture.winner_identities(&grouped, 1),
+            reference,
+            "grouping targets before decoys changed the winners"
+        );
+        let grouped_decoys: Vec<usize> = (1..n).step_by(2).chain((0..n).step_by(2)).collect();
+        assert_eq!(
+            fixture.winner_identities(&grouped_decoys, 1),
+            reference,
+            "grouping decoys before targets changed the winners"
+        );
+
+        // Deterministic shuffles.
+        for shuffle_seed in 1..=8u64 {
+            assert_eq!(
+                fixture.winner_identities(&permutation(n, shuffle_seed), 1),
+                reference,
+                "shuffle {shuffle_seed} changed the winners"
+            );
+        }
+    }
+
+    /// **Frozen failure case (independent audit C1).**
+    ///
+    /// The statistical consequence of the ordering attack: whichever label the
+    /// rule prefers, it wins every tie, and 200 spectra of pure noise become
+    /// 200 confident discoveries.  A fair rule splits the ties, so neither label
+    /// can dominate.
+    #[test]
+    fn exact_ties_do_not_hand_every_precursor_to_one_label() {
+        let fixture = tied_pairs(200);
+        let order: Vec<usize> = (0..fixture.rows.len()).collect();
+        let (ds, score) = fixture.build(&order);
+        let winners = competition_winners(&ds, &score, 1);
+        assert_eq!(winners.len(), 200, "one winner per spectrum");
+        let targets = winners.iter().filter(|&&row| ds.labels[row] > 0).count();
+        // A fair coin over 200 two-way ties has SD 7.07; 5 SD is 35.
+        assert!(
+            (targets as i64 - 100).abs() < 35,
+            "{targets} of 200 tied precursors were won by the target label"
+        );
+    }
+
+    /// Changing the seed must re-flip the coins, so tie sensitivity shows up as
+    /// seed variability instead of hiding inside a fixed row order.
+    #[test]
+    fn a_different_seed_resolves_ties_differently() {
+        let fixture = tied_pairs(200);
+        let order: Vec<usize> = (0..fixture.rows.len()).collect();
+        let first = fixture.winner_identities(&order, 1);
+        let second = fixture.winner_identities(&order, 2);
+        assert_ne!(
+            first, second,
+            "two seeds resolved 200 exact ties identically"
+        );
+    }
+
+    /// Ties among more than two candidates must also be label-fair: with three
+    /// targets and one decoy tied, the decoy wins about a quarter of the time.
+    #[test]
+    fn wider_ties_are_drawn_uniformly() {
+        let mut rows = Vec::new();
+        for scan in 1..=2_000i64 {
+            for candidate in 0..3 {
+                rows.push((0u32, scan, 500.0, 1i8, format!("TARGET{scan}_{candidate}"), 7.5));
+            }
+            rows.push((0u32, scan, 500.0, -1i8, format!("DECOY{scan}"), 7.5));
+        }
+        let fixture = Rows { rows };
+        let order: Vec<usize> = (0..fixture.rows.len()).collect();
+        let (ds, score) = fixture.build(&order);
+        let winners = competition_winners(&ds, &score, 1);
+        assert_eq!(winners.len(), 2_000);
+        let decoys = winners.iter().filter(|&&row| ds.labels[row] < 0).count();
+        // Expectation 500, SD 19.4; 5 SD is 97.
+        assert!(
+            (decoys as i64 - 500).abs() < 97,
+            "{decoys} of 2000 four-way ties were won by the decoy"
+        );
+    }
+
+    /// A strict winner is never displaced by the tie rule.
+    #[test]
+    fn a_strictly_better_candidate_always_wins() {
+        for seed in 1..=16u64 {
+            let ds = dataset(&[(0, 1, 500.0, 1), (0, 1, 500.0, -1), (0, 1, 500.0, 1)]);
+            assert_eq!(competition_winners(&ds, &[3.0, 4.0, 3.0], seed), vec![1]);
+            assert_eq!(competition_winners(&ds, &[5.0, 4.0, 3.0], seed), vec![0]);
+        }
+    }
+
     #[test]
     fn one_winner_per_precursor() {
         // Two spectra, five candidates each, mixed targets and decoys.
@@ -1243,7 +1529,7 @@ mod competition_tests {
             .collect();
         let ds = dataset(&rows);
         let score: Vec<f64> = vec![1.0, 5.0, 2.0, 3.0, 4.0, 9.0, 8.0, 7.0, 6.0, 5.5];
-        let winners = competition_winners(&ds, &score);
+        let winners = competition_winners(&ds, &score, 1);
         assert_eq!(winners, vec![1, 5]);
     }
 
@@ -1257,23 +1543,25 @@ mod competition_tests {
             (0, 42, 1600.0, 1),
             (0, 42, 1600.0, -1),
         ]);
-        let winners = competition_winners(&ds, &[1.0, 2.0, 5.0, 4.0]);
+        let winners = competition_winners(&ds, &[1.0, 2.0, 5.0, 4.0], 1);
         assert_eq!(winners, vec![1, 2]);
     }
 
     #[test]
     fn joined_files_reusing_scan_numbers_compete_separately() {
         let ds = dataset(&[(0, 7, 900.0, 1), (1, 7, 900.0, 1)]);
-        assert_eq!(competition_winners(&ds, &[1.0, 2.0]), vec![0, 1]);
+        assert_eq!(competition_winners(&ds, &[1.0, 2.0], 1), vec![0, 1]);
     }
 
+    /// The tie draw must be reproducible: repeated calls with the same seed and
+    /// the same content give the same winner.
     #[test]
-    fn ties_are_resolved_by_input_order_not_by_map_iteration() {
+    fn tie_resolution_is_reproducible() {
         let ds = dataset(&[(0, 1, 500.0, 1), (0, 1, 500.0, -1), (0, 1, 500.0, 1)]);
-        let winners = competition_winners(&ds, &[3.0, 3.0, 3.0]);
-        assert_eq!(winners, vec![0]);
+        let winners = competition_winners(&ds, &[3.0, 3.0, 3.0], 1);
+        assert_eq!(winners.len(), 1);
         for _ in 0..16 {
-            assert_eq!(competition_winners(&ds, &[3.0, 3.0, 3.0]), winners);
+            assert_eq!(competition_winners(&ds, &[3.0, 3.0, 3.0], 1), winners);
         }
     }
 
@@ -1286,7 +1574,10 @@ mod competition_tests {
             .collect();
         let ds = dataset(&rows);
         let score = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        assert_eq!(competition_winners(&ds, &score), (0..6).collect::<Vec<_>>());
+        assert_eq!(
+            competition_winners(&ds, &score, 1),
+            (0..6).collect::<Vec<_>>()
+        );
     }
 
     /// A PIN without an ExpMass column reports 0.0 for every row, which must
@@ -1294,6 +1585,6 @@ mod competition_tests {
     #[test]
     fn a_pin_without_expmass_competes_per_scan() {
         let ds = dataset(&[(0, 3, 0.0, 1), (0, 3, -0.0, -1), (0, 4, 0.0, 1)]);
-        assert_eq!(competition_winners(&ds, &[1.0, 2.0, 0.5]), vec![1, 2]);
+        assert_eq!(competition_winners(&ds, &[1.0, 2.0, 0.5], 1), vec![1, 2]);
     }
 }
