@@ -1,0 +1,238 @@
+{
+  "analysis": "entrapment-adjusted aggregate PEP calibration",
+  "bins": [
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7834216040041905,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.0,
+      "pep_upper_exclusive": 1e-12,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7834216040041905,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-12,
+      "pep_upper_exclusive": 1e-06,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7834216040041905,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-06,
+      "pep_upper_exclusive": 0.0001,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": 0.00515818431911967,
+      "calibration_error_observed_minus_reported": 0.004728298143053645,
+      "decoys_for_fraction": 5,
+      "effective_entrapment_fraction": 0.8,
+      "mean_reported_pep": 0.00042988617606602475,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 252,
+      "pep_lower_inclusive": 0.0001,
+      "pep_upper_exclusive": 0.001,
+      "pure_entrapment_targets": 48,
+      "targets": 11632
+    },
+    {
+      "adjusted_observed_error": 0.01137915339098771,
+      "calibration_error_observed_minus_reported": 0.009103158852981338,
+      "decoys_for_fraction": 5,
+      "effective_entrapment_fraction": 0.6,
+      "mean_reported_pep": 0.002275994538006372,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 40,
+      "pep_lower_inclusive": 0.001,
+      "pep_upper_exclusive": 0.005,
+      "pure_entrapment_targets": 15,
+      "targets": 2197
+    },
+    {
+      "adjusted_observed_error": 0.01477194194885971,
+      "calibration_error_observed_minus_reported": 0.007861186592950934,
+      "decoys_for_fraction": 9,
+      "effective_entrapment_fraction": 0.8888888888888888,
+      "mean_reported_pep": 0.006910755355908777,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 49,
+      "pep_lower_inclusive": 0.005,
+      "pep_upper_exclusive": 0.01,
+      "pure_entrapment_targets": 19,
+      "targets": 1447
+    },
+    {
+      "adjusted_observed_error": 0.04725,
+      "calibration_error_observed_minus_reported": 0.030250135,
+      "decoys_for_fraction": 14,
+      "effective_entrapment_fraction": 0.5714285714285714,
+      "mean_reported_pep": 0.016999865,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 34,
+      "pep_lower_inclusive": 0.01,
+      "pep_upper_exclusive": 0.02,
+      "pure_entrapment_targets": 27,
+      "targets": 1000
+    },
+    {
+      "adjusted_observed_error": 0.04568857353004802,
+      "calibration_error_observed_minus_reported": 0.01473919962791502,
+      "decoys_for_fraction": 72,
+      "effective_entrapment_fraction": 0.8055555555555556,
+      "mean_reported_pep": 0.030949373902133002,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 117,
+      "pep_lower_inclusive": 0.02,
+      "pep_upper_exclusive": 0.05,
+      "pure_entrapment_targets": 88,
+      "targets": 2391
+    },
+    {
+      "adjusted_observed_error": 0.11776212832550861,
+      "calibration_error_observed_minus_reported": 0.052034619718309874,
+      "decoys_for_fraction": 42,
+      "effective_entrapment_fraction": 0.5714285714285714,
+      "mean_reported_pep": 0.06572750860719874,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 15,
+      "pep_lower_inclusive": 0.05,
+      "pep_upper_exclusive": 0.1,
+      "pure_entrapment_targets": 43,
+      "targets": 639
+    },
+    {
+      "adjusted_observed_error": 0.1469123403906458,
+      "calibration_error_observed_minus_reported": 0.02017276086778297,
+      "decoys_for_fraction": 256,
+      "effective_entrapment_fraction": 0.7578125,
+      "mean_reported_pep": 0.12673957952286283,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 83,
+      "pep_lower_inclusive": 0.1,
+      "pep_upper_exclusive": 0.2,
+      "pure_entrapment_targets": 224,
+      "targets": 2012
+    },
+    {
+      "adjusted_observed_error": 0.36539144819649727,
+      "calibration_error_observed_minus_reported": 0.024944839015355824,
+      "decoys_for_fraction": 1383,
+      "effective_entrapment_fraction": 0.7483731019522777,
+      "mean_reported_pep": 0.34044660918114145,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 152,
+      "pep_lower_inclusive": 0.2,
+      "pep_upper_exclusive": 0.5,
+      "pure_entrapment_targets": 1102,
+      "targets": 4030
+    },
+    {
+      "adjusted_observed_error": 0.9347614414176983,
+      "calibration_error_observed_minus_reported": 0.022997653255110828,
+      "decoys_for_fraction": 66942,
+      "effective_entrapment_fraction": 0.7843954468046966,
+      "mean_reported_pep": 0.9117637881625875,
+      "method": "rust-repaired2-seed2",
+      "mixed_targets": 689,
+      "pep_lower_inclusive": 0.5,
+      "pep_upper_exclusive": 1.0000001,
+      "pure_entrapment_targets": 53864,
+      "targets": 73462
+    }
+  ],
+  "decoy_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/decoy.psms.tsv",
+      "rows": 14071,
+      "sha256": "8817c806cd09804a1ba353c083be54d78e4db6cb71e2ba5b3752b3c03269e76d"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/22Oct2014-Anopheles-8-MAGs-S-01/decoy.psms.tsv",
+      "rows": 12964,
+      "sha256": "9e2c8a5f147c24bf54347197b2a996cd88fcbff38388048305b2944291f524a9"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/decoy.psms.tsv",
+      "rows": 4319,
+      "sha256": "09f16cdac083bafc79c6b65eaf7d3b1a866b6174dbe84aacc6500b64ffb150aa"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/decoy.psms.tsv",
+      "rows": 2817,
+      "sha256": "93fac1289eb4a684a4dee4d8bcef726c6252159eb92d35c5e6e5e19f76764e4a"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/decoy.psms.tsv",
+      "rows": 12446,
+      "sha256": "b097016318968cfef9c408195f257666ac18db10d5e13ed5f54d6699a45f6cd0"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/9March2015-29-MAGs-pellet-2ndRep-14N-male-02/decoy.psms.tsv",
+      "rows": 22200,
+      "sha256": "c50a58a1f824eaa564b1e0c3d28a032efd269b6cfa4e93da71920bebd3a529e8"
+    }
+  ],
+  "evaluator": {
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/pep_entrapment.py",
+    "sha256": "f415871e6e146b58fd3ecf31c25f04aa6211e0bdbab1cb44c701392eb9dc2bdc"
+  },
+  "exact_zero_peps": 0,
+  "global_effective_entrapment_fraction": 0.7834216040041905,
+  "interpretation": "Entrapment matches are known false, but native matches are not individually labelled. Observed error is therefore a bin-level estimate obtained by dividing entrapment matches by the empirical foreign fraction among non-mixed decoys in the same PEP bin. It is not individual ground truth and bins with few decoys are unstable.",
+  "method": "rust-repaired2-seed2",
+  "pure_entrapment_with_exact_zero_pep": 0,
+  "schema_version": 1,
+  "target_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/target.psms.tsv",
+      "rows": 16272,
+      "sha256": "7d307837ad0b16b9c3ee1db0142d4c67fc4e9d11afedd170d3a946dcc5548705"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/22Oct2014-Anopheles-8-MAGs-S-01/target.psms.tsv",
+      "rows": 23031,
+      "sha256": "7431a91defd3dcd3214438e334d67602b385057e2c0957135e5900077600c216"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/target.psms.tsv",
+      "rows": 5061,
+      "sha256": "08c0d58368c660a934949df354167608c747538ecbd7bff4ce0a5649284f3c4e"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/target.psms.tsv",
+      "rows": 3557,
+      "sha256": "0b17da6af7d9e593f699acfd7ed207ef53f06be5ca6ff4f56fd06c5fb298863a"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/target.psms.tsv",
+      "rows": 19693,
+      "sha256": "7fa2d833c2a0595372ae0feaf0b2f6d6d70a928ef0ae65ca6e14ef8793838b2e"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-2/rust/9March2015-29-MAGs-pellet-2ndRep-14N-male-02/target.psms.tsv",
+      "rows": 31196,
+      "sha256": "7949493aea7ee30990b24ea25cac7f9e5d8d6e71eece1ed14f0c3a380ed1e557"
+    }
+  ],
+  "targets": 98810,
+  "weighted_absolute_calibration_error": 0.0203996045322858,
+  "weighted_signed_observed_minus_reported": 0.0203996045322858
+}

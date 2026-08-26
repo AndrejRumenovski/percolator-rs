@@ -1,0 +1,188 @@
+{
+  "analysis": "entrapment-adjusted aggregate PEP calibration",
+  "bins": [
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.0,
+      "pep_upper_exclusive": 1e-12,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-12,
+      "pep_upper_exclusive": 1e-06,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-06,
+      "pep_upper_exclusive": 0.0001,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.0001,
+      "pep_upper_exclusive": 0.001,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": 0.010086455331412104,
+      "calibration_error_observed_minus_reported": 0.007204455331412104,
+      "decoys_for_fraction": 2,
+      "effective_entrapment_fraction": 1.0,
+      "mean_reported_pep": 0.002882,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 14,
+      "pep_lower_inclusive": 0.001,
+      "pep_upper_exclusive": 0.005,
+      "pure_entrapment_targets": 7,
+      "targets": 694
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.005,
+      "pep_upper_exclusive": 0.01,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7772888573456352,
+      "mean_reported_pep": null,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.01,
+      "pep_upper_exclusive": 0.02,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 2,
+      "effective_entrapment_fraction": 0.0,
+      "mean_reported_pep": 0.028571285714285716,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.02,
+      "pep_upper_exclusive": 0.05,
+      "pure_entrapment_targets": 3,
+      "targets": 70
+    },
+    {
+      "adjusted_observed_error": 0.05446927374301676,
+      "calibration_error_observed_minus_reported": -0.018156558659217878,
+      "decoys_for_fraction": 13,
+      "effective_entrapment_fraction": 0.6153846153846154,
+      "mean_reported_pep": 0.07262583240223464,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 4,
+      "pep_lower_inclusive": 0.05,
+      "pep_upper_exclusive": 0.1,
+      "pure_entrapment_targets": 6,
+      "targets": 179
+    },
+    {
+      "adjusted_observed_error": 0.21713286713286714,
+      "calibration_error_observed_minus_reported": 0.05629374125874126,
+      "decoys_for_fraction": 23,
+      "effective_entrapment_fraction": 0.8695652173913043,
+      "mean_reported_pep": 0.16083912587412588,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 10,
+      "pep_lower_inclusive": 0.1,
+      "pep_upper_exclusive": 0.2,
+      "pure_entrapment_targets": 27,
+      "targets": 143
+    },
+    {
+      "adjusted_observed_error": 0.4424955152481563,
+      "calibration_error_observed_minus_reported": 0.02053017420769382,
+      "decoys_for_fraction": 74,
+      "effective_entrapment_fraction": 0.7837837837837838,
+      "mean_reported_pep": 0.42196534104046246,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 4,
+      "pep_lower_inclusive": 0.2,
+      "pep_upper_exclusive": 0.5,
+      "pure_entrapment_targets": 60,
+      "targets": 173
+    },
+    {
+      "adjusted_observed_error": 0.9575183735479493,
+      "calibration_error_observed_minus_reported": 0.02392713614555997,
+      "decoys_for_fraction": 13976,
+      "effective_entrapment_fraction": 0.7773325701202061,
+      "mean_reported_pep": 0.9335912374023894,
+      "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "mixed_targets": 95,
+      "pep_lower_inclusive": 0.5,
+      "pep_upper_exclusive": 1.0000001,
+      "pure_entrapment_targets": 11152,
+      "targets": 14983
+    }
+  ],
+  "decoy_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-1/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/decoy.psms.tsv",
+      "rows": 14101,
+      "sha256": "33ba5c62fe58d080141aa86612e51838be3ba761e42e0443f50a6cda443d95eb"
+    }
+  ],
+  "evaluator": {
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/pep_entrapment.py",
+    "sha256": "f415871e6e146b58fd3ecf31c25f04aa6211e0bdbab1cb44c701392eb9dc2bdc"
+  },
+  "exact_zero_peps": 0,
+  "global_effective_entrapment_fraction": 0.7772888573456352,
+  "interpretation": "Entrapment matches are known false, but native matches are not individually labelled. Observed error is therefore a bin-level estimate obtained by dividing entrapment matches by the empirical foreign fraction among non-mixed decoys in the same PEP bin. It is not individual ground truth and bins with few decoys are unstable.",
+  "method": "09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+  "pure_entrapment_with_exact_zero_pep": 0,
+  "schema_version": 1,
+  "target_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-1/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/target.psms.tsv",
+      "rows": 16242,
+      "sha256": "60348bf16dfa12a61b44359a3f7529d077995d73b111136758aa7b0ef31660b8"
+    }
+  ],
+  "targets": 16242,
+  "weighted_absolute_calibration_error": 0.023395493569555777,
+  "weighted_signed_observed_minus_reported": 0.02299356134101262
+}

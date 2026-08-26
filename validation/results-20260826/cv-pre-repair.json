@@ -1,0 +1,95 @@
+{
+ "binary": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/pre-repair/target/release/percolator-rs",
+ "results": [
+  {
+   "attack": "fold",
+   "mode": "fixed-c",
+   "heldout_rows": 200,
+   "heldout_scores_changed": 0,
+   "fold0_selection_clean": [
+    "all=1.000:4.000"
+   ],
+   "fold0_selection_dirty": [
+    "all=1.000:4.000"
+   ],
+   "fold0_selection_changed": false,
+   "all_selection_clean": [
+    "all=1.000:4.000"
+   ],
+   "all_selection_dirty": [
+    "all=1.000:4.000"
+   ],
+   "leakage_detected": false
+  },
+  {
+   "attack": "row",
+   "mode": "fixed-c",
+   "rows_attacked": 6,
+   "own_scores_changed": 0,
+   "detail": [],
+   "leakage_detected": false
+  },
+  {
+   "attack": "fold",
+   "mode": "select-c",
+   "heldout_rows": 200,
+   "heldout_scores_changed": 200,
+   "fold0_selection_clean": [
+    "all=4.000:1.000"
+   ],
+   "fold0_selection_dirty": [
+    "all=0.250:1.000"
+   ],
+   "fold0_selection_changed": true,
+   "all_selection_clean": [
+    "all=4.000:1.000"
+   ],
+   "all_selection_dirty": [
+    "all=0.250:1.000"
+   ],
+   "leakage_detected": true
+  },
+  {
+   "attack": "row",
+   "mode": "select-c",
+   "rows_attacked": 6,
+   "own_scores_changed": 1,
+   "detail": [
+    {
+     "row": 198,
+     "clean": "2.092504",
+     "dirty": "1.967065"
+    }
+   ],
+   "leakage_detected": true
+  },
+  {
+   "attack": "fold",
+   "mode": "ensemble",
+   "heldout_rows": 195,
+   "heldout_scores_changed": 0,
+   "fold0_selection_clean": [
+    "all=1.000:4.000"
+   ],
+   "fold0_selection_dirty": [
+    "all=1.000:4.000"
+   ],
+   "fold0_selection_changed": false,
+   "all_selection_clean": [
+    "all=1.000:4.000"
+   ],
+   "all_selection_dirty": [
+    "all=1.000:4.000"
+   ],
+   "leakage_detected": false
+  },
+  {
+   "attack": "row",
+   "mode": "ensemble",
+   "rows_attacked": 6,
+   "own_scores_changed": 0,
+   "detail": [],
+   "leakage_detected": false
+  }
+ ]
+}

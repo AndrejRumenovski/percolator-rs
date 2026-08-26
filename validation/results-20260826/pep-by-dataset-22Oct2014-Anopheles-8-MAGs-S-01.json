@@ -1,0 +1,188 @@
+{
+  "analysis": "entrapment-adjusted aggregate PEP calibration",
+  "bins": [
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7882479950647748,
+      "mean_reported_pep": null,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.0,
+      "pep_upper_exclusive": 1e-12,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7882479950647748,
+      "mean_reported_pep": null,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-12,
+      "pep_upper_exclusive": 1e-06,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7882479950647748,
+      "mean_reported_pep": null,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-06,
+      "pep_upper_exclusive": 0.0001,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": 0.002677376171352075,
+      "calibration_error_observed_minus_reported": 0.002231376171352075,
+      "decoys_for_fraction": 2,
+      "effective_entrapment_fraction": 0.5,
+      "mean_reported_pep": 0.000446,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 76,
+      "pep_lower_inclusive": 0.0001,
+      "pep_upper_exclusive": 0.001,
+      "pure_entrapment_targets": 6,
+      "targets": 4482
+    },
+    {
+      "adjusted_observed_error": 0.007575757575757576,
+      "calibration_error_observed_minus_reported": 0.003787757575757576,
+      "decoys_for_fraction": 4,
+      "effective_entrapment_fraction": 1.0,
+      "mean_reported_pep": 0.003788,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 26,
+      "pep_lower_inclusive": 0.001,
+      "pep_upper_exclusive": 0.005,
+      "pure_entrapment_targets": 8,
+      "targets": 1056
+    },
+    {
+      "adjusted_observed_error": 0.02112676056338028,
+      "calibration_error_observed_minus_reported": 0.015090760563380282,
+      "decoys_for_fraction": 3,
+      "effective_entrapment_fraction": 0.6666666666666666,
+      "mean_reported_pep": 0.006036,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 21,
+      "pep_lower_inclusive": 0.005,
+      "pep_upper_exclusive": 0.01,
+      "pure_entrapment_targets": 7,
+      "targets": 497
+    },
+    {
+      "adjusted_observed_error": 0.01928374655647383,
+      "calibration_error_observed_minus_reported": 0.00826474655647383,
+      "decoys_for_fraction": 4,
+      "effective_entrapment_fraction": 1.0,
+      "mean_reported_pep": 0.011019,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 20,
+      "pep_lower_inclusive": 0.01,
+      "pep_upper_exclusive": 0.02,
+      "pure_entrapment_targets": 7,
+      "targets": 363
+    },
+    {
+      "adjusted_observed_error": 0.07417582417582418,
+      "calibration_error_observed_minus_reported": 0.0339968956043956,
+      "decoys_for_fraction": 18,
+      "effective_entrapment_fraction": 0.7222222222222222,
+      "mean_reported_pep": 0.040178928571428574,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 24,
+      "pep_lower_inclusive": 0.02,
+      "pep_upper_exclusive": 0.05,
+      "pure_entrapment_targets": 24,
+      "targets": 448
+    },
+    {
+      "adjusted_observed_error": 0.11255186721991702,
+      "calibration_error_observed_minus_reported": 0.048236414937759334,
+      "decoys_for_fraction": 31,
+      "effective_entrapment_fraction": 0.6451612903225806,
+      "mean_reported_pep": 0.06431545228215768,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 17,
+      "pep_lower_inclusive": 0.05,
+      "pep_upper_exclusive": 0.1,
+      "pure_entrapment_targets": 35,
+      "targets": 482
+    },
+    {
+      "adjusted_observed_error": 0.1451161790017212,
+      "calibration_error_observed_minus_reported": 0.002545799483648886,
+      "decoys_for_fraction": 71,
+      "effective_entrapment_fraction": 0.7887323943661971,
+      "mean_reported_pep": 0.1425703795180723,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 21,
+      "pep_lower_inclusive": 0.1,
+      "pep_upper_exclusive": 0.2,
+      "pure_entrapment_targets": 57,
+      "targets": 498
+    },
+    {
+      "adjusted_observed_error": 0.3649014180417279,
+      "calibration_error_observed_minus_reported": 0.02835453022402412,
+      "decoys_for_fraction": 382,
+      "effective_entrapment_fraction": 0.7277486910994765,
+      "mean_reported_pep": 0.33654688781770375,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 43,
+      "pep_lower_inclusive": 0.2,
+      "pep_upper_exclusive": 0.5,
+      "pure_entrapment_targets": 303,
+      "targets": 1141
+    },
+    {
+      "adjusted_observed_error": 0.909978209010366,
+      "calibration_error_observed_minus_reported": 0.022473618266328987,
+      "decoys_for_fraction": 12453,
+      "effective_entrapment_fraction": 0.7904922508632458,
+      "mean_reported_pep": 0.887504590744037,
+      "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+      "mixed_targets": 148,
+      "pep_lower_inclusive": 0.5,
+      "pep_upper_exclusive": 1.0000001,
+      "pure_entrapment_targets": 10103,
+      "targets": 14045
+    }
+  ],
+  "decoy_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-1/rust/22Oct2014-Anopheles-8-MAGs-S-01/decoy.psms.tsv",
+      "rows": 12983,
+      "sha256": "01a894642f8f9bc6b0b8981821d7189e5c3a46c9a1297246b7320ffedecb877c"
+    }
+  ],
+  "evaluator": {
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/pep_entrapment.py",
+    "sha256": "f415871e6e146b58fd3ecf31c25f04aa6211e0bdbab1cb44c701392eb9dc2bdc"
+  },
+  "exact_zero_peps": 0,
+  "global_effective_entrapment_fraction": 0.7882479950647748,
+  "interpretation": "Entrapment matches are known false, but native matches are not individually labelled. Observed error is therefore a bin-level estimate obtained by dividing entrapment matches by the empirical foreign fraction among non-mixed decoys in the same PEP bin. It is not individual ground truth and bins with few decoys are unstable.",
+  "method": "22Oct2014-Anopheles-8-MAGs-S-01",
+  "pure_entrapment_with_exact_zero_pep": 0,
+  "schema_version": 1,
+  "target_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-1/rust/22Oct2014-Anopheles-8-MAGs-S-01/target.psms.tsv",
+      "rows": 23012,
+      "sha256": "e28ddbb406deb2cadadcb17ff42878f9ba10615689b1858ca149df0472d7faed"
+    }
+  ],
+  "targets": 23012,
+  "weighted_absolute_calibration_error": 0.017914304185200264,
+  "weighted_signed_observed_minus_reported": 0.017914304185200264
+}

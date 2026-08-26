@@ -1,0 +1,607 @@
+{
+ "seed": 1,
+ "thresholds": [
+  0.001,
+  0.005,
+  0.01,
+  0.02,
+  0.05,
+  0.1
+ ],
+ "datasets": [
+  {
+   "dataset": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+   "arm": "raw",
+   "rows": 151579,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 30343,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.7700084245998315,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.7700084245998315,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 556,
+     "pure_entrapment": 10,
+     "accepted_decoys": 4,
+     "effective_entrapment_fraction": 0.75,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": 0.023980815347721823,
+     "adjusted_fdp_whole_file_fraction": 0.02335768146970389,
+     "adjusted_fdp_declared_fraction": 0.03597120359713279
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 574,
+     "pure_entrapment": 11,
+     "accepted_decoys": 10,
+     "effective_entrapment_fraction": 0.6,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": 0.03193960511033682,
+     "adjusted_fdp_whole_file_fraction": 0.02488773168444407,
+     "adjusted_fdp_declared_fraction": 0.038327505435551246
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 723,
+     "pure_entrapment": 37,
+     "accepted_decoys": 35,
+     "effective_entrapment_fraction": 0.6285714285714286,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": 0.08141581793034075,
+     "adjusted_fdp_whole_file_fraction": 0.06646116503385177,
+     "adjusted_fdp_declared_fraction": 0.10235125869989153
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 822,
+     "pure_entrapment": 60,
+     "accepted_decoys": 81,
+     "effective_entrapment_fraction": 0.7283950617283951,
+     "whole_file_entrapment_fraction": 0.7700084245998315,
+     "adjusted_fdp_accepted_decoy_fraction": 0.10021031795125573,
+     "adjusted_fdp_whole_file_fraction": 0.09479467808142598,
+     "adjusted_fdp_declared_fraction": 0.14598532262777977
+    }
+   ]
+  },
+  {
+   "dataset": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+   "arm": "raw",
+   "rows": 179889,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 35995,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 3013,
+     "pure_entrapment": 4,
+     "accepted_decoys": 2,
+     "effective_entrapment_fraction": 0.5,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.002655160969133754,
+     "adjusted_fdp_whole_file_fraction": 0.0016896817908911572,
+     "adjusted_fdp_declared_fraction": 0.002655159535347604
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 4180,
+     "pure_entrapment": 16,
+     "accepted_decoys": 19,
+     "effective_entrapment_fraction": 0.6842105263157895,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.005594405594405594,
+     "adjusted_fdp_whole_file_fraction": 0.004871781087038332,
+     "adjusted_fdp_declared_fraction": 0.0076554982583754375
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 4494,
+     "pure_entrapment": 27,
+     "accepted_decoys": 43,
+     "effective_entrapment_fraction": 0.7209302325581395,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.008333692234807701,
+     "adjusted_fdp_whole_file_fraction": 0.007646712470559998,
+     "adjusted_fdp_declared_fraction": 0.012016014873167722
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 5255,
+     "pure_entrapment": 78,
+     "accepted_decoys": 104,
+     "effective_entrapment_fraction": 0.75,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.019790675547098003,
+     "adjusted_fdp_whole_file_fraction": 0.01889147842076567,
+     "adjusted_fdp_declared_fraction": 0.029685997290208464
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 6158,
+     "pure_entrapment": 223,
+     "accepted_decoys": 306,
+     "effective_entrapment_fraction": 0.7908496732026143,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.045790062782002316,
+     "adjusted_fdp_whole_file_fraction": 0.04609026898416603,
+     "adjusted_fdp_declared_fraction": 0.07242607326406789
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 7189,
+     "pure_entrapment": 521,
+     "accepted_decoys": 717,
+     "effective_entrapment_fraction": 0.8200836820083682,
+     "whole_file_entrapment_fraction": 0.7856985212977268,
+     "adjusted_fdp_accepted_decoy_fraction": 0.08837126448854685,
+     "adjusted_fdp_whole_file_fraction": 0.09223872770665545,
+     "adjusted_fdp_declared_fraction": 0.14494358566146942
+    }
+   ]
+  },
+  {
+   "dataset": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+   "arm": "raw",
+   "rows": 46804,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 9380,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.754555940023068,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.754555940023068,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 222,
+     "pure_entrapment": 1,
+     "accepted_decoys": 1,
+     "effective_entrapment_fraction": 0.0,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": 0.005969742288910739,
+     "adjusted_fdp_declared_fraction": 0.00900900414414677
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 223,
+     "pure_entrapment": 1,
+     "accepted_decoys": 3,
+     "effective_entrapment_fraction": 0.6666666666666666,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": 0.006726457399103139,
+     "adjusted_fdp_whole_file_fraction": 0.005942972144117418,
+     "adjusted_fdp_declared_fraction": 0.008968605022424138
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 291,
+     "pure_entrapment": 7,
+     "accepted_decoys": 13,
+     "effective_entrapment_fraction": 0.5384615384615384,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": 0.044673539518900345,
+     "adjusted_fdp_whole_file_fraction": 0.03187965469748209,
+     "adjusted_fdp_declared_fraction": 0.04810993965637141
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 336,
+     "pure_entrapment": 22,
+     "accepted_decoys": 32,
+     "effective_entrapment_fraction": 0.71875,
+     "whole_file_entrapment_fraction": 0.754555940023068,
+     "adjusted_fdp_accepted_decoy_fraction": 0.09109730848861283,
+     "adjusted_fdp_whole_file_fraction": 0.08677446827095253,
+     "adjusted_fdp_declared_fraction": 0.13095231023813342
+    }
+   ]
+  },
+  {
+   "dataset": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+   "arm": "raw",
+   "rows": 31727,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 6374,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.7466713384723196,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 0,
+     "pure_entrapment": 0,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.7466713384723196,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": null,
+     "adjusted_fdp_declared_fraction": null
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 233,
+     "pure_entrapment": 0,
+     "accepted_decoys": 1,
+     "effective_entrapment_fraction": 1.0,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": 0.0,
+     "adjusted_fdp_whole_file_fraction": 0.0,
+     "adjusted_fdp_declared_fraction": 0.0
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 262,
+     "pure_entrapment": 1,
+     "accepted_decoys": 4,
+     "effective_entrapment_fraction": 0.75,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": 0.0050890585241730275,
+     "adjusted_fdp_whole_file_fraction": 0.0051117455518500075,
+     "adjusted_fdp_declared_fraction": 0.0076335836641243625
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 313,
+     "pure_entrapment": 7,
+     "accepted_decoys": 14,
+     "effective_entrapment_fraction": 0.7857142857142857,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": 0.028463549230322398,
+     "adjusted_fdp_whole_file_fraction": 0.029951889271862344,
+     "adjusted_fdp_declared_fraction": 0.04472841035145074
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 371,
+     "pure_entrapment": 26,
+     "accepted_decoys": 36,
+     "effective_entrapment_fraction": 0.7222222222222222,
+     "whole_file_entrapment_fraction": 0.7466713384723196,
+     "adjusted_fdp_accepted_decoy_fraction": 0.09703504043126684,
+     "adjusted_fdp_whole_file_fraction": 0.0938577107795209,
+     "adjusted_fdp_declared_fraction": 0.1401616493800948
+    }
+   ]
+  },
+  {
+   "dataset": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+   "arm": "raw",
+   "rows": 160570,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 32139,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 1892,
+     "pure_entrapment": 8,
+     "accepted_decoys": 0,
+     "effective_entrapment_fraction": 0.7780308206179306,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.005434655925798567,
+     "adjusted_fdp_whole_file_fraction": 0.005434655925798567,
+     "adjusted_fdp_declared_fraction": 0.008456655052856588
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 2494,
+     "pure_entrapment": 18,
+     "accepted_decoys": 11,
+     "effective_entrapment_fraction": 0.6363636363636364,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.011341505327070683,
+     "adjusted_fdp_whole_file_fraction": 0.009276395459552726,
+     "adjusted_fdp_declared_fraction": 0.014434635348841419
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 2827,
+     "pure_entrapment": 32,
+     "accepted_decoys": 27,
+     "effective_entrapment_fraction": 0.7037037037037037,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.016085491408039023,
+     "adjusted_fdp_whole_file_fraction": 0.014548806525094998,
+     "adjusted_fdp_declared_fraction": 0.022638827534495455
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 3196,
+     "pure_entrapment": 63,
+     "accepted_decoys": 62,
+     "effective_entrapment_fraction": 0.7096774193548387,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.027776197519626806,
+     "adjusted_fdp_whole_file_fraction": 0.025335937411275267,
+     "adjusted_fdp_declared_fraction": 0.03942425906133815
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 3854,
+     "pure_entrapment": 174,
+     "accepted_decoys": 191,
+     "effective_entrapment_fraction": 0.7905759162303665,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.057107606443120934,
+     "adjusted_fdp_whole_file_fraction": 0.05802841878633545,
+     "adjusted_fdp_declared_fraction": 0.0902957478152832
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 4583,
+     "pure_entrapment": 395,
+     "accepted_decoys": 457,
+     "effective_entrapment_fraction": 0.8074398249452954,
+     "whole_file_entrapment_fraction": 0.7780308206179306,
+     "adjusted_fdp_accepted_decoy_fraction": 0.10674242679585862,
+     "adjusted_fdp_whole_file_fraction": 0.11077721360425216,
+     "adjusted_fdp_declared_fraction": 0.17237607972948513
+    }
+   ]
+  },
+  {
+   "dataset": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+   "arm": "raw",
+   "rows": 266798,
+   "best_feature": "lnExpect",
+   "best_feature_sign": -1.0,
+   "competed_winners": 53396,
+   "calibration": [
+    {
+     "q_threshold": 0.001,
+     "accepted_targets": 2298,
+     "pure_entrapment": 16,
+     "accepted_decoys": 1,
+     "effective_entrapment_fraction": 0.0,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": null,
+     "adjusted_fdp_whole_file_fraction": 0.008904093449329914,
+     "adjusted_fdp_declared_fraction": 0.013925144786775165
+    },
+    {
+     "q_threshold": 0.005,
+     "accepted_targets": 2888,
+     "pure_entrapment": 25,
+     "accepted_decoys": 13,
+     "effective_entrapment_fraction": 0.8461538461538461,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": 0.010230420548980107,
+     "adjusted_fdp_whole_file_fraction": 0.01107038107392667,
+     "adjusted_fdp_declared_fraction": 0.017313010041556293
+    },
+    {
+     "q_threshold": 0.01,
+     "accepted_targets": 3396,
+     "pure_entrapment": 36,
+     "accepted_decoys": 32,
+     "effective_entrapment_fraction": 0.84375,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": 0.012563800549666273,
+     "adjusted_fdp_whole_file_fraction": 0.013556718250812816,
+     "adjusted_fdp_declared_fraction": 0.02120140197880477
+    },
+    {
+     "q_threshold": 0.02,
+     "accepted_targets": 3853,
+     "pure_entrapment": 65,
+     "accepted_decoys": 76,
+     "effective_entrapment_fraction": 0.75,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": 0.022493295267756726,
+     "adjusted_fdp_whole_file_fraction": 0.021574170103270326,
+     "adjusted_fdp_declared_fraction": 0.03373992468207576
+    },
+    {
+     "q_threshold": 0.05,
+     "accepted_targets": 4537,
+     "pure_entrapment": 178,
+     "accepted_decoys": 225,
+     "effective_entrapment_fraction": 0.8044444444444444,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": 0.04877027071457884,
+     "adjusted_fdp_whole_file_fraction": 0.050173104486550935,
+     "adjusted_fdp_declared_fraction": 0.07846590428920075
+    },
+    {
+     "q_threshold": 0.1,
+     "accepted_targets": 5355,
+     "pure_entrapment": 467,
+     "accepted_decoys": 534,
+     "effective_entrapment_fraction": 0.8071161048689138,
+     "whole_file_entrapment_fraction": 0.7819522776572668,
+     "adjusted_fdp_accepted_decoy_fraction": 0.10804915933890959,
+     "adjusted_fdp_whole_file_fraction": 0.11152626459668051,
+     "adjusted_fdp_declared_fraction": 0.17441633905513956
+    }
+   ]
+  }
+ ],
+ "pooled": {
+  "raw": [
+   {
+    "q_threshold": 0.001,
+    "accepted_targets": 7203,
+    "pure_entrapment": 28,
+    "accepted_decoys": 3,
+    "effective_entrapment_fraction": 0.3333333333333333,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.011661807580174927,
+    "adjusted_fdp_whole_file_fraction": 0.005006309179906388,
+    "adjusted_fdp_declared_fraction": 0.007774534188534823
+   },
+   {
+    "q_threshold": 0.005,
+    "accepted_targets": 9562,
+    "pure_entrapment": 59,
+    "accepted_decoys": 43,
+    "effective_entrapment_fraction": 0.7209302325581395,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.008558743952877992,
+    "adjusted_fdp_whole_file_fraction": 0.007946507964371909,
+    "adjusted_fdp_declared_fraction": 0.01234050787283355
+   },
+   {
+    "q_threshold": 0.01,
+    "accepted_targets": 11728,
+    "pure_entrapment": 106,
+    "accepted_decoys": 108,
+    "effective_entrapment_fraction": 0.75,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.01205093224192815,
+    "adjusted_fdp_whole_file_fraction": 0.011640053024580266,
+    "adjusted_fdp_declared_fraction": 0.018076388601642377
+   },
+   {
+    "q_threshold": 0.02,
+    "accepted_targets": 13363,
+    "pure_entrapment": 219,
+    "accepted_decoys": 259,
+    "effective_entrapment_fraction": 0.7335907335907336,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.02234016156157812,
+    "adjusted_fdp_whole_file_fraction": 0.021106352989618434,
+    "adjusted_fdp_declared_fraction": 0.03277705331737841
+   },
+   {
+    "q_threshold": 0.05,
+    "accepted_targets": 15876,
+    "pure_entrapment": 626,
+    "accepted_decoys": 784,
+    "effective_entrapment_fraction": 0.7831632653061225,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.05034785056500583,
+    "adjusted_fdp_whole_file_fraction": 0.05078158987580971,
+    "adjusted_fdp_declared_fraction": 0.07886113151425832
+   },
+   {
+    "q_threshold": 0.1,
+    "accepted_targets": 18656,
+    "pure_entrapment": 1491,
+    "accepted_decoys": 1857,
+    "effective_entrapment_fraction": 0.8056004308023694,
+    "whole_file_entrapment_fraction": 0.7764740557762214,
+    "adjusted_fdp_accepted_decoy_fraction": 0.09920633840039993,
+    "adjusted_fdp_whole_file_fraction": 0.10292767460696824,
+    "adjusted_fdp_declared_fraction": 0.15984125159309978
+   }
+  ],
+  "rescored": [
+   {
+    "q_threshold": 0.001,
+    "accepted_targets": 10627,
+    "pure_entrapment": 44,
+    "accepted_decoys": 6,
+    "effective_entrapment_fraction": 0.5,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.008280794203444058,
+    "adjusted_fdp_whole_file_fraction": 0.005308217119816066,
+    "adjusted_fdp_declared_fraction": 0.008280789731817602
+   },
+   {
+    "q_threshold": 0.005,
+    "accepted_targets": 15088,
+    "pure_entrapment": 112,
+    "accepted_decoys": 67,
+    "effective_entrapment_fraction": 0.7313432835820896,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.010149977276170277,
+    "adjusted_fdp_whole_file_fraction": 0.009516845737154086,
+    "adjusted_fdp_declared_fraction": 0.01484622740191313
+   },
+   {
+    "q_threshold": 0.01,
+    "accepted_targets": 16947,
+    "pure_entrapment": 186,
+    "accepted_decoys": 160,
+    "effective_entrapment_fraction": 0.78125,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.014048504160028324,
+    "adjusted_fdp_whole_file_fraction": 0.014071059425649313,
+    "adjusted_fdp_declared_fraction": 0.02195077589662527
+   },
+   {
+    "q_threshold": 0.02,
+    "accepted_targets": 18452,
+    "pure_entrapment": 355,
+    "accepted_decoys": 359,
+    "effective_entrapment_fraction": 0.7632311977715878,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.025207442945278418,
+    "adjusted_fdp_whole_file_fraction": 0.02466559461768285,
+    "adjusted_fdp_declared_fraction": 0.03847819296554341
+   },
+   {
+    "q_threshold": 0.05,
+    "accepted_targets": 21153,
+    "pure_entrapment": 892,
+    "accepted_decoys": 1043,
+    "effective_entrapment_fraction": 0.7708533077660594,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.054704259631262686,
+    "adjusted_fdp_whole_file_fraction": 0.054062928546991525,
+    "adjusted_fdp_declared_fraction": 0.08433787342885266
+   },
+   {
+    "q_threshold": 0.1,
+    "accepted_targets": 24096,
+    "pure_entrapment": 2002,
+    "accepted_decoys": 2391,
+    "effective_entrapment_fraction": 0.7841907151819323,
+    "whole_file_entrapment_fraction": 0.7799976919304117,
+    "adjusted_fdp_accepted_decoy_fraction": 0.10594913678618857,
+    "adjusted_fdp_whole_file_fraction": 0.10651868615616628,
+    "adjusted_fdp_declared_fraction": 0.16616856896751192
+   }
+  ]
+ }
+}

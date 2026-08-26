@@ -1,0 +1,238 @@
+{
+  "analysis": "entrapment-adjusted aggregate PEP calibration",
+  "bins": [
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7825297969019932,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 0.0,
+      "pep_upper_exclusive": 1e-12,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7825297969019932,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-12,
+      "pep_upper_exclusive": 1e-06,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": null,
+      "calibration_error_observed_minus_reported": null,
+      "decoys_for_fraction": 0,
+      "effective_entrapment_fraction": 0.7825297969019932,
+      "mean_reported_pep": null,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 0,
+      "pep_lower_inclusive": 1e-06,
+      "pep_upper_exclusive": 0.0001,
+      "pure_entrapment_targets": 0,
+      "targets": 0
+    },
+    {
+      "adjusted_observed_error": 0.003881755747984473,
+      "calibration_error_observed_minus_reported": 0.0034836745297103615,
+      "decoys_for_fraction": 4,
+      "effective_entrapment_fraction": 1.0,
+      "mean_reported_pep": 0.0003980812182741117,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 209,
+      "pep_lower_inclusive": 0.0001,
+      "pep_upper_exclusive": 0.001,
+      "pure_entrapment_targets": 39,
+      "targets": 10047
+    },
+    {
+      "adjusted_observed_error": 0.011255530973451328,
+      "calibration_error_observed_minus_reported": 0.00882191592920354,
+      "decoys_for_fraction": 11,
+      "effective_entrapment_fraction": 0.7272727272727273,
+      "mean_reported_pep": 0.002433615044247788,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 100,
+      "pep_lower_inclusive": 0.001,
+      "pep_upper_exclusive": 0.005,
+      "pure_entrapment_targets": 37,
+      "targets": 4520
+    },
+    {
+      "adjusted_observed_error": 0.01579778830963665,
+      "calibration_error_observed_minus_reported": 0.009478377567140598,
+      "decoys_for_fraction": 3,
+      "effective_entrapment_fraction": 1.0,
+      "mean_reported_pep": 0.006319410742496051,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 31,
+      "pep_lower_inclusive": 0.005,
+      "pep_upper_exclusive": 0.01,
+      "pure_entrapment_targets": 10,
+      "targets": 633
+    },
+    {
+      "adjusted_observed_error": 0.030264922870556675,
+      "calibration_error_observed_minus_reported": 0.014839038229376258,
+      "decoys_for_fraction": 19,
+      "effective_entrapment_fraction": 0.8421052631578947,
+      "mean_reported_pep": 0.015425884641180417,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 56,
+      "pep_lower_inclusive": 0.01,
+      "pep_upper_exclusive": 0.02,
+      "pure_entrapment_targets": 38,
+      "targets": 1491
+    },
+    {
+      "adjusted_observed_error": 0.05913405965285932,
+      "calibration_error_observed_minus_reported": 0.023919439295888745,
+      "decoys_for_fraction": 73,
+      "effective_entrapment_fraction": 0.726027397260274,
+      "mean_reported_pep": 0.03521462035697057,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 86,
+      "pep_lower_inclusive": 0.02,
+      "pep_upper_exclusive": 0.05,
+      "pure_entrapment_targets": 89,
+      "targets": 2073
+    },
+    {
+      "adjusted_observed_error": 0.08213979679275309,
+      "calibration_error_observed_minus_reported": 0.0063042222426245575,
+      "decoys_for_fraction": 61,
+      "effective_entrapment_fraction": 0.6885245901639344,
+      "mean_reported_pep": 0.07583557455012853,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 35,
+      "pep_lower_inclusive": 0.05,
+      "pep_upper_exclusive": 0.1,
+      "pure_entrapment_targets": 44,
+      "targets": 778
+    },
+    {
+      "adjusted_observed_error": 0.16982665707032188,
+      "calibration_error_observed_minus_reported": 0.01930377121311405,
+      "decoys_for_fraction": 334,
+      "effective_entrapment_fraction": 0.7604790419161677,
+      "mean_reported_pep": 0.15052288585720783,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 89,
+      "pep_lower_inclusive": 0.1,
+      "pep_upper_exclusive": 0.2,
+      "pure_entrapment_targets": 284,
+      "targets": 2199
+    },
+    {
+      "adjusted_observed_error": 0.3976542535119725,
+      "calibration_error_observed_minus_reported": 0.033798241965248554,
+      "decoys_for_fraction": 1346,
+      "effective_entrapment_fraction": 0.7563150074294205,
+      "mean_reported_pep": 0.3638560115467239,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 123,
+      "pep_lower_inclusive": 0.2,
+      "pep_upper_exclusive": 0.5,
+      "pure_entrapment_targets": 1120,
+      "targets": 3724
+    },
+    {
+      "adjusted_observed_error": 0.9341306851298068,
+      "calibration_error_observed_minus_reported": 0.01784314607445847,
+      "decoys_for_fraction": 67032,
+      "effective_entrapment_fraction": 0.7832826112901301,
+      "mean_reported_pep": 0.9162875390553483,
+      "method": "rust-repaired2-seed3",
+      "mixed_targets": 671,
+      "pep_lower_inclusive": 0.5,
+      "pep_upper_exclusive": 1.0000001,
+      "pure_entrapment_targets": 53553,
+      "targets": 73191
+    }
+  ],
+  "decoy_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/decoy.psms.tsv",
+      "rows": 14151,
+      "sha256": "77aefbde21b5007d68433d3b110a254138b46e9a953008d94c6875be9527db8c"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/22Oct2014-Anopheles-8-MAGs-S-01/decoy.psms.tsv",
+      "rows": 12945,
+      "sha256": "ef4deae25f961a1616c190d11ffd633a4c45984ef00d0adda36702c27c5344b7"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/decoy.psms.tsv",
+      "rows": 4315,
+      "sha256": "d51d31755542ad30df0a907aadfcb6b448f3ce3046a390ba77d8c5c0f67d3876"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/decoy.psms.tsv",
+      "rows": 2879,
+      "sha256": "d72175a27eb204121a649d60603413a13aec2f7164c8cf3973102ae8740cc2ae"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/decoy.psms.tsv",
+      "rows": 12444,
+      "sha256": "7169678afc36f0152301e93aceba782c51953096c58252f9054ddd012bd6c4da"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/9March2015-29-MAGs-pellet-2ndRep-14N-male-02/decoy.psms.tsv",
+      "rows": 22237,
+      "sha256": "e01be3c167e7a28ebd93e80d744ba0d6e6367931ef7161cf5de62b17a97238cd"
+    }
+  ],
+  "evaluator": {
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/pep_entrapment.py",
+    "sha256": "f415871e6e146b58fd3ecf31c25f04aa6211e0bdbab1cb44c701392eb9dc2bdc"
+  },
+  "exact_zero_peps": 0,
+  "global_effective_entrapment_fraction": 0.7825297969019932,
+  "interpretation": "Entrapment matches are known false, but native matches are not individually labelled. Observed error is therefore a bin-level estimate obtained by dividing entrapment matches by the empirical foreign fraction among non-mixed decoys in the same PEP bin. It is not individual ground truth and bins with few decoys are unstable.",
+  "method": "rust-repaired2-seed3",
+  "pure_entrapment_with_exact_zero_pep": 0,
+  "schema_version": 1,
+  "target_files": [
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/target.psms.tsv",
+      "rows": 16192,
+      "sha256": "e7fb208bad0d64b6eef0d9faf18f5988f57d4b5fe3b36905b8b83adf4f64fde3"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/22Oct2014-Anopheles-8-MAGs-S-01/target.psms.tsv",
+      "rows": 23050,
+      "sha256": "f7075d26f1d2aa6f68e7fa52b85a67808e1c42fe49c49c4f984c9914cccc8a7f"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/target.psms.tsv",
+      "rows": 5065,
+      "sha256": "a2413038d766523b0fab74ffea5d442eabd34b0e7865c082ec95e5950f99bb64"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/target.psms.tsv",
+      "rows": 3495,
+      "sha256": "368ceb6ba4cee60054718c731f513687fae55a2bba7a022f7bed6708a6e95f0f"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/target.psms.tsv",
+      "rows": 19695,
+      "sha256": "3d4e6cf81125b8d5e0ba4ae81d08bb7a45ad1461d9897fdc7d42f1bd14699e75"
+    },
+    {
+      "path": "/run/media/andrej-rumenovski/New Volume/percolator_rs_repair2/entrapment-20260826/seed-3/rust/9March2015-29-MAGs-pellet-2ndRep-14N-male-02/target.psms.tsv",
+      "rows": 31159,
+      "sha256": "1bb1fc0d03a71b813501db11a294e73e3cb26d5de5d127a9a562b8293f9200f0"
+    }
+  ],
+  "targets": 98656,
+  "weighted_absolute_calibration_error": 0.016539910293109923,
+  "weighted_signed_observed_minus_reported": 0.016539910293109923
+}

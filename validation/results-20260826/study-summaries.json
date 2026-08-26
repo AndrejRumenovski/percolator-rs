@@ -1,0 +1,2661 @@
+{
+ "complete_null": {
+  "inputs": [
+   {
+    "bytes": 48635987,
+    "id": "pxd032157_01",
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/data/PXD032157/03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-01-comet.pin",
+    "sha256": "09c823ac5d0488d961885400a93048aae96974537f211d0b35b26cb574c2bcc4"
+   },
+   {
+    "bytes": 52120620,
+    "id": "pxd032157_02",
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/data/PXD032157/03May2016-QEHF1-Anopheles-12-WB-virgin-neg-4-18-16-02-comet.pin",
+    "sha256": "05d5e535cac3c92fce6d752cb8ab348e7fd14299e3029714b34ef2afabe1f84c"
+   },
+   {
+    "bytes": 9071098,
+    "id": "pxd032157_03",
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/data/PXD032157/03May2016-QEHF1-Anopheles-4-atrium-S-3hpm-4th-01-comet.pin",
+    "sha256": "bff342cfcb9b4e23814345c9be247f4a65c29af2bd4cff456c29669f23e7f2e7"
+   }
+  ],
+  "relabel_seeds": [
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010
+  ],
+  "runs": [
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1008,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1008,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "rust",
+    "relabel_seed": 1010,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_01",
+    "method": "cpp",
+    "relabel_seed": 1010,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1008,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1008,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "rust",
+    "relabel_seed": 1010,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_02",
+    "method": "cpp",
+    "relabel_seed": 1010,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1001,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1002,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1003,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1004,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1005,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1006,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1007,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1008,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": null,
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1008,
+    "status": "failed"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1009,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "rust",
+    "relabel_seed": 1010,
+    "status": "complete"
+   },
+   {
+    "false_target_psms": {
+     "q_lt_0.001": 0,
+     "q_lt_0.005": 0,
+     "q_lt_0.01": 0,
+     "q_lt_0.02": 0,
+     "q_lt_0.05": 0,
+     "q_lt_0.1": 0
+    },
+    "input": "pxd032157_03",
+    "method": "cpp",
+    "relabel_seed": 1010,
+    "status": "complete"
+   }
+  ],
+  "study": "exchangeable-label pure-null FDR validation"
+ },
+ "entrapment": {
+  "inputs": [
+   {
+    "bytes": 54344034,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+    "sha256": "85e8eab7d51769d60eac91401556fc2b9ef8bd0d80a062335ec4afc6062b24bd"
+   },
+   {
+    "bytes": 62224358,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+    "sha256": "2244c90dd3cd825c29a6975d5ebc90db7f45f4452a3a3077e87deb2b7501246d"
+   },
+   {
+    "bytes": 16696174,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+    "sha256": "299730400202c93aa3c664393be2deb776a122b30a586443410faee280226416"
+   },
+   {
+    "bytes": 11316602,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+    "sha256": "1900975fe17c23f0ef39b8629dbcd014c9a546ca419dc9c2838e13989b14b47c"
+   },
+   {
+    "bytes": 57367437,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+    "sha256": "0bbeb54533c1e90ff141cbd87291d410b24a40661f558d032a850a77974300d7"
+   },
+   {
+    "bytes": 95681589,
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+    "sha256": "c93e05fda9aadb564cccb03d021e9ca99d2fe6d226611fa9dcdebc57fccbee4e"
+   }
+  ],
+  "runs": [
+   {
+    "calibration": [
+     {
+      "accepted_targets": 12454,
+      "adjusted_fdp": 0.005781275092339811,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.75,
+      "estimated_false": 72.0,
+      "mixed": 281,
+      "pure_entrapment": 54,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17863,
+      "adjusted_fdp": 0.0116322501957063,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8133333333333334,
+      "estimated_false": 207.78688524590163,
+      "mixed": 449,
+      "pure_entrapment": 169,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19545,
+      "adjusted_fdp": 0.01786507712104513,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7388888888888889,
+      "estimated_false": 349.17293233082705,
+      "mixed": 523,
+      "pure_entrapment": 258,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 21064,
+      "adjusted_fdp": 0.027671443559091954,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7463054187192119,
+      "estimated_false": 582.8712871287129,
+      "mixed": 584,
+      "pure_entrapment": 435,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23813,
+      "adjusted_fdp": 0.05844496703481292,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7508532423208191,
+      "estimated_false": 1391.75,
+      "mixed": 681,
+      "pure_entrapment": 1045,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26796,
+      "adjusted_fdp": 0.10862789163269605,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7623352165725047,
+      "estimated_false": 2910.7929841897235,
+      "mixed": 788,
+      "pure_entrapment": 2219,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "rust",
+    "seed": 1
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 13076,
+      "adjusted_fdp": 0.014060656382467333,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7777777777777778,
+      "estimated_false": 183.85714285714286,
+      "mixed": 311,
+      "pure_entrapment": 143,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17600,
+      "adjusted_fdp": 0.02000674114021572,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7866666666666666,
+      "estimated_false": 352.11864406779665,
+      "mixed": 438,
+      "pure_entrapment": 277,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19122,
+      "adjusted_fdp": 0.02614948929772749,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7359550561797753,
+      "estimated_false": 500.03053435114504,
+      "mixed": 518,
+      "pure_entrapment": 368,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 20619,
+      "adjusted_fdp": 0.03528820546740497,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7380352644836272,
+      "estimated_false": 727.6075085324231,
+      "mixed": 585,
+      "pure_entrapment": 537,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23255,
+      "adjusted_fdp": 0.06659016817082027,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.731004366812227,
+      "estimated_false": 1548.5543608124253,
+      "mixed": 685,
+      "pure_entrapment": 1132,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26187,
+      "adjusted_fdp": 0.11535987958401751,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7401696222050886,
+      "estimated_false": 3020.929166666667,
+      "mixed": 795,
+      "pure_entrapment": 2236,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "cpp",
+    "seed": 1
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 13019,
+      "adjusted_fdp": 0.006452108456870728,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.75,
+      "estimated_false": 84.0,
+      "mixed": 295,
+      "pure_entrapment": 63,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17813,
+      "adjusted_fdp": 0.011588225039666476,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7702702702702703,
+      "estimated_false": 206.42105263157893,
+      "mixed": 443,
+      "pure_entrapment": 159,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19501,
+      "adjusted_fdp": 0.017287819649882897,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7237569060773481,
+      "estimated_false": 337.1297709923664,
+      "mixed": 521,
+      "pure_entrapment": 244,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 21277,
+      "adjusted_fdp": 0.028358144363573923,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7408312958435208,
+      "estimated_false": 603.3762376237623,
+      "mixed": 587,
+      "pure_entrapment": 447,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23794,
+      "adjusted_fdp": 0.058246283228299583,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7561807331628303,
+      "estimated_false": 1385.9120631341602,
+      "mixed": 682,
+      "pure_entrapment": 1048,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26914,
+      "adjusted_fdp": 0.10922582761725534,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7544977511244377,
+      "estimated_false": 2939.70392449081,
+      "mixed": 794,
+      "pure_entrapment": 2218,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "rust",
+    "seed": 2
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 13053,
+      "adjusted_fdp": 0.011807630429786256,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8888888888888888,
+      "estimated_false": 154.125,
+      "mixed": 308,
+      "pure_entrapment": 137,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17252,
+      "adjusted_fdp": 0.01887317412473916,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8108108108108109,
+      "estimated_false": 325.59999999999997,
+      "mixed": 443,
+      "pure_entrapment": 264,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19056,
+      "adjusted_fdp": 0.02562451468722183,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7556818181818182,
+      "estimated_false": 488.3007518796992,
+      "mixed": 524,
+      "pure_entrapment": 369,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 20511,
+      "adjusted_fdp": 0.03641381711359278,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7189873417721518,
+      "estimated_false": 746.8838028169015,
+      "mixed": 596,
+      "pure_entrapment": 537,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23131,
+      "adjusted_fdp": 0.06780374756164823,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7243195785776997,
+      "estimated_false": 1568.368484848485,
+      "mixed": 693,
+      "pure_entrapment": 1136,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26022,
+      "adjusted_fdp": 0.11740442694229954,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7368012422360248,
+      "estimated_false": 3055.0979978925184,
+      "mixed": 801,
+      "pure_entrapment": 2251,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "cpp",
+    "seed": 2
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 13101,
+      "adjusted_fdp": 0.006280872779613333,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7777777777777778,
+      "estimated_false": 82.28571428571428,
+      "mixed": 298,
+      "pure_entrapment": 64,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 18063,
+      "adjusted_fdp": 0.0126640093007806,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8,
+      "estimated_false": 228.75,
+      "mixed": 454,
+      "pure_entrapment": 183,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19536,
+      "adjusted_fdp": 0.018150412887254993,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7388888888888889,
+      "estimated_false": 354.5864661654135,
+      "mixed": 515,
+      "pure_entrapment": 262,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 21141,
+      "adjusted_fdp": 0.02721157939548744,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7352941176470589,
+      "estimated_false": 575.28,
+      "mixed": 581,
+      "pure_entrapment": 423,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23775,
+      "adjusted_fdp": 0.058323414311576526,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7442455242966752,
+      "estimated_false": 1386.639175257732,
+      "mixed": 675,
+      "pure_entrapment": 1032,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26853,
+      "adjusted_fdp": 0.11004825339824206,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7522522522522522,
+      "estimated_false": 2955.125748502994,
+      "mixed": 783,
+      "pure_entrapment": 2223,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "rust",
+    "seed": 3
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 12852,
+      "adjusted_fdp": 0.013005202080832333,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7777777777777778,
+      "estimated_false": 167.14285714285714,
+      "mixed": 298,
+      "pure_entrapment": 130,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17506,
+      "adjusted_fdp": 0.018050017511560438,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8133333333333334,
+      "estimated_false": 315.983606557377,
+      "mixed": 444,
+      "pure_entrapment": 257,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19218,
+      "adjusted_fdp": 0.024718324732328146,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.768361581920904,
+      "estimated_false": 475.0367647058823,
+      "mixed": 529,
+      "pure_entrapment": 365,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 20744,
+      "adjusted_fdp": 0.03646536347859622,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7218045112781954,
+      "estimated_false": 756.4375,
+      "mixed": 590,
+      "pure_entrapment": 546,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23311,
+      "adjusted_fdp": 0.06661476576439139,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7360627177700348,
+      "estimated_false": 1552.8568047337278,
+      "mixed": 697,
+      "pure_entrapment": 1143,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26304,
+      "adjusted_fdp": 0.11746777154705454,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7362763915547025,
+      "estimated_false": 3089.8722627737225,
+      "mixed": 800,
+      "pure_entrapment": 2275,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "cpp",
+    "seed": 3
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 13174,
+      "adjusted_fdp": 0.005953284608210979,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7777777777777778,
+      "estimated_false": 78.42857142857143,
+      "mixed": 296,
+      "pure_entrapment": 61,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17950,
+      "adjusted_fdp": 0.011460954759389108,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7631578947368421,
+      "estimated_false": 205.72413793103448,
+      "mixed": 453,
+      "pure_entrapment": 157,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19514,
+      "adjusted_fdp": 0.01883839310755228,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.712707182320442,
+      "estimated_false": 367.6124031007752,
+      "mixed": 513,
+      "pure_entrapment": 262,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 21108,
+      "adjusted_fdp": 0.02644380783425584,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7524509803921569,
+      "estimated_false": 558.1758957654723,
+      "mixed": 586,
+      "pure_entrapment": 420,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23854,
+      "adjusted_fdp": 0.05686479897703556,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7578589634664401,
+      "estimated_false": 1356.4529147982062,
+      "mixed": 686,
+      "pure_entrapment": 1028,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26833,
+      "adjusted_fdp": 0.10680000279415144,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7655897821187078,
+      "estimated_false": 2865.764474975466,
+      "mixed": 779,
+      "pure_entrapment": 2194,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "rust",
+    "seed": 4
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 12670,
+      "adjusted_fdp": 0.013394971248167777,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7777777777777778,
+      "estimated_false": 169.71428571428572,
+      "mixed": 293,
+      "pure_entrapment": 132,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17814,
+      "adjusted_fdp": 0.018044094532390254,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8648648648648649,
+      "estimated_false": 321.4375,
+      "mixed": 448,
+      "pure_entrapment": 278,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19262,
+      "adjusted_fdp": 0.02525871318312394,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7584269662921348,
+      "estimated_false": 486.53333333333336,
+      "mixed": 524,
+      "pure_entrapment": 369,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 20757,
+      "adjusted_fdp": 0.03652686579515848,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7175,
+      "estimated_false": 758.1881533101046,
+      "mixed": 591,
+      "pure_entrapment": 544,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23302,
+      "adjusted_fdp": 0.06625308488053626,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7358326068003488,
+      "estimated_false": 1543.8293838862558,
+      "mixed": 684,
+      "pure_entrapment": 1136,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26256,
+      "adjusted_fdp": 0.11621769598286644,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.740968485780169,
+      "estimated_false": 3051.411825726141,
+      "mixed": 790,
+      "pure_entrapment": 2261,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "cpp",
+    "seed": 4
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 12984,
+      "adjusted_fdp": 0.006264119942493325,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.75,
+      "estimated_false": 81.33333333333333,
+      "mixed": 293,
+      "pure_entrapment": 61,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 18240,
+      "adjusted_fdp": 0.012916666666666667,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7894736842105263,
+      "estimated_false": 235.6,
+      "mixed": 465,
+      "pure_entrapment": 186,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19586,
+      "adjusted_fdp": 0.01837820665554761,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7417582417582418,
+      "estimated_false": 359.9555555555555,
+      "mixed": 517,
+      "pure_entrapment": 267,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 21120,
+      "adjusted_fdp": 0.02758817269686835,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7328431372549019,
+      "estimated_false": 582.6622073578595,
+      "mixed": 585,
+      "pure_entrapment": 427,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23906,
+      "adjusted_fdp": 0.06066471051100485,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7446988973706531,
+      "estimated_false": 1450.250569476082,
+      "mixed": 687,
+      "pure_entrapment": 1080,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26846,
+      "adjusted_fdp": 0.10891222666961617,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.759954921111946,
+      "estimated_false": 2923.8576371725158,
+      "mixed": 785,
+      "pure_entrapment": 2222,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "rust",
+    "seed": 5
+   },
+   {
+    "calibration": [
+     {
+      "accepted_targets": 12808,
+      "adjusted_fdp": 0.011418644597126796,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.8888888888888888,
+      "estimated_false": 146.25,
+      "mixed": 296,
+      "pure_entrapment": 130,
+      "q_threshold": 0.001
+     },
+     {
+      "accepted_targets": 17822,
+      "adjusted_fdp": 0.01980412706443569,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7763157894736842,
+      "estimated_false": 352.9491525423729,
+      "mixed": 455,
+      "pure_entrapment": 274,
+      "q_threshold": 0.005
+     },
+     {
+      "accepted_targets": 19232,
+      "adjusted_fdp": 0.024318502010031943,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7740112994350282,
+      "estimated_false": 467.6934306569343,
+      "mixed": 530,
+      "pure_entrapment": 362,
+      "q_threshold": 0.01
+     },
+     {
+      "accepted_targets": 20732,
+      "adjusted_fdp": 0.03609384419518963,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7243107769423559,
+      "estimated_false": 748.2975778546713,
+      "mixed": 590,
+      "pure_entrapment": 542,
+      "q_threshold": 0.02
+     },
+     {
+      "accepted_targets": 23366,
+      "adjusted_fdp": 0.06748213598813689,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7280625543006082,
+      "estimated_false": 1576.7875894988067,
+      "mixed": 688,
+      "pure_entrapment": 1148,
+      "q_threshold": 0.05
+     },
+     {
+      "accepted_targets": 26282,
+      "adjusted_fdp": 0.11714328326283821,
+      "comparison": "strict_less_than",
+      "effective_entrapment_fraction": 0.7366602687140115,
+      "estimated_false": 3078.759770713914,
+      "mixed": 797,
+      "pure_entrapment": 2268,
+      "q_threshold": 0.1
+     }
+    ],
+    "method": "cpp",
+    "seed": 5
+   }
+  ],
+  "seeds": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "study": "matched five-seed signal-present foreign-proteome entrapment"
+ },
+ "multiseed": {
+  "datasets": null,
+  "runs": [
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "725f88da53397fce8a357de1a3f999e7f8a0ca241edbaa7e3714460d555c98af",
+      "decoy.psms.tsv": "0bcca1bbbf0c3f8cc28dcac7f2131789f7a62ea1064e4bc49bd516eeaaf96bb2",
+      "target.peptides.tsv": "96bd29efcbcfc0fafb6474e3b95fc14679d980275754bf5f6a6ccdd06ac8a24f",
+      "target.psms.tsv": "6ee2260cffa270e630d8b3abadd8361bb2aa317195947c872b939fa168919468"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "5cb348ff4dd6a4e219d5a5d885a14cd9671b4218fcc8911638fefe73f5a2b775",
+      "decoy.psms.tsv": "fd1502a76eaf4cfd979802eda0185b64415e0f38b0c604f9570dec4ba9cc8f49",
+      "target.peptides.tsv": "de2236a678ca92616e4870384215692ba6d4dc01be42631b76864a37320390d9",
+      "target.psms.tsv": "eeb9eed80da0affac3618513e68ce19a5220cca9ee5e6d1210fd3a8f6126e85e"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 17617,
+      "q_lt_0.005": 19273,
+      "q_lt_0.01": 19722,
+      "q_lt_0.02": 20323,
+      "q_lt_0.05": 21472,
+      "q_lt_0.1": 22918
+     },
+     "psms": {
+      "q_lt_0.001": 24771,
+      "q_lt_0.005": 26931,
+      "q_lt_0.01": 27617,
+      "q_lt_0.02": 28535,
+      "q_lt_0.05": 30110,
+      "q_lt_0.1": 32207
+     }
+    },
+    "dataset": "hogrebe_tide",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 17776,
+      "q_lt_0.005": 19254,
+      "q_lt_0.01": 19736,
+      "q_lt_0.02": 20337,
+      "q_lt_0.05": 21472,
+      "q_lt_0.1": 22886
+     },
+     "psms": {
+      "q_lt_0.001": 24811,
+      "q_lt_0.005": 26964,
+      "q_lt_0.01": 27640,
+      "q_lt_0.02": 28538,
+      "q_lt_0.05": 30083,
+      "q_lt_0.1": 32219
+     }
+    },
+    "seed": 1
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "2adcdb4645824c1d23bab448c9ded498342052fcc117df70d03f637c373881af",
+      "decoy.psms.tsv": "157409cb803d47e267405ed8300d3841820ee9f029d012f9be18d2a3f3ac81be",
+      "target.peptides.tsv": "2d3c1f175abb3c040b601a7f1fce51d59f449c8829f6a05fa8ffe01209662b48",
+      "target.psms.tsv": "5437896a835207f85e2ae8ff8b43e59c3ed54580826ffdc977cb830225594755"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "bccd70ba7f6ffd6558730a8da0a862d781de2519e8541a09c150c68f97bf50db",
+      "decoy.psms.tsv": "3b00f226ab5f79258ed35d3459ae21ed1681792a476c23bd130f2adca927f541",
+      "target.peptides.tsv": "2082f84d8358f47539c3e6923b4bb14be023fb0e30f3c4427ccb325bfba56b20",
+      "target.psms.tsv": "702154b57c0a40ae7a479e79d4d0e380fe06f8f01d86079d31b3454a38b50041"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 17723,
+      "q_lt_0.005": 19261,
+      "q_lt_0.01": 19736,
+      "q_lt_0.02": 20301,
+      "q_lt_0.05": 21436,
+      "q_lt_0.1": 22880
+     },
+     "psms": {
+      "q_lt_0.001": 24722,
+      "q_lt_0.005": 26886,
+      "q_lt_0.01": 27656,
+      "q_lt_0.02": 28526,
+      "q_lt_0.05": 30125,
+      "q_lt_0.1": 32226
+     }
+    },
+    "dataset": "hogrebe_tide",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 17624,
+      "q_lt_0.005": 19191,
+      "q_lt_0.01": 19713,
+      "q_lt_0.02": 20306,
+      "q_lt_0.05": 21463,
+      "q_lt_0.1": 22883
+     },
+     "psms": {
+      "q_lt_0.001": 24680,
+      "q_lt_0.005": 26938,
+      "q_lt_0.01": 27665,
+      "q_lt_0.02": 28521,
+      "q_lt_0.05": 30091,
+      "q_lt_0.1": 32197
+     }
+    },
+    "seed": 2
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "4c3b8b28539110bed23ef42e5a379d2ac5530a46ecea5420e4df1d908b63ca94",
+      "decoy.psms.tsv": "880b388ab5c6f149656bcc3319b2cbcd2778e32b13b71ebb10e539f094f51f5f",
+      "target.peptides.tsv": "5d99f96dddc7cf9317eb03d5d78f1a9cf4cc29e5013cdc246442ec77b7c506ce",
+      "target.psms.tsv": "b3693e844be1f641c9cf46766515e48a4f333c5d7e9688fb6a3e59d28d99e902"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "c662f2371fcebd05cd0ee37a8570393049c8bf1376483b39ad2f66be29c5312e",
+      "decoy.psms.tsv": "aebc7af450a08527bee5309664868e625f948d8c053fdfeab1887f28fdea97cc",
+      "target.peptides.tsv": "f28e3be64a46e399ef78eab3242ab314635ed5188d4f81390cd61708b39a8733",
+      "target.psms.tsv": "106f21df1a40158eacd92f7a115158718f8d9cb1dfa369b0936eb5550dae511b"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 17669,
+      "q_lt_0.005": 19269,
+      "q_lt_0.01": 19745,
+      "q_lt_0.02": 20324,
+      "q_lt_0.05": 21478,
+      "q_lt_0.1": 22917
+     },
+     "psms": {
+      "q_lt_0.001": 24684,
+      "q_lt_0.005": 27005,
+      "q_lt_0.01": 27610,
+      "q_lt_0.02": 28554,
+      "q_lt_0.05": 30088,
+      "q_lt_0.1": 32201
+     }
+    },
+    "dataset": "hogrebe_tide",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 17609,
+      "q_lt_0.005": 19207,
+      "q_lt_0.01": 19715,
+      "q_lt_0.02": 20325,
+      "q_lt_0.05": 21467,
+      "q_lt_0.1": 22890
+     },
+     "psms": {
+      "q_lt_0.001": 24601,
+      "q_lt_0.005": 26881,
+      "q_lt_0.01": 27616,
+      "q_lt_0.02": 28532,
+      "q_lt_0.05": 30128,
+      "q_lt_0.1": 32171
+     }
+    },
+    "seed": 3
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "165ed0809da1a8b4bb5ead954b7483a81fd82c31bedb23b040c9de4161a446ad",
+      "decoy.psms.tsv": "26eccdeea482881070b3d87bc607ee425e8bcac35220d95cb8069dc12c4f74d1",
+      "target.peptides.tsv": "c43a7763c8694007b54eab3717efae12ddf75eb9e43b9512a0ee0beffa7b1b66",
+      "target.psms.tsv": "7b16270f6fe876a1c39530750e321d72adc0ac3e54ec97a6b759f6a07e9ab753"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "d7a47aa96bb9b38cb1968ed571fd63ac1339c6f487d2102e22ee0bd5e6ecd1ee",
+      "decoy.psms.tsv": "bc5e80c1618a609bef6e1e18f1d0d54ec1f99c2f12c45428f8776a3d4b4421f3",
+      "target.peptides.tsv": "4f9f06cdc04e0dea037ef95179b2d876960af1e6a315125ea36dd7f0059c52f7",
+      "target.psms.tsv": "e7ffe46d2ead7fac90097ce1d8255b88e684e26c0313b8d815af172f7947ce87"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 17816,
+      "q_lt_0.005": 19173,
+      "q_lt_0.01": 19737,
+      "q_lt_0.02": 20303,
+      "q_lt_0.05": 21412,
+      "q_lt_0.1": 22903
+     },
+     "psms": {
+      "q_lt_0.001": 24858,
+      "q_lt_0.005": 26891,
+      "q_lt_0.01": 27612,
+      "q_lt_0.02": 28501,
+      "q_lt_0.05": 30080,
+      "q_lt_0.1": 32190
+     }
+    },
+    "dataset": "hogrebe_tide",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 17719,
+      "q_lt_0.005": 19223,
+      "q_lt_0.01": 19701,
+      "q_lt_0.02": 20327,
+      "q_lt_0.05": 21433,
+      "q_lt_0.1": 22891
+     },
+     "psms": {
+      "q_lt_0.001": 24807,
+      "q_lt_0.005": 26864,
+      "q_lt_0.01": 27624,
+      "q_lt_0.02": 28532,
+      "q_lt_0.05": 30105,
+      "q_lt_0.1": 32192
+     }
+    },
+    "seed": 4
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "a07cc5f93e214d742c4580dfeedfa14272884fc5adfdcb31576e64976289fbf6",
+      "decoy.psms.tsv": "82ab62016c590e5780a12b209a28b6d715a002c04c08eede4b06cd2475aa6fbe",
+      "target.peptides.tsv": "61bf2d52eb9d5a3881b707d8006e8c92d5f24583a6c675b4a5cb3cb1c8dc16f9",
+      "target.psms.tsv": "c97998c43071cf759e7f3f546bebcd529fc8e6074be9fa2714acdcd4d195272b"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "c540c8c9ec8b9f0af51e493605c2fe020dabeb28d7f1f944b243c5f7078798fd",
+      "decoy.psms.tsv": "a7ef9beb4dbba8d3ac7c66772df1d5643213d25099e69e52c0e52c64f0c4f2a2",
+      "target.peptides.tsv": "0f86fc5ceee8c97c406174016d0bab8729dc02aa15c5026199b423021cecd869",
+      "target.psms.tsv": "4d758f0db44cee82d97d3c769136d94bccf371013292d3ee542c04782b0c12fe"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 17606,
+      "q_lt_0.005": 19246,
+      "q_lt_0.01": 19722,
+      "q_lt_0.02": 20314,
+      "q_lt_0.05": 21499,
+      "q_lt_0.1": 22905
+     },
+     "psms": {
+      "q_lt_0.001": 24679,
+      "q_lt_0.005": 26887,
+      "q_lt_0.01": 27670,
+      "q_lt_0.02": 28518,
+      "q_lt_0.05": 30092,
+      "q_lt_0.1": 32221
+     }
+    },
+    "dataset": "hogrebe_tide",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 17752,
+      "q_lt_0.005": 19246,
+      "q_lt_0.01": 19735,
+      "q_lt_0.02": 20322,
+      "q_lt_0.05": 21453,
+      "q_lt_0.1": 22916
+     },
+     "psms": {
+      "q_lt_0.001": 24849,
+      "q_lt_0.005": 26902,
+      "q_lt_0.01": 27624,
+      "q_lt_0.02": 28551,
+      "q_lt_0.05": 30106,
+      "q_lt_0.1": 32195
+     }
+    },
+    "seed": 5
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "664d01a483a3dd80d014ab757a546040742d8bded487854511a3987b597f7c24",
+      "decoy.psms.tsv": "05341ef56b62181665d9fba0891137883a089dc29c09a2c3cf584c0db5278450",
+      "target.peptides.tsv": "480d8ed889b3fa491afda2b6753ef542e4244ca749cdc60ed5c52a250e9f298c",
+      "target.psms.tsv": "8dd4ad99f8160d5e48082fe97c982076c7997af23bc6ffd7637a91d27875c0d7"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "5289e3d3011ca7d95c91cb2e667606dc0c7940480c560759338364d6f583e581",
+      "decoy.psms.tsv": "e8dd490fbe3bcd8e56661e6cd0246836913e10d705aef40ccd1db376d7811ba0",
+      "target.peptides.tsv": "7560a0093fae07f7fbdb614bc104a2992626566c8e255d06d99b0f4e507375de",
+      "target.psms.tsv": "822f8b5f34778b5c17c8b41adf20ee601b45d847bc030105472c5ba29839841e"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1029,
+      "q_lt_0.01": 1062,
+      "q_lt_0.02": 1129,
+      "q_lt_0.05": 1275,
+      "q_lt_0.1": 1378
+     },
+     "psms": {
+      "q_lt_0.001": 1103,
+      "q_lt_0.005": 1341,
+      "q_lt_0.01": 1388,
+      "q_lt_0.02": 1555,
+      "q_lt_0.05": 1678,
+      "q_lt_0.1": 1835
+     }
+    },
+    "dataset": "PXD020243_msfragger",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 952,
+      "q_lt_0.01": 1060,
+      "q_lt_0.02": 1153,
+      "q_lt_0.05": 1257,
+      "q_lt_0.1": 1355
+     },
+     "psms": {
+      "q_lt_0.001": 1061,
+      "q_lt_0.005": 1292,
+      "q_lt_0.01": 1367,
+      "q_lt_0.02": 1471,
+      "q_lt_0.05": 1603,
+      "q_lt_0.1": 1759
+     }
+    },
+    "seed": 1
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "6b809a0a7e3cea4ecc8cc0320ee3da768c74cf663d424f610b3eab02d694c215",
+      "decoy.psms.tsv": "8850b1eb999a47b492a049c7f05b245978132e0909c1b6dec61a0b63f25737c9",
+      "target.peptides.tsv": "edc6959f6d192335e717f9aec186a43725e1b6458b14647eb2df47269d8b15b5",
+      "target.psms.tsv": "2e160307c5573745f28d0c34eb34a7381317ddf46a97b22dc38e0950628c0f9d"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "a817e130958472017ed21a89fa8537dc6e6f6385afd0c3328109421ab8df48da",
+      "decoy.psms.tsv": "368f397ba0b607e33dfc678f7f7ca644ee808a72a090fa4b6a5ee8424e19ac3f",
+      "target.peptides.tsv": "521fd5079e47511f1ceca7c5102176c6e2ad5b1c77859a04ea3ec5233a30768d",
+      "target.psms.tsv": "c3861e5611d0c8be17883402ec7b5b30569736c1536c6654fda2b3dd272b1484"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 980,
+      "q_lt_0.01": 1128,
+      "q_lt_0.02": 1159,
+      "q_lt_0.05": 1265,
+      "q_lt_0.1": 1402
+     },
+     "psms": {
+      "q_lt_0.001": 1188,
+      "q_lt_0.005": 1366,
+      "q_lt_0.01": 1477,
+      "q_lt_0.02": 1513,
+      "q_lt_0.05": 1665,
+      "q_lt_0.1": 1894
+     }
+    },
+    "dataset": "PXD020243_msfragger",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 989,
+      "q_lt_0.01": 1067,
+      "q_lt_0.02": 1175,
+      "q_lt_0.05": 1266,
+      "q_lt_0.1": 1383
+     },
+     "psms": {
+      "q_lt_0.001": 1069,
+      "q_lt_0.005": 1255,
+      "q_lt_0.01": 1377,
+      "q_lt_0.02": 1502,
+      "q_lt_0.05": 1596,
+      "q_lt_0.1": 1763
+     }
+    },
+    "seed": 2
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "c72521eaa284e61cbf00d2d8d34737e4cf6c323f1e8edd0db6aab8e2530f7eec",
+      "decoy.psms.tsv": "698c11c497f4a999cb24ac4c7a028064b9e2bb26c1c36560bb43c73fb143ad5d",
+      "target.peptides.tsv": "3d4d8eca44c53489f98172eb58651160eca84ec7af1beff986cbb1f57d607961",
+      "target.psms.tsv": "bf3dec9e8385a8cd6951bd4d957d278f0b3432155cb3ed37eb82f0d1266106ab"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "b3af4c3236a675d142be28624a9d97bdf3468ccb9eacd539b207b33697efcd4e",
+      "decoy.psms.tsv": "723328dcc9f46978e35641432df6136a90df1c1f7640033e929a652b64bd861d",
+      "target.peptides.tsv": "7d84b11108808bc49161669a72508405b81b3387c1e5b57615a9592cdf1a471f",
+      "target.psms.tsv": "8c4ce7a6a86a9083cc30c1bfa466d4877ba8b348ea8b1a756bc767489349a040"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1017,
+      "q_lt_0.01": 1075,
+      "q_lt_0.02": 1181,
+      "q_lt_0.05": 1290,
+      "q_lt_0.1": 1394
+     },
+     "psms": {
+      "q_lt_0.001": 1104,
+      "q_lt_0.005": 1326,
+      "q_lt_0.01": 1399,
+      "q_lt_0.02": 1581,
+      "q_lt_0.05": 1702,
+      "q_lt_0.1": 1866
+     }
+    },
+    "dataset": "PXD020243_msfragger",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 891,
+      "q_lt_0.01": 1030,
+      "q_lt_0.02": 1079,
+      "q_lt_0.05": 1265,
+      "q_lt_0.1": 1382
+     },
+     "psms": {
+      "q_lt_0.001": 1078,
+      "q_lt_0.005": 1141,
+      "q_lt_0.01": 1312,
+      "q_lt_0.02": 1451,
+      "q_lt_0.05": 1616,
+      "q_lt_0.1": 1781
+     }
+    },
+    "seed": 3
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "580761b7e1e788775d0460bed6410dd703e1d42bc3660e6815f4573796a9ccca",
+      "decoy.psms.tsv": "ce2a4b92f67336c4826b49fc57b86d314895af75954c58289f82841f33578cbf",
+      "target.peptides.tsv": "548aff90f3ba7b3430985c48b0ca9378bc70535dcc2fa7112ea1dda5151f230d",
+      "target.psms.tsv": "ce9d91fe7df3248678413da8821cddcd4b6295727a5760c734e9d663d876740a"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "e78895f494c2a731043c25ac4cada94b2a40f32e00c96cb8f852b0441ae37298",
+      "decoy.psms.tsv": "703fa2b85518bd465091316fbb00d971f88790d8e98448d84539b6aa8690d430",
+      "target.peptides.tsv": "9cebd45590daf3f87f1ab034ba70958cdd63a138d0f65cf6f8f83c65ff9346d9",
+      "target.psms.tsv": "99a7a19147f3a15b67a1f79ba2825a375613df99953a9b0fd7e9fdc7662d4937"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1037,
+      "q_lt_0.01": 1085,
+      "q_lt_0.02": 1176,
+      "q_lt_0.05": 1271,
+      "q_lt_0.1": 1389
+     },
+     "psms": {
+      "q_lt_0.001": 1101,
+      "q_lt_0.005": 1377,
+      "q_lt_0.01": 1409,
+      "q_lt_0.02": 1569,
+      "q_lt_0.05": 1685,
+      "q_lt_0.1": 1864
+     }
+    },
+    "dataset": "PXD020243_msfragger",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1011,
+      "q_lt_0.01": 1065,
+      "q_lt_0.02": 1171,
+      "q_lt_0.05": 1266,
+      "q_lt_0.1": 1358
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1297,
+      "q_lt_0.01": 1361,
+      "q_lt_0.02": 1478,
+      "q_lt_0.05": 1595,
+      "q_lt_0.1": 1733
+     }
+    },
+    "seed": 4
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "8b9a397b9e163e4a9292984647062054f6006a69953bdfa01ad12735548ae485",
+      "decoy.psms.tsv": "a62ae967572aefc81bf3164fbff0636ffb3b041233022c0677837aba2db8be15",
+      "target.peptides.tsv": "f6c46ab190dfc90ae212423fedf50c8f48a68b320a571b9858e28b0d5f30e8cb",
+      "target.psms.tsv": "971285c31d9e14589f8159d17c6e9bf95b7db0125986b39a0b312cc4070763ab"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "38361c9d49d11f773abd9d8cf27701aa0b7f1a3bcf2f75aae67899011c0872e6",
+      "decoy.psms.tsv": "ad407cc6cba7bc131c689ae7d4e4353e0afdc0211e7162b9f9794cdea304d605",
+      "target.peptides.tsv": "aabdd141c9ac233557a8d23cdf6b58dbbc3a5d080043a965c1e4f2232b5c30e2",
+      "target.psms.tsv": "c6b0432ca62d302097680096abd8427636c3811d6d6618c74fefbb697ce83539"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 930,
+      "q_lt_0.01": 1053,
+      "q_lt_0.02": 1137,
+      "q_lt_0.05": 1261,
+      "q_lt_0.1": 1404
+     },
+     "psms": {
+      "q_lt_0.001": 1004,
+      "q_lt_0.005": 1315,
+      "q_lt_0.01": 1383,
+      "q_lt_0.02": 1508,
+      "q_lt_0.05": 1695,
+      "q_lt_0.1": 1849
+     }
+    },
+    "dataset": "PXD020243_msfragger",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 878,
+      "q_lt_0.01": 1056,
+      "q_lt_0.02": 1142,
+      "q_lt_0.05": 1267,
+      "q_lt_0.1": 1367
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1109,
+      "q_lt_0.01": 1340,
+      "q_lt_0.02": 1467,
+      "q_lt_0.05": 1615,
+      "q_lt_0.1": 1765
+     }
+    },
+    "seed": 5
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "13e047a4ef69331ff59326cec855ca6f5411b9d4adabae2998d3ce9ae93a3ad5",
+      "decoy.psms.tsv": "cfa0542993388c7ff49ec46222dd0506086037e3c96dafe0bdbed54fcb93147c",
+      "target.peptides.tsv": "108407af221bda59656f8e4c9f84fd3823aab4e62535fa18a0c4b1b6dd7d9822",
+      "target.psms.tsv": "5372159eb05bef4df7482fdde38c66298c562ee6f83ea9520d585356a7451b15"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "59256f32471c426914e5687c692a8b97b2c78f5482cc5ff9b4016b1433b47deb",
+      "decoy.psms.tsv": "ff089829b0013528cfd37943136727ef7927b85ae439f65fad44bae741280e86",
+      "target.peptides.tsv": "ce17c73cf386d9219f07d11251f82beaacce204a5d09b735dc571547d48878c9",
+      "target.psms.tsv": "2bfb0bbd019d626df9840a1bac70f60dea04666eb004c280719e9cf5d0b2209b"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 11071,
+      "q_lt_0.005": 11216,
+      "q_lt_0.01": 11336,
+      "q_lt_0.02": 11456,
+      "q_lt_0.05": 11653,
+      "q_lt_0.1": 11958
+     },
+     "psms": {
+      "q_lt_0.001": 24777,
+      "q_lt_0.005": 25501,
+      "q_lt_0.01": 25795,
+      "q_lt_0.02": 26115,
+      "q_lt_0.05": 26644,
+      "q_lt_0.1": 27394
+     }
+    },
+    "dataset": "PXD060954_sage",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 10949,
+      "q_lt_0.005": 11143,
+      "q_lt_0.01": 11245,
+      "q_lt_0.02": 11378,
+      "q_lt_0.05": 11582,
+      "q_lt_0.1": 11873
+     },
+     "psms": {
+      "q_lt_0.001": 24753,
+      "q_lt_0.005": 25481,
+      "q_lt_0.01": 25806,
+      "q_lt_0.02": 26121,
+      "q_lt_0.05": 26635,
+      "q_lt_0.1": 27380
+     }
+    },
+    "seed": 1
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "5f97b1ad192788c2aed85ae1cb5d65e5325ceba5b3450e31f329ac4b2c2a5179",
+      "decoy.psms.tsv": "c0da4ec23b2050fc6fb65ee1c1dea8dbc912e94ad95a78685a5abda8e29b67df",
+      "target.peptides.tsv": "ca463149c4260c48dc83657d1c4d6500eb5d76782dbec6bdfb7f84e66c00f418",
+      "target.psms.tsv": "06b97e383d12d6ad07f35538480dabc555c6e4c3c406d7ad11adfbb20092ebad"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "bca03f2750f95e6664355b67b7dd2cd112ca28c16f8f9849a8cec58028bca5c8",
+      "decoy.psms.tsv": "0f99a24ab20fb5d2bb1f4e7d6cf0ba74dcad15693fbee7e6fc54e02e06f1e5c2",
+      "target.peptides.tsv": "94883520aedce516b21c0c46ef40894ce6d7e1238bfe159b52054f3ec43e155e",
+      "target.psms.tsv": "0d0167bb484d066b31286f5745f12dc48c45a3cadc6935d2b66e641ff26ba570"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 11060,
+      "q_lt_0.005": 11205,
+      "q_lt_0.01": 11317,
+      "q_lt_0.02": 11447,
+      "q_lt_0.05": 11667,
+      "q_lt_0.1": 11950
+     },
+     "psms": {
+      "q_lt_0.001": 24842,
+      "q_lt_0.005": 25461,
+      "q_lt_0.01": 25788,
+      "q_lt_0.02": 26128,
+      "q_lt_0.05": 26633,
+      "q_lt_0.1": 27409
+     }
+    },
+    "dataset": "PXD060954_sage",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 10963,
+      "q_lt_0.005": 11149,
+      "q_lt_0.01": 11253,
+      "q_lt_0.02": 11375,
+      "q_lt_0.05": 11575,
+      "q_lt_0.1": 11867
+     },
+     "psms": {
+      "q_lt_0.001": 24796,
+      "q_lt_0.005": 25480,
+      "q_lt_0.01": 25803,
+      "q_lt_0.02": 26100,
+      "q_lt_0.05": 26633,
+      "q_lt_0.1": 27379
+     }
+    },
+    "seed": 2
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "c01649c46f498785351d4f2ef27a1d14047126010f5247dd8357f6b833364494",
+      "decoy.psms.tsv": "48e512b2afcc2b64ceaf2f9c6a62e58bfcb9fdb854279dee8289b0f216d61ae9",
+      "target.peptides.tsv": "e610c75cbfefe98dda14de89d083f9ffab7c57ebcb809375460fb2931c90d6e7",
+      "target.psms.tsv": "e3e323d8995c74aad7fa1f468ffbe3f83844ef451b79e74ef359386707c6d035"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "7d3b409bf687fd6a29e0f50af8c65a6bf6da3f9b40b7bebe65e84ed86d02a3a5",
+      "decoy.psms.tsv": "c884251e887b1b779b99e47fb6b4d29cf5acad7ff3dce6a316280994d2ddef4f",
+      "target.peptides.tsv": "0fe082c7078e3704e63888ef4d7a9ccf4a5ebb7288a29b1a9ea85f443a1d5c4d",
+      "target.psms.tsv": "ee1f8137310b5a33a23b85acb2c5dfddc8e95839b5a3db511457564ab4f4411c"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 11059,
+      "q_lt_0.005": 11208,
+      "q_lt_0.01": 11322,
+      "q_lt_0.02": 11433,
+      "q_lt_0.05": 11672,
+      "q_lt_0.1": 11965
+     },
+     "psms": {
+      "q_lt_0.001": 24832,
+      "q_lt_0.005": 25492,
+      "q_lt_0.01": 25784,
+      "q_lt_0.02": 26124,
+      "q_lt_0.05": 26657,
+      "q_lt_0.1": 27415
+     }
+    },
+    "dataset": "PXD060954_sage",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 10964,
+      "q_lt_0.005": 11143,
+      "q_lt_0.01": 11247,
+      "q_lt_0.02": 11377,
+      "q_lt_0.05": 11581,
+      "q_lt_0.1": 11878
+     },
+     "psms": {
+      "q_lt_0.001": 24829,
+      "q_lt_0.005": 25465,
+      "q_lt_0.01": 25804,
+      "q_lt_0.02": 26115,
+      "q_lt_0.05": 26632,
+      "q_lt_0.1": 27391
+     }
+    },
+    "seed": 3
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "459ddc8c5923a722cc99dd5b5116176033cea8afe540bf7ee27d63ce8e8df949",
+      "decoy.psms.tsv": "d0b0ca5ea027159e3a561432bde962151f10738cb21325464ae0b8db96845b81",
+      "target.peptides.tsv": "eb86a04c4b8592d004f0c5819250d894d9d86c9cea0ea4bcbf9e1c4bf07cf09f",
+      "target.psms.tsv": "b0da59d29f97f287fa9acef27fbd0f6a247913b2dd920bc4b25723f8d889f13e"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "88f82e9f9d47a9c8f145a66a1617ccc03739ccd502fb618ce5aecfaa15015308",
+      "decoy.psms.tsv": "60ff62cf192d5ceb553eafdf15602fe60ee22ea6e82c1402aa4879781eb4cc79",
+      "target.peptides.tsv": "03754706f6f36275784b45767de08cc3c2a7f066d8b8e9455436d27565c31705",
+      "target.psms.tsv": "83915c7fdb849b06498fe4bb4d662429fa6b64f8b344b1385bc65cc8869edbf2"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 11067,
+      "q_lt_0.005": 11208,
+      "q_lt_0.01": 11327,
+      "q_lt_0.02": 11448,
+      "q_lt_0.05": 11664,
+      "q_lt_0.1": 11956
+     },
+     "psms": {
+      "q_lt_0.001": 24850,
+      "q_lt_0.005": 25495,
+      "q_lt_0.01": 25790,
+      "q_lt_0.02": 26103,
+      "q_lt_0.05": 26648,
+      "q_lt_0.1": 27416
+     }
+    },
+    "dataset": "PXD060954_sage",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 10955,
+      "q_lt_0.005": 11150,
+      "q_lt_0.01": 11246,
+      "q_lt_0.02": 11365,
+      "q_lt_0.05": 11575,
+      "q_lt_0.1": 11874
+     },
+     "psms": {
+      "q_lt_0.001": 24747,
+      "q_lt_0.005": 25462,
+      "q_lt_0.01": 25791,
+      "q_lt_0.02": 26111,
+      "q_lt_0.05": 26644,
+      "q_lt_0.1": 27399
+     }
+    },
+    "seed": 4
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "5bbbd1314058333455e7daba7d7c6f321309b2086e1aa15455e4f7f7fffbf6ad",
+      "decoy.psms.tsv": "af271f88b236622da5bb1fbd3396daf344d07d725571f2f8dda824e42f69b195",
+      "target.peptides.tsv": "a6b5b918f867fad72710c56f512be18b9364bdb3a3c9d46ce5ab786b9e434643",
+      "target.psms.tsv": "0eb28f871bece7cb79e4847947e9954c5d6dc1501d10975f99f1b004ee20e25a"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "4455b0863c44083e886d1341a87b7fc79bb1baea4fba1ea3313b29a453e8a429",
+      "decoy.psms.tsv": "f72eba79466e4eddb21d5b5bf8ae611348b694b87217c1e440d37f0535a21c33",
+      "target.peptides.tsv": "2bfd9a7d5d7cf56e4f55cb5c3235f5dafa7012fa933b5e75a9556c01063828fc",
+      "target.psms.tsv": "c0a243d872296df91825603cc6f523da9328d365dd3286f8e75493e1d307e8c0"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 11039,
+      "q_lt_0.005": 11216,
+      "q_lt_0.01": 11317,
+      "q_lt_0.02": 11432,
+      "q_lt_0.05": 11670,
+      "q_lt_0.1": 11962
+     },
+     "psms": {
+      "q_lt_0.001": 24811,
+      "q_lt_0.005": 25470,
+      "q_lt_0.01": 25790,
+      "q_lt_0.02": 26107,
+      "q_lt_0.05": 26642,
+      "q_lt_0.1": 27425
+     }
+    },
+    "dataset": "PXD060954_sage",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 10955,
+      "q_lt_0.005": 11140,
+      "q_lt_0.01": 11253,
+      "q_lt_0.02": 11362,
+      "q_lt_0.05": 11575,
+      "q_lt_0.1": 11870
+     },
+     "psms": {
+      "q_lt_0.001": 24785,
+      "q_lt_0.005": 25504,
+      "q_lt_0.01": 25779,
+      "q_lt_0.02": 26116,
+      "q_lt_0.05": 26646,
+      "q_lt_0.1": 27405
+     }
+    },
+    "seed": 5
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "77bf6e2963bcc5208478e14fa1bfd8901c79a723f64453c951cb218200e9368e",
+      "decoy.psms.tsv": "f9e3214c6df8aa2c0646eb10c093acbce833a7a7484b42ea4180ccdee5d19b52",
+      "target.peptides.tsv": "8f4824332452aaff837106588a1f5b5bbf8e0b60fde742d0758c1e0d7e8a905f",
+      "target.psms.tsv": "3a87edb39d326703df02eeb08f0eac1500aff098f60024ef7b3f0a9b6fc13db7"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "b11fd8fe47ffa779cbea14177be0a86d2cfdb00957c15e3770b99ed133910a33",
+      "decoy.psms.tsv": "a7cf954ea3f6af5ccb4827c3acebde997f9105b5cfe5b4aef2a707af541a6ed0",
+      "target.peptides.tsv": "816b2e92a5d92afc60b32a8ccba711eec0b3a8d51a9c797938f987666d60149f",
+      "target.psms.tsv": "9cd9ed5aa06bcd987837a3196ce37581d44015eb3c5c21edd23dc3959c5e6528"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 832,
+      "q_lt_0.01": 928,
+      "q_lt_0.02": 963,
+      "q_lt_0.05": 1085,
+      "q_lt_0.1": 1243
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1024,
+      "q_lt_0.01": 1147,
+      "q_lt_0.02": 1208,
+      "q_lt_0.05": 1389,
+      "q_lt_0.1": 1591
+     }
+    },
+    "dataset": "percolator_yeast",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 867,
+      "q_lt_0.01": 904,
+      "q_lt_0.02": 982,
+      "q_lt_0.05": 1112,
+      "q_lt_0.1": 1321
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1058,
+      "q_lt_0.01": 1150,
+      "q_lt_0.02": 1217,
+      "q_lt_0.05": 1467,
+      "q_lt_0.1": 1714
+     }
+    },
+    "seed": 1
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "82523fb072d0a152f4c5bc04104064e9ee246e20b5209e3b1b4c1a331b38a7c6",
+      "decoy.psms.tsv": "556172379cd03815a29cc39ab98f0624027d951e86e515166077b1b03f7a5b51",
+      "target.peptides.tsv": "1e56a31e404f53dcaab53ca2ea1b514a54b70befb07c76e011ce8a3c9b5fa346",
+      "target.psms.tsv": "4ce54aa6f478afdc5790990fac748d4ead7d590b11011b95ade0a1de68522901"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "ac4a7f27ed823768ed85f88bd2520b2cbb0f1d9451da814b60dc5d59f7418067",
+      "decoy.psms.tsv": "a86ffc4ce42665825c862129e4738b8aa1f1c47f39bb51ad76d241eb0769fc2c",
+      "target.peptides.tsv": "88cc62a91923afb73eaab00ebe005bbf26995b38174120b6c7f33b04d4c3de75",
+      "target.psms.tsv": "a46a50095537ebf75c9fa91c40bd3f7c7c03c09fc6bef7e72727e220bdc8b547"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 827,
+      "q_lt_0.01": 890,
+      "q_lt_0.02": 985,
+      "q_lt_0.05": 1077,
+      "q_lt_0.1": 1235
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1081,
+      "q_lt_0.01": 1137,
+      "q_lt_0.02": 1230,
+      "q_lt_0.05": 1378,
+      "q_lt_0.1": 1559
+     }
+    },
+    "dataset": "percolator_yeast",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 863,
+      "q_lt_0.01": 908,
+      "q_lt_0.02": 996,
+      "q_lt_0.05": 1128,
+      "q_lt_0.1": 1321
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1058,
+      "q_lt_0.01": 1144,
+      "q_lt_0.02": 1253,
+      "q_lt_0.05": 1484,
+      "q_lt_0.1": 1698
+     }
+    },
+    "seed": 2
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "3c4895c73233d0eb669aea7f483a20d5a58f82e31991eeea78ab47cfdbfea0e4",
+      "decoy.psms.tsv": "45007e72a724ef4c3a62428ed204e665597cd6e490a3b7b99822ddb91632e274",
+      "target.peptides.tsv": "05cb0644ba6079d6de2f2cc29a36c0463897e88540f380fa08c888b1ec4be850",
+      "target.psms.tsv": "fbd096fa2600d8bbe6f982733b3634a6445a15c4e37d9c7cb6a8c961d4c869bb"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "b5da2475a33cbd740a15305e03f984fd5acf43f7ecb86e40cb22f9e52451a4a3",
+      "decoy.psms.tsv": "641c0d1c025a16cd5ee5d4b117dcc437bdc24e328bc3b013f2aa48739aeca359",
+      "target.peptides.tsv": "1c49b9200b0582a1a6fcc962cd583b49a1305fa45220e8a8b44e04584aa2dc89",
+      "target.psms.tsv": "492ebf210810bf09bc393197924f6d650fd094b53f20c08c4d14aa563659ca29"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 761,
+      "q_lt_0.01": 863,
+      "q_lt_0.02": 921,
+      "q_lt_0.05": 1089,
+      "q_lt_0.1": 1206
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 961,
+      "q_lt_0.01": 1059,
+      "q_lt_0.02": 1157,
+      "q_lt_0.05": 1368,
+      "q_lt_0.1": 1531
+     }
+    },
+    "dataset": "percolator_yeast",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 771,
+      "q_lt_0.01": 907,
+      "q_lt_0.02": 1031,
+      "q_lt_0.05": 1173,
+      "q_lt_0.1": 1359
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 943,
+      "q_lt_0.01": 1124,
+      "q_lt_0.02": 1274,
+      "q_lt_0.05": 1483,
+      "q_lt_0.1": 1724
+     }
+    },
+    "seed": 3
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "189532d719c9b0359b6a360f6732f3db1453e04dee87931dac884bce90e67032",
+      "decoy.psms.tsv": "64e8d7507763487884784a894922e62c091ebe631cbcf5828bef3059c06c313f",
+      "target.peptides.tsv": "33a90476b5bc588d8221725b6ceac412bea0a26a9e8fda0e973d6d3dc31986cb",
+      "target.psms.tsv": "d1c50090e9b490b9c447cadd764133675049998b1f1dab0ed8f5843de12183f8"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "3d0975a5ac8138de81cf563be48682778f7671cf6463fabd81a7e08986ba0508",
+      "decoy.psms.tsv": "7ef1d5e2cf0ceb4f94053007e55aff3596b86f9106a9085857acb4decc705b19",
+      "target.peptides.tsv": "9bb10c537c84c30582295dd16f30bee621d40d8d34191219f519b4df58cb6a35",
+      "target.psms.tsv": "bce92341fcd5c5136662b54ff87c3bbac16a92b14e52225f1b1ed1be0e0e6f91"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 749,
+      "q_lt_0.01": 896,
+      "q_lt_0.02": 934,
+      "q_lt_0.05": 1069,
+      "q_lt_0.1": 1204
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1020,
+      "q_lt_0.01": 1105,
+      "q_lt_0.02": 1150,
+      "q_lt_0.05": 1358,
+      "q_lt_0.1": 1523
+     }
+    },
+    "dataset": "percolator_yeast",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 811,
+      "q_lt_0.01": 954,
+      "q_lt_0.02": 1011,
+      "q_lt_0.05": 1168,
+      "q_lt_0.1": 1316
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 984,
+      "q_lt_0.01": 1180,
+      "q_lt_0.02": 1256,
+      "q_lt_0.05": 1485,
+      "q_lt_0.1": 1691
+     }
+    },
+    "seed": 4
+   },
+   {
+    "artifact_sha256": {
+     "cpp": {
+      "decoy.peptides.tsv": "2521116327953a30b1d162063940a51fb153e185639c9cf88a51ce08f88883fa",
+      "decoy.psms.tsv": "bfa44b1b9db3d3971430259fc885f95121bcb0fc4ccff3930b1e6d6f44f897ce",
+      "target.peptides.tsv": "82ce96ecc645159d0a27550935475d92b6f5b75761396a45510cc18ea6e29d44",
+      "target.psms.tsv": "f4a7f1d4a51de21a0ab7e1848dae8e4b863686fcb217915563fac5c7c16c626f"
+     },
+     "rust": {
+      "decoy.peptides.tsv": "38a0aa6fb97664e643d66618cf304134a852e30d1340fdada1c1ebe244f19cba",
+      "decoy.psms.tsv": "0a2fa4b20e9c205d27d3750be6dc2a499daa27ea99bb00d03d8c045eeb6734f0",
+      "target.peptides.tsv": "1eb95bd7f4e4bbd199fec5a6ae6594bd56aeae04415ac4d9ca173926e06cd874",
+      "target.psms.tsv": "048d9301a132cd4270474c96822cc2dda11d414338e9912340358b22091fc52b"
+     }
+    },
+    "cpp": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 819,
+      "q_lt_0.01": 908,
+      "q_lt_0.02": 923,
+      "q_lt_0.05": 1080,
+      "q_lt_0.1": 1223
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 999,
+      "q_lt_0.01": 1111,
+      "q_lt_0.02": 1146,
+      "q_lt_0.05": 1386,
+      "q_lt_0.1": 1552
+     }
+    },
+    "dataset": "percolator_yeast",
+    "rust": {
+     "peptides": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 842,
+      "q_lt_0.01": 935,
+      "q_lt_0.02": 974,
+      "q_lt_0.05": 1139,
+      "q_lt_0.1": 1325
+     },
+     "psms": {
+      "q_lt_0.001": 0,
+      "q_lt_0.005": 1066,
+      "q_lt_0.01": 1159,
+      "q_lt_0.02": 1266,
+      "q_lt_0.05": 1446,
+      "q_lt_0.1": 1703
+     }
+    },
+    "seed": 5
+   }
+  ]
+ }
+}

@@ -1,0 +1,165 @@
+{
+ "mutations": [
+  {
+   "mutation": "input_order_dependent_psm_ties",
+   "file": "src/main.rs",
+   "description": "PSM competition resolves exact target/decoy ties by row order",
+   "compiled": true,
+   "failing_tests": [
+    "competition_tests::a_different_seed_resolves_ties_differently",
+    "competition_tests::exact_ties_do_not_hand_every_precursor_to_one_label",
+    "competition_tests::exact_ties_survive_every_equivalent_row_permutation",
+    "competition_tests::wider_ties_are_drawn_uniformly"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "missing_finite_sample_decoy",
+   "file": "src/stats.rs",
+   "description": "reported q-values lose the +1 decoy, so a leading target run reaches q = 0",
+   "compiled": true,
+   "failing_tests": [
+    "protein::tests::synthetic_pin_fixture_groups_and_picks_deterministically",
+    "stats::tests::a_decoy_dominated_tail_saturates_at_one",
+    "stats::tests::a_leading_target_run_never_receives_zero_pep",
+    "stats::tests::a_list_without_decoys_still_has_positive_qvalues",
+    "stats::tests::a_second_decoy_adds_exactly_one_more_false_discovery",
+    "stats::tests::dropping_the_safeguard_is_confined_to_the_training_estimator",
+    "stats::tests::empty_and_single_row_inputs_are_handled",
+    "stats::tests::equal_scores_share_one_pep_increment",
+    "stats::tests::equal_scores_share_one_rejection_boundary",
+    "stats::tests::leading_pep_is_pinned_by_the_estimator_not_by_a_constant",
+    "stats::tests::leading_target_run_never_receives_zero_qvalue",
+    "stats::tests::peps_handle_empty_and_single_row_inputs",
+    "stats::tests::qvalues_match_the_documented_closed_form",
+    "stats::tests::target_decoy_imbalance_is_not_rescaled_by_a_count_ratio",
+    "stats::tests::the_leading_run_carries_exactly_the_safeguard_decoy"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "broken_tie_grouping",
+   "file": "src/stats.rs",
+   "description": "equal scores stop sharing one rejection boundary",
+   "compiled": true,
+   "failing_tests": [
+    "stats::tests::equal_scores_share_one_pep_increment",
+    "stats::tests::equal_scores_share_one_rejection_boundary",
+    "stats::tests::reversed_integer_ranks_match_the_negated_score_scan"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "pep_prior_doubled",
+   "file": "src/stats.rs",
+   "description": "an arbitrary constant is added to every PEP after the estimate",
+   "compiled": true,
+   "failing_tests": [
+    "stats::tests::a_second_decoy_adds_exactly_one_more_false_discovery",
+    "stats::tests::equal_scores_share_one_pep_increment",
+    "stats::tests::leading_pep_is_pinned_by_the_estimator_not_by_a_constant",
+    "stats::tests::summed_peps_reproduce_the_estimated_false_discovery_count",
+    "stats::tests::the_leading_run_carries_exactly_the_safeguard_decoy",
+    "stats::tests::the_opportunity_ratio_scales_the_peps"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "pep_floor_raised",
+   "file": "src/stats.rs",
+   "description": "small PEPs are clamped upward by a constant",
+   "compiled": true,
+   "failing_tests": [
+    "stats::tests::summed_peps_reproduce_the_estimated_false_discovery_count"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "leaked_normalization",
+   "file": "src/percolator.rs",
+   "description": "per-fold normalization is fitted on the whole dataset",
+   "compiled": true,
+   "failing_tests": [
+    "percolator::tests::folds_fit_their_own_normalization_and_direction",
+    "percolator::tests::heldout_rows_cannot_influence_the_model_that_scores_them"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "leaked_initial_direction",
+   "file": "src/percolator.rs",
+   "description": "the initial direction is chosen with held-out labels",
+   "compiled": true,
+   "failing_tests": [
+    "percolator::tests::heldout_rows_cannot_influence_the_model_that_scores_them"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "leaked_c_selection",
+   "file": "src/percolator.rs",
+   "description": "class-weight selection sees the fold it will score",
+   "compiled": true,
+   "failing_tests": [
+    "selected_c_cross_validation_is_leakage_free"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "leaked_ensemble_feature",
+   "file": "src/pin.rs",
+   "description": "the cross-engine agreement feature is built from labels",
+   "compiled": false,
+   "failing_tests": [],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "target_favouring_protein_ties",
+   "file": "src/protein.rs",
+   "description": "picked-protein ties always go to the target",
+   "compiled": true,
+   "failing_tests": [
+    "protein::tests::a_different_seed_reflips_protein_ties",
+    "protein::tests::exact_picked_ties_do_not_all_go_to_the_target"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "connected_component_protein_grouping",
+   "file": "src/protein.rs",
+   "description": "distinguishable proteins are merged by shared-peptide connectivity",
+   "compiled": true,
+   "failing_tests": [
+    "protein::tests::a_sharing_chain_does_not_collapse_into_one_group",
+    "protein::tests::a_unique_peptide_keeps_two_proteins_apart",
+    "protein::tests::shared_peptides_support_every_group_they_map_to",
+    "protein::tests::subset_proteins_are_not_absorbed",
+    "protein::tests::synthetic_pin_fixture_groups_and_picks_deterministically"
+   ],
+   "caught": true,
+   "status": "caught"
+  },
+  {
+   "mutation": "peptide_pep_as_protein_pep",
+   "file": "src/protein.rs",
+   "description": "a peptide-level PEP is emitted under a protein-level column name",
+   "compiled": true,
+   "failing_tests": [
+    "protein::tests::picked_inference_reports_no_protein_posterior",
+    "protein::tests::synthetic_pin_fixture_groups_and_picks_deterministically"
+   ],
+   "caught": true,
+   "status": "caught"
+  }
+ ]
+}
