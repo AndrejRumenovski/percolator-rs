@@ -1111,7 +1111,7 @@ fn main() {
                     .map(|entry| entry.2.capacity() as u64)
                     .sum::<u64>(),
         );
-        let picked_groups = protein::infer(&entries);
+        let picked_groups = protein::infer(&entries, args.params.seed);
         let picked_q01 = picked_groups
             .iter()
             .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
@@ -1218,12 +1218,19 @@ fn write_proteins(
         .iter()
         .filter(|g| g.picked && g.is_decoy == want_decoy)
     {
+        // `NA` where the selected method estimates no protein-level posterior.
+        // Picked-protein FDR is a cumulative estimate; it has no posterior to
+        // report, and the best peptide's PEP is not one.
+        let mut pep = String::from("NA");
+        if let Some(value) = g.pep {
+            pep = format!("{value:.6}");
+        }
         writeln!(
             w,
-            "{}\t{:.6}\t{:.6}\t{:.6}\t{}\t{}",
+            "{}\t{:.6}\t{}\t{:.6}\t{}\t{}",
             g.proteins.first().map(|s| s.as_str()).unwrap_or(""),
             g.qval,
-            g.pep,
+            pep,
             g.score,
             g.n_peptides,
             g.proteins.join(",")

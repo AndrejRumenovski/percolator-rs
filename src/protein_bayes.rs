@@ -415,7 +415,9 @@ pub fn infer(entries: &[(f64, f64, String)], params: &Params) -> InferenceResult
                 proteins: cluster.proteins,
                 score: 1.0 - pep,
                 qval: 1.0,
-                pep,
+                // The Bayesian path does estimate a protein-level posterior, so
+                // unlike picked-protein FDR it can fill this in.
+                pep: Some(pep),
                 n_peptides: cluster.peptides.len(),
                 is_decoy,
                 picked: true,
@@ -453,9 +455,9 @@ fn assign_bayesian_qvalues(groups: &mut [ProtGroup]) {
         let mut expected_errors = 0.0;
         let mut start = 0;
         while start < order.len() {
-            let pep = groups[order[start]].pep;
+            let pep = groups[order[start]].pep.unwrap_or(1.0);
             let mut end = start + 1;
-            while end < order.len() && groups[order[end]].pep == pep {
+            while end < order.len() && groups[order[end]].pep.unwrap_or(1.0) == pep {
                 end += 1;
             }
             expected_errors += pep * (end - start) as f64;
@@ -511,7 +513,7 @@ mod tests {
         assert_eq!(result.groups.len(), 1);
         assert_eq!(result.groups[0].proteins, vec!["A", "B"]);
         assert_eq!(result.groups[0].n_peptides, 1);
-        assert!(result.groups[0].pep < 0.05);
+        assert!(result.groups[0].pep.unwrap() < 0.05);
         assert_eq!(result.diagnostics.tree_components, 1);
 
         let mut weights = [0.0; 3];
@@ -548,7 +550,7 @@ mod tests {
             .unwrap();
         assert!(
             a.pep < b.pep,
-            "unique evidence should favor A: {} vs {}",
+            "unique evidence should favor A: {:?} vs {:?}",
             a.pep,
             b.pep
         );
