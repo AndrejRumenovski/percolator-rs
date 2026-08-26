@@ -1528,6 +1528,18 @@ mod competition_tests {
         }
     }
 
+    /// Exact equality, not an epsilon, defines a score tie. A one-ULP score
+    /// advantage is evidence and must win independently of the lottery seed.
+    #[test]
+    fn a_one_ulp_near_tie_is_never_randomized() {
+        let ds = dataset(&[(0, 1, 500.0, 1), (0, 1, 500.0, -1)]);
+        let low = 7.5f64;
+        let high = f64::from_bits(low.to_bits() + 1);
+        for seed in 1..=64u64 {
+            assert_eq!(competition_winners(&ds, &[low, high], seed), vec![1]);
+        }
+    }
+
     #[test]
     fn one_winner_per_precursor() {
         // Two spectra, five candidates each, mixed targets and decoys.

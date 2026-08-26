@@ -2137,6 +2137,69 @@ mod tests {
         );
     }
 
+    /// A named spectrum's fold is part of the seeded methodology. Joined-file
+    /// argument positions and row positions cannot be allowed to reassign it.
+    #[test]
+    fn joined_permutations_preserve_named_spectrum_folds() {
+        let part = |name: &str, scans: &[i64]| Dataset {
+            feature_names: vec!["f".to_string()],
+            n_feat: 1,
+            n_psm: scans.len(),
+            features: scans.iter().map(|scan| *scan as f64).collect(),
+            labels: scans.iter().map(|scan| if scan % 2 == 0 { 1 } else { -1 }).collect(),
+            spec_id: scans.iter().map(|scan| format!("{name}:{scan}")).collect(),
+            scan: scans.to_vec(),
+            exp_mass: vec![500.0; scans.len()],
+            peptide: scans.iter().map(|scan| format!("K.P{scan}.R")).collect(),
+            proteins: scans.iter().map(|scan| format!("P{scan}")).collect(),
+            source: vec![0; scans.len()],
+            source_names: vec![name.to_string()],
+            ensemble: false,
+        };
+        let alpha: Vec<i64> = (1..=17).collect();
+        let beta: Vec<i64> = (101..=119).collect();
+        let mut reversed_alpha = alpha.clone();
+        reversed_alpha.reverse();
+        let mut reversed_beta = beta.clone();
+        reversed_beta.reverse();
+        let canonical = crate::pin::merge(vec![
+            part("alpha.pin", &alpha),
+            part("beta.pin", &beta),
+        ]);
+        let permuted = crate::pin::merge(vec![
+            part("beta.pin", &reversed_beta),
+            part("alpha.pin", &reversed_alpha),
+        ]);
+
+        let membership = |dataset: &Dataset| {
+            let rows: Vec<usize> = (0..dataset.n_psm).collect();
+            let folds = assign_dataset_folds(dataset, &rows, 3, 17);
+            let mut by_id: BTreeMap<String, u8> = BTreeMap::new();
+            for row in rows {
+                by_id.insert(dataset.spec_id[row].clone(), folds[row]);
+            }
+            by_id
+        };
+        assert_eq!(
+            membership(&permuted),
+            membership(&canonical),
+            "a joined permutation changed named-spectrum fold membership"
+        );
+
+        let params = Params {
+            maxiter: 2,
+            num_threads: 1,
+            c_alpha: Some(C_POS_DEFAULT),
+            c_beta: Some(C_NEG_DEFAULT),
+            ..Params::default()
+        };
+        let expected = run(&canonical, &params);
+        let actual = run(&permuted, &params);
+        assert_eq!(actual.score, expected.score, "joined scores changed");
+        assert_eq!(actual.qval, expected.qval, "joined q-values changed");
+        assert_eq!(actual.pep, expected.pep, "joined PEPs changed");
+    }
+
     #[test]
     fn ensemble_candidate_duplicates_stay_in_the_same_fold() {
         let mut dataset = selection_fixture();

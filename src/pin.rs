@@ -6,6 +6,7 @@
 //! ExpMass/CalcMass are recognized by name and excluded from the feature matrix.
 
 use memmap2::Mmap;
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::File;
 
@@ -51,10 +52,119 @@ impl Dataset {
     }
 }
 
+/// Compare two rows by their complete parsed content, with spectrum and PSM
+/// identity first and the target/decoy label only as the final fallback.
+///
+/// The label fallback is not a target-first or decoy-first competition rule: it
+/// is reached only when every label-free identifier and every feature agree.
+/// Its sole purpose is to give two otherwise equal records one canonical
+/// in-memory order before floating-point accumulation and model fitting.
+fn compare_rows(dataset: &Dataset, left: usize, right: usize) -> Ordering {
+    dataset.scan[left]
+        .cmp(&dataset.scan[right])
+        .then_with(|| dataset.exp_mass[left].total_cmp(&dataset.exp_mass[right]))
+        .then_with(|| dataset.spec_id[left].cmp(&dataset.spec_id[right]))
+        .then_with(|| dataset.peptide[left].cmp(&dataset.peptide[right]))
+        .then_with(|| dataset.proteins[left].cmp(&dataset.proteins[right]))
+        .then_with(|| {
+            for (left, right) in dataset.row(left).iter().zip(dataset.row(right)) {
+                let ordering = left.total_cmp(right);
+                if ordering != Ordering::Equal {
+                    return ordering;
+                }
+            }
+            Ordering::Equal
+        })
+        .then_with(|| dataset.labels[left].cmp(&dataset.labels[right]))
+}
+
+/// Put one parsed source into a content-defined row order.
+fn canonicalize_rows(dataset: &mut Dataset) {
+    let mut order: Vec<usize> = (0..dataset.n_psm).collect();
+    order.sort_unstable_by(|&left, &right| compare_rows(dataset, left, right));
+
+    let old_features = std::mem::take(&mut dataset.features);
+    let old_labels = std::mem::take(&mut dataset.labels);
+    let old_spec_id = std::mem::take(&mut dataset.spec_id);
+    let old_scan = std::mem::take(&mut dataset.scan);
+    let old_exp_mass = std::mem::take(&mut dataset.exp_mass);
+    let old_peptide = std::mem::take(&mut dataset.peptide);
+    let old_proteins = std::mem::take(&mut dataset.proteins);
+
+    dataset.features = Vec::with_capacity(old_features.len());
+    dataset.labels = Vec::with_capacity(dataset.n_psm);
+    dataset.spec_id = Vec::with_capacity(dataset.n_psm);
+    dataset.scan = Vec::with_capacity(dataset.n_psm);
+    dataset.exp_mass = Vec::with_capacity(dataset.n_psm);
+    dataset.peptide = Vec::with_capacity(dataset.n_psm);
+    dataset.proteins = Vec::with_capacity(dataset.n_psm);
+    for row in order {
+        let start = row * dataset.n_feat;
+        dataset
+            .features
+            .extend_from_slice(&old_features[start..start + dataset.n_feat]);
+        dataset.labels.push(old_labels[row]);
+        dataset.spec_id.push(old_spec_id[row].clone());
+        dataset.scan.push(old_scan[row]);
+        dataset.exp_mass.push(old_exp_mass[row]);
+        dataset.peptide.push(old_peptide[row].clone());
+        dataset.proteins.push(old_proteins[row].clone());
+    }
+    dataset.source = vec![0; dataset.n_psm];
+}
+
+fn compare_parts(left: &Dataset, right: &Dataset) -> Ordering {
+    left.source_names[0]
+        .cmp(&right.source_names[0])
+        .then_with(|| left.n_psm.cmp(&right.n_psm))
+        .then_with(|| {
+            for row in 0..left.n_psm.min(right.n_psm) {
+                let ordering = left.scan[row]
+                    .cmp(&right.scan[row])
+                    .then_with(|| left.exp_mass[row].total_cmp(&right.exp_mass[row]))
+                    .then_with(|| left.spec_id[row].cmp(&right.spec_id[row]))
+                    .then_with(|| left.peptide[row].cmp(&right.peptide[row]))
+                    .then_with(|| left.proteins[row].cmp(&right.proteins[row]))
+                    .then_with(|| {
+                        for (a, b) in left.row(row).iter().zip(right.row(row)) {
+                            let ordering = a.total_cmp(b);
+                            if ordering != Ordering::Equal {
+                                return ordering;
+                            }
+                        }
+                        Ordering::Equal
+                    })
+                    .then_with(|| left.labels[row].cmp(&right.labels[row]));
+                if ordering != Ordering::Equal {
+                    return ordering;
+                }
+            }
+            Ordering::Equal
+        })
+}
+
 /// Concatenate datasets into one pooled dataset for cross-run joint training.
 /// All inputs must share the same feature layout (same n_feat).
+///
+/// A joined input is a multiset of named source files and parsed PSM records.
+/// Argument positions and row positions carry no scientific information. Parts
+/// and their rows are therefore canonicalized before numeric source indices are
+/// assigned. This makes those indices stable for fold grouping and seeded tie
+/// draws, and gives normalization/training a stable accumulation order.
 pub fn merge(mut parts: Vec<Dataset>) -> Dataset {
     assert!(!parts.is_empty());
+    for part in &parts {
+        assert_eq!(
+            part.source_names.len(),
+            1,
+            "joined input parts must each describe one source"
+        );
+    }
+    for part in &mut parts {
+        canonicalize_rows(part);
+    }
+    parts.sort_by(compare_parts);
+
     let n_feat = parts[0].n_feat;
     let mut out = parts.remove(0); // its source is already all-0, source_names = [file0]
     for mut p in parts {
@@ -544,7 +654,7 @@ pub fn parse(path: &str) -> std::io::Result<Dataset> {
 
 #[cfg(test)]
 mod tests {
-    use super::{merge_ensemble, Dataset};
+    use super::{merge, merge_ensemble, Dataset};
 
     fn dataset(feature: &str, rows: &[(i64, i8, &str, f64)]) -> Dataset {
         Dataset {
@@ -562,6 +672,68 @@ mod tests {
             source_names: vec!["input.pin".to_string()],
             ensemble: false,
         }
+    }
+
+    fn named_dataset(name: &str, rows: &[(i64, i8, &str, f64)]) -> Dataset {
+        let mut result = dataset("score", rows);
+        result.source_names = vec![name.to_string()];
+        result.spec_id = rows
+            .iter()
+            .map(|row| format!("{}:{}", name, row.2))
+            .collect();
+        result
+    }
+
+    fn joined_snapshot(dataset: &Dataset) -> Vec<String> {
+        (0..dataset.n_psm)
+            .map(|row| {
+                format!(
+                    "{}\t{}\t{}\t{}\t{}\t{}\t{:?}",
+                    dataset.source_names[dataset.source[row] as usize],
+                    dataset.spec_id[row],
+                    dataset.labels[row],
+                    dataset.scan[row],
+                    dataset.peptide[row],
+                    dataset.proteins[row],
+                    dataset.row(row),
+                )
+            })
+            .collect()
+    }
+
+    /// Joined inputs are a multiset of named scientific records. Neither the
+    /// argument order nor the row layout is evidence, so both must materialize
+    /// the same internal dataset before folds or floating-point fits are built.
+    #[test]
+    fn joined_merge_is_canonical_under_file_and_row_permutations() {
+        let alpha_rows = [
+            (11, 1, "K.ALPHA_TARGET.R", 4.0),
+            (11, -1, "K.ALPHA_DECOY.R", 4.0),
+            (12, 1, "K.ALPHA_NEAR.R", f64::from_bits(4.0f64.to_bits() + 1)),
+        ];
+        let beta_rows = [
+            (21, -1, "K.BETA_DECOY.R", -3.0),
+            (22, 1, "K.BETA_TARGET.R", 2.0),
+        ];
+        let canonical = merge(vec![
+            named_dataset("alpha.pin", &alpha_rows),
+            named_dataset("beta.pin", &beta_rows),
+        ]);
+
+        let mut reversed_alpha = alpha_rows;
+        reversed_alpha.reverse();
+        let mut reversed_beta = beta_rows;
+        reversed_beta.reverse();
+        let permuted = merge(vec![
+            named_dataset("beta.pin", &reversed_beta),
+            named_dataset("alpha.pin", &reversed_alpha),
+        ]);
+
+        assert_eq!(
+            joined_snapshot(&permuted),
+            joined_snapshot(&canonical),
+            "scientifically equivalent joined permutations produced different internal rows"
+        );
     }
 
     /// **Frozen failure case (independent audit M5).**
