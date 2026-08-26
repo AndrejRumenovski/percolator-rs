@@ -11,14 +11,27 @@ Read in this order:
 2. [`SCIENTIFIC_VALIDATION.md`](SCIENTIFIC_VALIDATION.md) — the adversarial validation that
    **rejected** that implementation, with its claim audit, limitations and verdicts.
 3. [`COMPLETION_AUDIT.md`](COMPLETION_AUDIT.md) — requirement-by-requirement closeout of that study.
-4. [`REPAIR.md`](REPAIR.md) — **current.** The verified root causes, the corrections, the tests, the
-   rerun of every predeclared experiment against a frozen build, a skeptical audit of the repair
-   itself, and what still fails.
+4. [`REPAIR.md`](REPAIR.md) — the first repair: root causes, corrections, tests, and the rerun of
+   every predeclared experiment against a frozen build.
+5. [`INDEPENDENT_AUDIT.md`](INDEPENDENT_AUDIT.md) + [`INDEPENDENT_AUDIT_RESULTS.json`](INDEPENDENT_AUDIT_RESULTS.json)
+   — the independent adversarial audit that **rejected** the repaired build, with the attack scripts
+   `adversarial_competition.py`, `adversarial_cv.py`, `adversarial_parser.py`,
+   `adversarial_protein.rs` and `independent_stats_probe.rs`.
+6. [`SECOND_REPAIR.md`](SECOND_REPAIR.md) — **current.** The response to that audit: competition tie
+   handling, the PEP estimator, protein grouping/competition/posterior, the two leaking CV modes, a
+   root-cause attribution of the entrapment failure that remains, and a twelve-mutation test of the
+   suite itself.
 
 Documents 1–3 describe an implementation that no longer exists. They are the record of the failure
-that document 4 responds to, and they are deliberately unchanged.
+that document 4 responds to, and they are deliberately unchanged. Document 4's own claims are
+corrected where document 5 falsified them and document 6 says so explicitly; it is not rewritten.
 
-During the repair, the canonical implementation *was* changed — that was the point — but no
+Attack scripts take a `--binary` argument so the same attack can be run against an old and a new
+build. `mutation_test.py` runs in a throwaway git worktree and reverts every mutation;
+`entrapment_rootcause.py` reimplements the entrapment accounting from the raw counts rather than
+calling the production crate.
+
+During the first repair, the canonical implementation *was* changed — that was the point — but no
 experiment was altered after its results were seen. Two arms were added afterwards to test a
 hypothesis the results raised (spectrum-level competition), and both are labelled as new experiments
 in [`REPAIR.md`](REPAIR.md) §11 rather than folded into the predeclared ones. A third new experiment,
