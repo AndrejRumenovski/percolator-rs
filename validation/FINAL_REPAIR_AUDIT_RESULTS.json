@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "audit": "fresh adversarial scientific audit after joined-input and protein-grouping repairs",
+  "date": "2026-08-27",
+  "commit": "b2501f03ed727a74a633b176d3ef9efc4d41d88c",
+  "frozen_binary_sha256": "be9bf670bfd69df4dc3ba3b8be6c4c164acaf56a91f4a2819d115f49604b2c45",
+  "scientifically_defensible": false,
+  "cpp_used_as_correctness_oracle": false,
+  "production_code_modified_by_audit": false,
+  "key_results": {
+    "ordinary_suite": {
+      "all_targets_passed": true,
+      "listed_tests": 126
+    },
+    "single_file_ties": {
+      "spectra": 233,
+      "arms": 6,
+      "winner_identity_invariant": true,
+      "score_q_invariant": true,
+      "target_pep_invariant": true,
+      "decoy_pep_invariant": false
+    },
+    "joined_fixed_name_permutations": {
+      "files": 4,
+      "arms": 6,
+      "distinct_results": 1,
+      "invariant": true
+    },
+    "joined_path_alias_cutoff": {
+      "same_file_bytes": true,
+      "original_boundary_winner": "decoy",
+      "aliased_boundary_winner": "target",
+      "original_targets_q_lt_0_01": 0,
+      "aliased_targets_q_lt_0_01": 101
+    },
+    "candidate_multiplicity": {
+      "spectra": 101,
+      "balanced_target_decoy_winners": [56, 45],
+      "balanced_targets_q_lt_0_01": 0,
+      "target_copies_per_spectrum": 94,
+      "duplicated_target_decoy_winners": [101, 0],
+      "duplicated_targets_q_lt_0_01": 101
+    },
+    "qvalue_oracle": {
+      "cases": 40928,
+      "fast_path_checks": 327424,
+      "strict_boundaries": 6,
+      "passed": true
+    },
+    "complete_null": {
+      "inputs": 3,
+      "relabels_per_input": 10,
+      "runs": 30,
+      "runs_with_any_false_discovery": 0
+    },
+    "signal_entrapment": {
+      "inputs": 6,
+      "seeds": 5,
+      "nominal_q": 0.01,
+      "mean_adjusted_fdp": 0.018103981884256583,
+      "minimum_seed_adjusted_fdp": 0.017287819649882897,
+      "maximum_seed_adjusted_fdp": 0.01883839310755228
+    },
+    "psm_pep": {
+      "targets": 493760,
+      "weighted_signed_observed_minus_reported": 0.01868544626219112,
+      "weighted_absolute_calibration_error": 0.01868544626219112,
+      "known_false_pep_lt_0_001": 217,
+      "minimum_known_false_pep": 0.000262,
+      "extreme_p": 1e-15,
+      "extreme_pep_mass_to_estimate_ratio": 5000.0
+    },
+    "cv_isolation": {
+      "attacked_fold_spectra": 137,
+      "sentinels": 11,
+      "fixed_c_leakage_detected": false,
+      "select_c_leakage_detected": false,
+      "ensemble_leakage_detected": false
+    },
+    "protein_graph": {
+      "groups": 11,
+      "permutations": 4,
+      "target_wins_100_seeds": 25415,
+      "competitions_100_seeds": 50900,
+      "picked_pep_all_na": true,
+      "pair_key_collision_reproduced": true,
+      "precompetition_mapping_loss_reproduced": true
+    },
+    "protein_pr_est_final_test": {
+      "picked_A": {
+        "accepted_q_le_0_01": 331,
+        "known_absent": 152,
+        "raw_fdp": 0.459214501510574,
+        "adjusted_fdp": 0.5332440433158051
+      },
+      "picked_B": {
+        "accepted_q_le_0_01": 364,
+        "known_absent": 175,
+        "raw_fdp": 0.4807692307692308,
+        "adjusted_fdp": 0.5578052400619514
+      },
+      "bayesian_fixed_probability_ece_10_bin": 0.394447133580705,
+      "bayesian_selected_probability_ece_10_bin": 0.022636405998763123,
+      "committed_evaluator_accepts_na_schema": false
+    },
+    "same_seed_compact_repeats_byte_identical": true,
+    "performance_output_byte_equivalent": true,
+    "latest_repair_mutations_caught_behaviorally": 5,
+    "latest_repair_mutations_total": 5
+  },
+  "verdicts": {
+    "PSM COMPETITION": "FAILED VALIDATION",
+    "JOINED-INPUT INVARIANCE": "MODERATE EVIDENCE",
+    "Q-VALUE IMPLEMENTATION": "STRONG EVIDENCE",
+    "COMPLETE-NULL BEHAVIOR": "MODERATE EVIDENCE",
+    "FDR CALIBRATION": "FAILED VALIDATION",
+    "PEP IMPLEMENTATION": "FAILED VALIDATION",
+    "PEP CALIBRATION": "FAILED VALIDATION",
+    "FIXED-C CV": "STRONG EVIDENCE",
+    "SELECT-C CV": "STRONG EVIDENCE",
+    "ENSEMBLE CV": "STRONG EVIDENCE",
+    "PROTEIN GROUPING": "FAILED VALIDATION",
+    "PROTEIN COMPETITION": "FAILED VALIDATION",
+    "PROTEIN PEP": "FAILED VALIDATION",
+    "MULTI-SEED REPRODUCIBILITY": "MODERATE EVIDENCE",
+    "CROSS-DATASET GENERALIZATION": "WEAK EVIDENCE",
+    "PERFORMANCE/CORRECTNESS EQUIVALENCE": "MODERATE EVIDENCE",
+    "VALIDATION-SUITE QUALITY": "FAILED VALIDATION"
+  },
+  "evidence_root": "/run/media/andrej-rumenovski/New Volume/percolator_rs_final_audit_20260827",
+  "evidence_sha256": {
+    "fresh-adversarial-v3.json": "3a32a2e96d7707b86cfda31c89be76e8a36eb704ab2ab399532028a32237e4b5",
+    "final-repair-stats-probe.log": "1f1dc526c847d25d5f2dd6c35221b714f768f4d166700c57301aef18d8526206",
+    "final-repair-protein-probe-v2.log": "6fce227b8fdd0b841308f66d53c80c1da494932b1b59d0997bbfea780f2c6780",
+    "null-predefined-current/manifest.json": "0f56e9e6cfe2ef16c3150a28b859a2363a079fde1a228b7ef97d1b2b68fd57b0",
+    "empirical-current/manifest.json": "7fce5d2e51e96b1ab37515aedeb19b046a6dbf9d8591721e841c9c9aa672d3d4",
+    "performance-equivalence/manifest.json": "1259d457c303c08060faa7b055d6eff12284de56ba7a4c436e85b90c726a24d9",
+    "final-repair-mutations-v4.json": "4020fc4455c7275d1c5068963c74d937d49f47bb70039b5f8dd9650bb966c295",
+    "historical-post-repair-replay.json": "55218af58b183f1eb70728099c3e838e496a354552ff11298a3e5c967e774081",
+    "historical-mutations-current.json": "21aeecfa5500745d07af913e5cd4fc213a3f163b090b416d2ae0b1a3b5c9a568"
+  }
+}
