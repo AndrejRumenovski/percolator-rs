@@ -40,3 +40,14 @@ For each coherent production slice:
 Known adverse scientific observations are baseline behavior too.  A refactor
 must not silently “repair” one of them, because doing so would change the method
 and is outside this task.
+
+The repeatable acceptance command for the current checkout is:
+
+```bash
+python3 refactor/verify_baseline.py
+```
+
+It builds the release binary, runs the release test suite and six portable
+shell gates, compares all fixed/selected/ensemble TSVs by size and SHA-256, and
+reruns the frozen adversarial driver plus its standalone probes. Temporary
+outputs are kept outside the worktree and removed after the check.
