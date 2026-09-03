@@ -6,8 +6,7 @@ use cli::{ensemble_input, parse_args, ProteinInference};
 #[cfg(feature = "profiling")]
 use percolator_rs::profile;
 use percolator_rs::percolator::Model;
-use percolator_rs::{competition, output, peptide, percolator, pin, protein, protein_bayes, rt, stats};
-use std::borrow::Cow;
+use percolator_rs::{output, percolator, pin, pipeline, rt};
 
 #[cfg(feature = "profiling")]
 #[global_allocator]
@@ -168,11 +167,7 @@ fn main() {
         },
     );
 
-    #[cfg(feature = "profiling")]
-    let _rescoring = profile::Scope::new("stage", "rescoring");
-    let out = percolator::run(&ds, &args.params);
-    #[cfg(feature = "profiling")]
-    drop(_rescoring);
+    let out = pipeline::rescore(&ds, &args.params);
     if out.nested_folds.is_empty() {
         eprintln!(
             "{} class weights: Cpos={:.3} Cneg={:.3}{}{}",
@@ -231,167 +226,39 @@ fn main() {
         );
     }
 
-    // Engine reports of the same candidate are training observations, not separate
-    // discoveries. Retain the best out-of-fold score per exact candidate and
-    // recalibrate q-values on that deduplicated candidate set for ensemble output.
-    #[cfg(feature = "profiling")]
-    let _psm_context = profile::context(Some("psm_level_processing"), None, None, None);
-    #[cfg(feature = "profiling")]
-    let _psm_processing = profile::Scope::new("stage", "psm_level_processing");
-    let reported_indices: Vec<usize> = if args.psm_competition {
-        competition::winner_indices(&ds, &out.score, args.params.seed)
-    } else if args.ensemble {
-        let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
-            std::collections::BTreeMap::new();
-        for i in 0..ds.n_psm {
-            let key = (ds.scan[i], ds.labels[i], ds.peptide[i].clone());
-            match best.get(&key) {
-                Some(&previous) if out.score[previous] >= out.score[i] => {}
-                _ => {
-                    best.insert(key, i);
-                }
-            }
-        }
-        best.into_values().collect()
-    } else {
-        (0..ds.n_psm).collect()
-    };
-    // Statistics belong to the list that is actually reported. Whenever
-    // competition or ensemble deduplication has removed rows, the q-values
-    // computed over the full training list no longer describe it.
-    let (reported_qvals, reported_peps) = if reported_indices.len() == ds.n_psm {
-        (out.qval.clone(), out.pep.clone())
-    } else {
-        let reported_scores: Vec<f64> = reported_indices.iter().map(|&i| out.score[i]).collect();
-        let reported_labels: Vec<i8> = reported_indices.iter().map(|&i| ds.labels[i]).collect();
-        stats::qvalues_and_peps(
-            &reported_scores,
-            &reported_labels,
-            stats::Tdc::reported(args.params.null_target_win_prob),
-        )
-    };
 
-    // PSM-level output
-    let target_capacity = reported_indices
-        .iter()
-        .filter(|&&index| ds.labels[index] > 0)
-        .count();
-    let mut targets: Vec<output::Row<'_>> = Vec::with_capacity(target_capacity);
-    let mut decoys: Vec<output::Row<'_>> =
-        Vec::with_capacity(reported_indices.len() - target_capacity);
-    #[cfg(feature = "profiling")]
-    let mut psm_row_string_bytes = 0u64;
-    for (output_index, &i) in reported_indices.iter().enumerate() {
-        let r = output::Row::new(
-            if args.ensemble {
-                Cow::Owned(format!(
-                    "{}:{}",
-                    ds.source_names[ds.source[i] as usize], ds.spec_id[i]
-                ))
-            } else {
-                Cow::Borrowed(&ds.spec_id[i])
-            },
-            out.score[i],
-            reported_qvals[output_index],
-            reported_peps[output_index],
-            &ds.peptide[i],
-            &ds.proteins[i],
-        );
-        #[cfg(feature = "profiling")]
-        {
-            psm_row_string_bytes += r.owned_id_capacity();
-        }
-        if ds.labels[i] > 0 {
-            targets.push(r);
-        } else {
-            decoys.push(r);
-        }
-    }
-    #[cfg(feature = "profiling")]
-    {
-        profile::allocation_site(
-            "main::psm output row vectors",
-            2,
-            ((targets.capacity() + decoys.capacity())
-                * std::mem::size_of::<output::Row>()) as u64,
-        );
-        profile::allocation_site(
-            "main::psm output row strings",
-            u64::from(args.ensemble) * reported_indices.len() as u64,
-            psm_row_string_bytes,
-        );
-    }
-    let n_psm_q01 = targets.iter().filter(|r| r.q_value() < 0.01).count();
-    #[cfg(feature = "profiling")]
-    drop(_psm_processing);
-    #[cfg(feature = "profiling")]
-    drop(_psm_context);
-
-    // Peptide-level: best-scoring PSM per unique (core) peptide, then re-q-value.
-    #[cfg(feature = "profiling")]
-    let _peptide_context = profile::context(Some("peptide_level_processing"), None, None, None);
-    #[cfg(feature = "profiling")]
-    let _peptide_processing = profile::Scope::new("stage", "peptide_level_processing");
-    let peptides = peptide::score(
+    let pipeline::Reports {
+        target_psms,
+        decoy_psms,
+        target_peptides,
+        decoy_peptides,
+        reported_indices,
+        peptides,
+        target_psms_q01,
+        target_peptides_q01,
+    } = pipeline::build_reports(
         &ds,
-        &reported_indices,
-        &out.score,
-        args.params.null_target_win_prob,
+        &out,
+        &args.params,
+        args.psm_competition,
+        args.ensemble,
     );
-
-    let peptide_target_capacity = peptides
-        .indices
-        .iter()
-        .filter(|&&index| ds.labels[index] > 0)
-        .count();
-    let mut ptargets: Vec<output::Row<'_>> = Vec::with_capacity(peptide_target_capacity);
-    let mut pdecoys: Vec<output::Row<'_>> =
-        Vec::with_capacity(peptides.indices.len() - peptide_target_capacity);
-    for (peptide_index, &psm_index) in peptides.indices.iter().enumerate() {
-        let r = output::Row::new(
-            Cow::Borrowed(&ds.spec_id[psm_index]),
-            peptides.scores[peptide_index],
-            peptides.q_values[peptide_index],
-            peptides.peps[peptide_index],
-            &ds.peptide[psm_index],
-            &ds.proteins[psm_index],
-        );
-        if ds.labels[psm_index] > 0 {
-            ptargets.push(r);
-        } else {
-            pdecoys.push(r);
-        }
-    }
-    #[cfg(feature = "profiling")]
-    {
-        profile::allocation_site(
-            "main::peptide output row vectors",
-            2,
-            ((ptargets.capacity() + pdecoys.capacity())
-                * std::mem::size_of::<output::Row>()) as u64,
-        );
-    }
-    let n_pep_q01 = ptargets.iter().filter(|r| r.q_value() < 0.01).count();
-    #[cfg(feature = "profiling")]
-    drop(_peptide_processing);
-    #[cfg(feature = "profiling")]
-    drop(_peptide_context);
 
     #[cfg(feature = "profiling")]
     let _output_context = profile::context(Some("result_output"), None, None, None);
     #[cfg(feature = "profiling")]
     let _output = profile::Scope::new("stage", "result_output");
     if let Some(p) = &args.results_psms {
-        output::write_results(p, targets).unwrap();
+        output::write_results(p, target_psms).unwrap();
     }
     if let Some(p) = &args.decoy_psms {
-        output::write_results(p, decoys).unwrap();
+        output::write_results(p, decoy_psms).unwrap();
     }
     if let Some(p) = &args.results_peptides {
-        output::write_results(p, ptargets).unwrap();
+        output::write_results(p, target_peptides).unwrap();
     }
     if let Some(p) = &args.decoy_peptides {
-        output::write_results(p, pdecoys).unwrap();
+        output::write_results(p, decoy_peptides).unwrap();
     }
     #[cfg(feature = "profiling")]
     drop(_output);
@@ -414,42 +281,36 @@ fn main() {
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
         #[cfg(feature = "profiling")]
         let _protein_inference = profile::Scope::new("stage", "protein_inference_and_output");
-        let entries = peptide::protein_entries(&ds, &reported_indices, &peptides);
-        #[cfg(feature = "profiling")]
-        profile::allocation_site(
-            "main::protein inference entries",
-            (entries.len() + 1) as u64,
-            (entries.capacity() * std::mem::size_of::<(f64, f64, String)>()) as u64
-                + entries
-                    .iter()
-                    .map(|entry| entry.2.capacity() as u64)
-                    .sum::<u64>(),
-        );
-        let picked_groups = protein::infer(&entries, args.params.seed);
-        let picked_q01 = picked_groups
-            .iter()
-            .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
-            .count();
-        let n_prot_classic = protein::classic_target_q01(&picked_groups);
-        let (groups, method_label) = match args.protein_inference {
-            ProteinInference::Picked => (picked_groups, "picked-FDR"),
-            ProteinInference::Bayesian => {
-                let result = protein_bayes::infer(&entries, &args.protein_bayes);
-                eprintln!(
-                    "Bayesian protein model: alpha={:.4}, beta={:.4}, gamma={:.4}, peptide-prior={:.4}; components: {} ({} tree-exact, {} loopy); BP iterations: {}, converged: {}",
-                    args.protein_bayes.alpha,
-                    args.protein_bayes.beta,
-                    args.protein_bayes.gamma,
-                    args.protein_bayes.peptide_prior,
-                    result.diagnostics.components,
-                    result.diagnostics.tree_components,
-                    result.diagnostics.loopy_components,
-                    result.diagnostics.iterations,
-                    result.diagnostics.converged,
-                );
-                (result.groups, "Bayesian")
-            }
+        let method = match args.protein_inference {
+            ProteinInference::Picked => pipeline::ProteinMethod::Picked,
+            ProteinInference::Bayesian => pipeline::ProteinMethod::Bayesian(&args.protein_bayes),
         };
+        let pipeline::ProteinResults {
+            groups,
+            picked_q01,
+            classic_q01,
+            bayesian_diagnostics,
+        } = pipeline::infer_proteins(
+            &ds,
+            &reported_indices,
+            &peptides,
+            args.params.seed,
+            method,
+        );
+        if let Some(diagnostics) = bayesian_diagnostics {
+            eprintln!(
+                "Bayesian protein model: alpha={:.4}, beta={:.4}, gamma={:.4}, peptide-prior={:.4}; components: {} ({} tree-exact, {} loopy); BP iterations: {}, converged: {}",
+                args.protein_bayes.alpha,
+                args.protein_bayes.beta,
+                args.protein_bayes.gamma,
+                args.protein_bayes.peptide_prior,
+                diagnostics.components,
+                diagnostics.tree_components,
+                diagnostics.loopy_components,
+                diagnostics.iterations,
+                diagnostics.converged,
+            );
+        }
         let n_prot_q01 = groups
             .iter()
             .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
@@ -468,7 +329,7 @@ fn main() {
                 groups.iter().filter(|g| g.is_decoy).count(),
                 groups.iter().filter(|g| g.picked).count(),
                 n_prot_q01,
-                n_prot_classic
+                classic_q01
             );
         } else {
             eprintln!(
@@ -478,17 +339,17 @@ fn main() {
                 groups.iter().filter(|g| g.is_decoy).count(),
                 groups.iter().filter(|g| g.picked).count(),
                 n_prot_q01,
-                method_label,
+                "Bayesian",
                 picked_q01,
-                n_prot_classic
+                classic_q01
             );
         }
     }
 
     eprintln!(
         "target PSMs q<0.01: {} | target peptides q<0.01: {} | {:.2}s",
-        n_psm_q01,
-        n_pep_q01,
+        target_psms_q01,
+        target_peptides_q01,
         t0.elapsed().as_secs_f64()
     );
     #[cfg(feature = "profiling")]
