@@ -1,0 +1,6 @@
+== percolator-rs nested-selection regression gate ==
+  PASS  selected outer folds  3
+  PASS  PSM q<0.01           117
+  PASS  peptide q<0.05       43
+  PASS  serial/parallel      byte-identical choices and outputs
+ALL CHECKS PASSED

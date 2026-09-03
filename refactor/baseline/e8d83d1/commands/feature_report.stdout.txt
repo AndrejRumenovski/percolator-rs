@@ -1,0 +1,6 @@
+== percolator-rs feature-report regression gate ==
+  PASS  feature rows             21
+  PASS  baseline PSM q<0.01      117
+  PASS  deterministic report     byte-identical
+  PASS  MLP rejection            clear unsupported-model error
+ALL CHECKS PASSED

@@ -1,0 +1,102 @@
+warning: function `classic_target_q01` is never used
+   --> validation/../src/protein.rs:194:8
+    |
+194 | pub fn classic_target_q01(groups: &[ProtGroup]) -> usize {
+    |        ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `training` is never used
+   --> validation/../src/stats.rs:130:12
+    |
+117 | impl Tdc {
+    | -------- associated function in this implementation
+...
+130 |     pub fn training(null_target_win_prob: f64) -> Self {
+    |            ^^^^^^^^
+
+warning: fields `target_ranks`, `target_pep`, `pava_value`, `pava_weight`, and `pava_len` are never read
+   --> validation/../src/stats.rs:175:5
+    |
+172 | pub struct QValueWorkspace {
+    |            --------------- fields in this struct
+...
+175 |     target_ranks: Vec<usize>,
+    |     ^^^^^^^^^^^^
+176 |     target_pep: Vec<f64>,
+    |     ^^^^^^^^^^
+177 |     pava_value: Vec<f64>,
+    |     ^^^^^^^^^^
+178 |     pava_weight: Vec<f64>,
+    |     ^^^^^^^^^^^
+179 |     pava_len: Vec<usize>,
+    |     ^^^^^^^^
+
+warning: function `sort_reversed_rank_order` is never used
+   --> validation/../src/stats.rs:210:4
+    |
+210 | fn sort_reversed_rank_order(order: &mut [usize], ranks: &[u32]) {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `ends_rank_group` is never used
+   --> validation/../src/stats.rs:227:4
+    |
+227 | fn ends_rank_group(order: &[usize], ranks: &[u32], rank: usize) -> bool {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `target_mask_at_fdr_into` is never used
+   --> validation/../src/stats.rs:319:8
+    |
+319 | pub fn target_mask_at_fdr_into(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `target_count_at_fdr_into` is never used
+   --> validation/../src/stats.rs:372:8
+    |
+372 | pub fn target_count_at_fdr_into(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `target_count_at_reversed_ranks_into` is never used
+   --> validation/../src/stats.rs:406:8
+    |
+406 | pub fn target_count_at_reversed_ranks_into(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `qvalues_and_peps` is never used
+   --> validation/../src/stats.rs:440:8
+    |
+440 | pub fn qvalues_and_peps(scores: &[f64], labels: &[i8], tdc: Tdc) -> (Vec<f64>, Vec<f64>) {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: function `pava_non_decreasing` is never used
+   --> validation/../src/stats.rs:455:4
+    |
+455 | fn pava_non_decreasing(
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `PEP_FLOOR` is never used
+   --> validation/../src/stats.rs:496:7
+    |
+496 | const PEP_FLOOR: f64 = 1e-12;
+    |       ^^^^^^^^^
+
+warning: function `peps_from_competition_into` is never used
+   --> validation/../src/stats.rs:502:4
+    |
+502 | fn peps_from_competition_into(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: methods `i64` and `u32` are never used
+  --> validation/../src/tiebreak.rs:81:12
+   |
+68 | impl Coin {
+   | --------- methods in this implementation
+...
+81 |     pub fn i64(self, value: i64) -> Self {
+   |            ^^^
+...
+86 |     pub fn u32(self, value: u32) -> Self {
+   |            ^^^
+
+warning: 13 warnings emitted
+

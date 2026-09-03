@@ -1,0 +1,6 @@
+profile: canonical (model=svm, maxiter=10, subset-max-train=none)
+parse: 0.012s
+parsed 12000 PSMs, 21 features (6410 targets / 5590 decoys)
+SVM class weights: Cpos=1.000 Cneg=4.000 (fixed)
+protein groups: 2063 (1105 target, 958 decoy); picked entries: 2032 | target proteins q<0.01: 0 (picked-FDR) vs 0 (classic)
+target PSMs q<0.01: 117 | target peptides q<0.01: 0 | 0.06s

@@ -1,0 +1,13 @@
+    Finished `release` profile [optimized] target(s) in 0.04s
+     Running unittests src/lib.rs (target/release/deps/percolator_rs-6b500a9a3b3e773c)
+     Running unittests src/bin/benchmark-dataset.rs (target/release/deps/benchmark_dataset-69eba96653280d05)
+     Running unittests src/bin/compare-benchmark-results.rs (target/release/deps/compare_benchmark_results-3a8ec67470cf1cec)
+     Running unittests src/main.rs (target/release/deps/percolator_rs-325a0fc08a2e871b)
+     Running unittests src/bin/validate-benchmark-manifests.rs (target/release/deps/validate_benchmark_manifests-1ff1aaf64f05792c)
+     Running tests/benchmark_comparison.rs (target/release/deps/benchmark_comparison-9b20d6156f42ee80)
+     Running tests/benchmark_dataset_runner.rs (target/release/deps/benchmark_dataset_runner-5968ff30912bfa2e)
+     Running tests/benchmark_manifest.rs (target/release/deps/benchmark_manifest-eed731ec65313086)
+     Running tests/benchmark_result.rs (target/release/deps/benchmark_result-2141ac25003e83e5)
+     Running tests/cv_leakage.rs (target/release/deps/cv_leakage-34a0626917740bfb)
+     Running tests/join_permutation.rs (target/release/deps/join_permutation-33779037ae100a13)
+     Running tests/protein_grouping.rs (target/release/deps/protein_grouping-248f33f9c5688282)

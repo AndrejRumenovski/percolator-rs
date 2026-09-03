@@ -1,0 +1,2 @@
+PASS q_oracle_cases=40928 fast_path_checks=327424 strict_boundaries=6 ordinary_pep_mass=2.99999999999999956
+FAILURE EXTREME_P_FLOOR p=1.00000000000000008e-15 estimated_false=1.00000000000000106e-15 pep_sum=4.99999999999999970e-12 ratio=5000.000

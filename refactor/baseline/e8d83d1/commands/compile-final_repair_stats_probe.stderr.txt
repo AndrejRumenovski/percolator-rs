@@ -1,0 +1,31 @@
+warning: associated function `training` is never used
+   --> validation/../src/stats.rs:130:12
+    |
+117 | impl Tdc {
+    | -------- associated function in this implementation
+...
+130 |     pub fn training(null_target_win_prob: f64) -> Self {
+    |            ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sort_reversed_rank_order` is never used
+   --> validation/../src/stats.rs:210:4
+    |
+210 | fn sort_reversed_rank_order(order: &mut [usize], ranks: &[u32]) {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `ends_rank_group` is never used
+   --> validation/../src/stats.rs:227:4
+    |
+227 | fn ends_rank_group(order: &[usize], ranks: &[u32], rank: usize) -> bool {
+    |    ^^^^^^^^^^^^^^^
+
+warning: function `target_count_at_reversed_ranks_into` is never used
+   --> validation/../src/stats.rs:406:8
+    |
+406 | pub fn target_count_at_reversed_ranks_into(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: 4 warnings emitted
+

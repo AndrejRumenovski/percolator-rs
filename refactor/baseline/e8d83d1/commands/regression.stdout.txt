@@ -1,0 +1,6 @@
+== percolator-rs regression gate (fixture: sample.pin) ==
+  PASS  PSM q<0.01             117 (ref 117, +/-1%)
+  PASS  peptide q<0.05         43 (ref 43, +/-1%)
+  PASS  wall time              0.05s (budget 30s)
+  PASS  peak RSS               12076kB (budget 524288kB)
+ALL CHECKS PASSED

@@ -1,0 +1,5 @@
+profile: canonical (model=svm, maxiter=10, subset-max-train=none), ensemble=2 engines
+parse: 0.035s
+parsed 24000 PSMs, 46 features (12820 targets / 11180 decoys), ensemble from 2 engines
+SVM class weights: Cpos=1.000 Cneg=4.000 (fixed)
+target PSMs q<0.01: 103 | target peptides q<0.01: 0 | 0.22s

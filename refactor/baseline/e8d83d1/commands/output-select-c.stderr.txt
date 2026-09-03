@@ -1,0 +1,9 @@
+profile: canonical (model=svm, maxiter=10, subset-max-train=none)
+parse: 0.012s
+parsed 12000 PSMs, 21 features (6410 targets / 5590 decoys)
+nested SVM selection (outer test folds isolated):
+  fold 0: C=1.000, class-weights=0.2:1.0, features=21, tolerance=1e-5, inner-q01-yield=0
+  fold 1: C=1.000, class-weights=0.2:1.0, features=21, tolerance=1e-5, inner-q01-yield=0
+  fold 2: C=1.000, class-weights=0.2:1.0, features=21, tolerance=1e-5, inner-q01-yield=0
+protein groups: 2057 (1092 target, 965 decoy); picked entries: 2036 | target proteins q<0.01: 0 (picked-FDR) vs 0 (classic)
+target PSMs q<0.01: 132 | target peptides q<0.01: 0 | 0.19s

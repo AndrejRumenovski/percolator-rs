@@ -1,0 +1,60 @@
+{
+  "single_file_invariant": false,
+  "joined_permutation_invariant": true,
+  "joined_path_alias_invariant": false,
+  "duplicate_false_discoveries": 101,
+  "cv": {
+    "fixed-c": {
+      "attacked_fold": 1,
+      "attacked_spectra": 137,
+      "sentinels": 11,
+      "heldout_label_changed_scores": 0,
+      "heldout_outlier_changed_sentinel_scores": 0,
+      "reversed_row_changed_scores": 0,
+      "shuffled_row_changed_scores": 0,
+      "selection_clean": [],
+      "selection_labels": [],
+      "selection_outliers": [],
+      "selection_invariant": true,
+      "leakage_detected": false,
+      "row_permutation_invariant_at_printed_precision": true
+    },
+    "select-c": {
+      "attacked_fold": 1,
+      "attacked_spectra": 137,
+      "sentinels": 11,
+      "heldout_label_changed_scores": 0,
+      "heldout_outlier_changed_sentinel_scores": 0,
+      "reversed_row_changed_scores": 0,
+      "shuffled_row_changed_scores": 0,
+      "selection_clean": [
+        "1|1.000|0.2|1.0|4|1e-5"
+      ],
+      "selection_labels": [
+        "1|1.000|0.2|1.0|4|1e-5"
+      ],
+      "selection_outliers": [
+        "1|1.000|0.2|1.0|4|1e-5"
+      ],
+      "selection_invariant": true,
+      "leakage_detected": false,
+      "row_permutation_invariant_at_printed_precision": true
+    },
+    "ensemble": {
+      "attacked_fold": 1,
+      "attacked_spectra": 137,
+      "sentinels": 11,
+      "heldout_label_changed_scores": 0,
+      "heldout_outlier_changed_sentinel_scores": 0,
+      "reversed_row_changed_scores": 0,
+      "shuffled_row_changed_scores": 0,
+      "selection_clean": [],
+      "selection_labels": [],
+      "selection_outliers": [],
+      "selection_invariant": true,
+      "leakage_detected": false,
+      "row_permutation_invariant_at_printed_precision": true
+    }
+  },
+  "protein_seed_changes_mapping": true
+}

@@ -1,0 +1,186 @@
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 109 tests
+test competition_tests::a_one_ulp_near_tie_is_never_randomized ... ok
+test competition_tests::a_pin_without_expmass_competes_per_scan ... ok
+test competition_tests::distinct_precursors_of_one_scan_compete_separately ... ok
+test competition_tests::already_competed_input_is_unchanged ... ok
+test competition_tests::a_strictly_better_candidate_always_wins ... ok
+test competition_tests::joined_files_reusing_scan_numbers_compete_separately ... ok
+test competition_tests::a_different_seed_resolves_ties_differently ... ok
+test competition_tests::one_winner_per_precursor ... ok
+test competition_tests::tie_resolution_is_reproducible ... ok
+test mlp::tests::initial_score_matches_linear_direction ... ok
+test output_tests::borrowed_row_preserves_sort_layout_size ... ok
+test competition_tests::exact_ties_do_not_hand_every_precursor_to_one_label ... ok
+test percolator::tests::ensemble_candidate_duplicates_stay_in_the_same_fold ... ok
+test percolator::tests::all_candidates_of_a_spectrum_share_a_fold ... ok
+test percolator::tests::every_row_is_scored_by_a_model_that_excluded_it ... ok
+test percolator::tests::joined_permutations_preserve_named_spectrum_folds ... ok
+test percolator::tests::joined_files_with_colliding_scans_are_not_merged_into_one_spectrum ... ok
+test pin::tests::a_malformed_feature_is_rejected ... ok
+test percolator::tests::folds_fit_their_own_normalization_and_direction ... ok
+test percolator::tests::fold_standardization_preserves_within_fold_order ... ok
+test percolator::tests::heldout_rows_cannot_influence_the_model_that_scores_them ... ok
+test competition_tests::exact_ties_survive_every_equivalent_row_permutation ... ok
+test percolator::tests::outer_test_changes_cannot_change_nested_selection ... ok
+test pin::tests::a_malformed_label_is_rejected ... ok
+test pin::tests::a_malformed_scan_number_is_rejected ... ok
+test pin::tests::a_metadata_name_after_the_prefix_stays_a_feature ... ok
+test pin::tests::a_missing_feature_is_rejected ... ok
+test pin::tests::a_missing_required_column_is_rejected ... ok
+test pin::tests::a_pin_without_feature_columns_is_rejected ... ok
+test pin::tests::a_short_row_is_rejected_rather_than_skipped ... ok
+test pin::tests::a_well_formed_pin_still_parses ... ok
+test pin::tests::joined_merge_is_canonical_under_file_and_row_permutations ... ok
+test pin::tests::ensemble_features_do_not_depend_on_any_label ... ok
+test pin::tests::the_diagnostic_locates_the_row_and_column ... ok
+test pin::tests::metadata_columns_are_excluded_whatever_their_case ... ok
+test protein::tests::a_sharing_chain_does_not_collapse_into_one_group ... ok
+test protein::tests::a_unique_peptide_keeps_two_proteins_apart ... ok
+test pin::tests::the_metadata_prefix_stops_at_the_first_feature ... ok
+test protein::tests::decoy_proteins_flagged ... ok
+test pin::tests::ensemble_namespaces_features_and_counts_exact_cross_engine_support ... ok
+test protein::tests::grouping_is_invariant_to_entry_order ... ok
+test protein::tests::picked_inference_reports_no_protein_posterior ... ok
+test protein::tests::picked_keeps_the_higher_of_a_target_decoy_pair ... ok
+test protein::tests::picking_leaves_one_entry_per_pairing_key ... ok
+test protein::tests::hand_derived_grouping_graphs_survive_all_entry_permutations ... ok
+test protein::tests::shared_peptides_support_every_group_they_map_to ... ok
+test protein::tests::indistinguishable_proteins_are_one_group ... ok
+test protein::tests::subset_proteins_are_not_absorbed ... ok
+test protein::tests::target_and_decoy_proteins_never_collapse_into_one_group ... ok
+test pin::tests::non_finite_features_are_rejected ... ok
+test protein::tests::a_strictly_better_group_always_wins_its_pair ... ok
+test protein_bayes::tests::rejects_invalid_parameters ... ok
+test protein_bayes::tests::qvalues_are_cumulative_expected_error ... ok
+test protein_bayes::tests::tree_belief_propagation_matches_brute_force_marginal ... ok
+test protein_bayes::tests::unique_evidence_resolves_shared_peptide_ambiguity ... ok
+test protein_bayes::tests::weak_peptide_can_reduce_presence_below_prior ... ok
+test protein_entry_tests::complete_peptide_association_survives_representative_and_row_order ... ok
+test protein_bayes::tests::indistinguishable_proteins_form_one_group ... ok
+test rt::tests::each_input_file_gets_its_own_alignment ... ok
+test protein::tests::a_different_seed_reflips_protein_ties ... ok
+test rt::tests::residual_columns_are_finite_and_non_negative ... ok
+test rt::tests::the_alignment_depends_only_on_the_rows_it_is_fitted_on ... ok
+test simd::tests::fixed_dot_preserves_sequential_result ... ok
+test stats::tests::a_decoy_dominated_tail_saturates_at_one ... ok
+test stats::tests::a_decoy_only_list_reports_no_confidence ... ok
+test stats::tests::a_leading_target_run_never_receives_zero_pep ... ok
+test stats::tests::a_list_without_decoys_still_has_positive_qvalues ... ok
+test stats::tests::a_second_decoy_adds_exactly_one_more_false_discovery ... ok
+test stats::tests::a_non_finite_score_is_refused - should panic ... ok
+test stats::tests::all_identical_scores_collapse_to_one_qvalue ... ok
+test stats::tests::an_infinite_score_is_refused - should panic ... ok
+test stats::tests::dropping_the_safeguard_is_confined_to_the_training_estimator ... ok
+test stats::tests::empty_and_single_row_inputs_are_handled ... ok
+test stats::tests::equal_scores_share_one_pep_increment ... ok
+test stats::tests::equal_scores_share_one_rejection_boundary ... ok
+test stats::tests::leading_pep_is_pinned_by_the_estimator_not_by_a_constant ... ok
+test stats::tests::leading_target_run_never_receives_zero_qvalue ... ok
+test protein::tests::exact_picked_ties_do_not_all_go_to_the_target ... ok
+test stats::tests::peps_are_bounded_and_strictly_positive ... ok
+test stats::tests::peps_are_invariant_to_input_row_order ... ok
+test stats::tests::peps_handle_empty_and_single_row_inputs ... ok
+test stats::tests::peps_are_monotone_along_worsening_score ... ok
+test stats::tests::qvalues_are_bounded_in_the_unit_interval ... ok
+test stats::tests::qvalues_are_monotone_by_score ... ok
+test stats::tests::qvalues_match_the_documented_closed_form ... ok
+test stats::tests::repeated_calls_are_deterministic ... ok
+test protein::tests::picked_ties_are_invariant_to_entry_order ... ok
+test stats::tests::target_count_matches_materialized_qvalues ... ok
+test stats::tests::target_count_overwrites_reused_order ... ok
+test stats::tests::summed_peps_reproduce_the_estimated_false_discovery_count ... ok
+test stats::tests::target_decoy_imbalance_is_not_rescaled_by_a_count_ratio ... ok
+test stats::tests::target_mask_matches_materialized_qvalues_and_reuses_storage ... ok
+test stats::tests::the_leading_run_carries_exactly_the_safeguard_decoy ... ok
+test stats::tests::the_opportunity_ratio_scales_the_estimate ... ok
+test stats::tests::the_opportunity_ratio_scales_the_peps ... ok
+test stats::tests::tied_scores_receive_identical_peps ... ok
+test stats::tests::tied_scores_receive_identical_qvalues_in_any_row_order ... ok
+test tiebreak::tests::byte_folding_is_length_prefixed ... ok
+test tiebreak::tests::a_draw_never_leaves_its_range ... ok
+test tiebreak::tests::different_seeds_reflip_the_coins ... ok
+test tiebreak::tests::the_same_key_always_gives_the_same_draw ... ok
+test protein::tests::synthetic_pin_fixture_groups_and_picks_deterministically ... ok
+test tiebreak::tests::draws_are_uniform_across_a_wider_tie_group ... ok
+test tiebreak::tests::two_way_draws_are_close_to_fair ... ok
+test stats::tests::qvalue_workspace_overwrites_reused_buffers ... ok
+test mlp::tests::learns_xor ... ok
+test stats::tests::reversed_integer_ranks_match_the_negated_score_scan ... ok
+test competition_tests::wider_ties_are_drawn_uniformly ... ok
+test output_tests::fixed_6_matches_standard_formatter ... ok
+
+test result: ok. 109 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+test handles_zero_denominators_and_missing_proteins_explicitly ... ok
+test rejects_dataset_seed_input_and_failure_mismatches ... ok
+test compares_complete_matching_results_and_round_trips_json ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+test previews_commands_and_records_mock_failure_without_discarding_it ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+
+running 5 tests
+test parses_all_supported_metadata ... ok
+test reports_an_unset_path_environment_variable ... ok
+test parses_the_committed_pxd032157_registry ... ok
+test rejects_missing_required_fields_and_unknown_keys ... ok
+test reports_multiple_validation_errors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+test result_json_round_trips_without_losing_missing_values ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 3 tests
+test fixed_c_cross_validation_is_leakage_free ... ok
+test ensemble_cross_validation_is_leakage_free ... ok
+test selected_c_cross_validation_is_leakage_free ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+
+running 3 tests
+test minimal_joined_exact_tie_is_file_order_invariant ... ok
+test trained_three_file_join_preserves_exact_and_near_ties_under_permutation ... ok
+test joined_cutoff_is_invariant_to_file_and_row_layout ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 1 test
+test repeated_peptide_mappings_are_unioned_in_every_input_order ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

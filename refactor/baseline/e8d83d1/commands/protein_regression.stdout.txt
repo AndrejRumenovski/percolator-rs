@@ -1,0 +1,14 @@
+== percolator-rs protein regression gate (synthetic picked-FDR fixture) ==
+  PASS  protein groups         480
+  PASS  picked entries         370
+  PASS  picked q<0.01          267
+  PASS  classic q<0.01         262
+  PASS  target rows            336
+  PASS  decoy rows             36
+  PASS  numPeptides=1 rows     260
+  PASS  numPeptides=2 rows     75
+  PASS  Bayesian converged     true
+  PASS  Bayesian header        ProteinGroupId	q-value	posterior_error_prob	score	numPeptides	proteinIds
+  PASS  Bayesian probabilities bounded and q-values monotone
+  PASS  picked protein PEP      NA (no protein-level posterior is estimated)
+ALL CHECKS PASSED

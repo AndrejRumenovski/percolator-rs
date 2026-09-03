@@ -1,0 +1,5 @@
+== percolator-rs MLP regression gate ==
+  PASS  PSM q<0.01           130
+  PASS  peptide q<0.05       38
+  PASS  serial/parallel      byte-identical outputs
+ALL CHECKS PASSED
