@@ -5,6 +5,7 @@ pub mod benchmark_manifest;
 pub mod benchmark_result;
 pub mod competition;
 pub mod mlp;
+pub mod output;
 pub mod percolator;
 pub mod pin;
 #[cfg(feature = "profiling")]
