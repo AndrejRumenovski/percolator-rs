@@ -94,68 +94,80 @@ pub fn split_proteins(s: &str) -> Vec<&str> {
         .collect()
 }
 
-/// `entries`: one per peptide-level identification — (score, pep, raw_proteins_field).
-///
-/// `seed` is the run seed; it decides exact target/decoy picking ties and
-/// nothing else.
-pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
-    #[cfg(feature = "profiling")]
-    let _inference = crate::profile::Scope::with_elements(
-        "protein_inference",
-        "picked_protein_inference",
-        entries.len(),
-    );
+/// Protein accessions in first-observed order and the complete peptide set for
+/// each accession. Entry index is the peptide identity because callers provide
+/// exactly one entry per distinct peptide form.
+struct ProteinEvidence<'a> {
+    names: Vec<&'a str>,
+    peptide_sets: Vec<Vec<u32>>,
+}
 
-    // Index protein ids and record, for each protein, the peptides that map to
-    // it.  Entry index is the peptide identity: `entries` already holds one row
-    // per distinct peptide form.
+fn collect_protein_evidence<'a>(entries: &'a [(f64, f64, String)]) -> ProteinEvidence<'a> {
     let mut id_of: HashMap<&str, usize> = HashMap::new();
     let mut names: Vec<&str> = Vec::new();
-    let mut evidence: Vec<Vec<u32>> = Vec::new();
+    let mut peptide_sets: Vec<Vec<u32>> = Vec::new();
     for (peptide, (_, _, raw)) in entries.iter().enumerate() {
         for protein in split_proteins(raw) {
             let index = *id_of.entry(protein).or_insert_with(|| {
                 names.push(protein);
-                evidence.push(Vec::new());
+                peptide_sets.push(Vec::new());
                 names.len() - 1
             });
-            evidence[index].push(peptide as u32);
+            peptide_sets[index].push(peptide as u32);
         }
     }
+    ProteinEvidence {
+        names,
+        peptide_sets,
+    }
+}
 
-    // Indistinguishability: proteins of the same target/decoy class with the
-    // *same* observed peptide set.  Keeping the class in the key prevents a
-    // target and a decoy from disappearing into a single mixed group before
-    // target/decoy competition.
-    for peptides in evidence.iter_mut() {
+/// Class-aware evidence-equivalence groups. The target/decoy class is part of
+/// the key so identical evidence cannot collapse a competition pair.
+struct EvidenceGroups<'a> {
+    names: Vec<&'a str>,
+    members: Vec<Vec<usize>>,
+    class_and_peptides: Vec<(bool, Vec<u32>)>,
+}
+
+fn group_by_evidence(mut evidence: ProteinEvidence<'_>) -> EvidenceGroups<'_> {
+    for peptides in evidence.peptide_sets.iter_mut() {
         peptides.sort_unstable();
         peptides.dedup();
     }
     let mut group_of: HashMap<(bool, Vec<u32>), usize> = HashMap::new();
-    let mut group_members: Vec<Vec<usize>> = Vec::new();
-    let mut group_evidence: Vec<(bool, Vec<u32>)> = Vec::new();
-    for protein in 0..names.len() {
+    let mut members: Vec<Vec<usize>> = Vec::new();
+    let mut class_and_peptides: Vec<(bool, Vec<u32>)> = Vec::new();
+    for protein in 0..evidence.names.len() {
         let key = (
-            is_decoy_protein(names[protein]),
-            std::mem::take(&mut evidence[protein]),
+            is_decoy_protein(evidence.names[protein]),
+            std::mem::take(&mut evidence.peptide_sets[protein]),
         );
         match group_of.get(&key) {
-            Some(&group) => group_members[group].push(protein),
+            Some(&group) => members[group].push(protein),
             None => {
-                group_of.insert(key.clone(), group_members.len());
-                group_members.push(vec![protein]);
-                group_evidence.push(key);
+                group_of.insert(key.clone(), members.len());
+                members.push(vec![protein]);
+                class_and_peptides.push(key);
             }
         }
     }
+    EvidenceGroups {
+        names: evidence.names,
+        members,
+        class_and_peptides,
+    }
+}
 
-    let mut out: Vec<ProtGroup> = group_members
+fn score_groups(entries: &[(f64, f64, String)], groups: &EvidenceGroups<'_>) -> Vec<ProtGroup> {
+    groups
+        .members
         .iter()
-        .zip(&group_evidence)
+        .zip(&groups.class_and_peptides)
         .map(|(members, (is_decoy, peptides))| {
             let mut proteins: Vec<String> = members
                 .iter()
-                .map(|&index| names[index].to_string())
+                .map(|&index| groups.names[index].to_string())
                 .collect();
             proteins.sort();
             let score = peptides
@@ -175,7 +187,24 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
                 picked: false,
             }
         })
-        .collect();
+        .collect()
+}
+
+/// `entries`: one per peptide-level identification — (score, pep, raw_proteins_field).
+///
+/// `seed` is the run seed; it decides exact target/decoy picking ties and
+/// nothing else.
+pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
+    #[cfg(feature = "profiling")]
+    let _inference = crate::profile::Scope::with_elements(
+        "protein_inference",
+        "picked_protein_inference",
+        entries.len(),
+    );
+
+    let evidence = collect_protein_evidence(entries);
+    let evidence_groups = group_by_evidence(evidence);
+    let mut out = score_groups(entries, &evidence_groups);
 
     // Deterministic order before any tie-sensitive step, so nothing downstream
     // can depend on hash-map iteration.
