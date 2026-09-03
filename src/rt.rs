@@ -181,7 +181,9 @@ mod tests {
     use super::*;
 
     fn fixture() -> Dataset {
-        let peptides = ["K.AAAA.R", "K.WWWW.R", "K.LLLL.R", "K.GGGG.R", "K.KKKK.R", "K.FFFF.R"];
+        let peptides = [
+            "K.AAAA.R", "K.WWWW.R", "K.LLLL.R", "K.GGGG.R", "K.KKKK.R", "K.FFFF.R",
+        ];
         let n = peptides.len();
         Dataset {
             feature_names: vec!["f".to_string()],
@@ -252,7 +254,10 @@ mod tests {
         let rows: Vec<usize> = (0..ds.n_psm).collect();
         alignment.residuals(&ds.labels, &ds.source, &rows, &mut columns);
         for (index, value) in columns.iter().enumerate() {
-            assert!(value.is_finite() && *value >= 0.0, "column {index} = {value}");
+            assert!(
+                value.is_finite() && *value >= 0.0,
+                "column {index} = {value}"
+            );
         }
         for row in 0..ds.n_psm {
             let absolute = columns[row * 2];

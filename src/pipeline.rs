@@ -38,11 +38,7 @@ fn select_reported_indices(
         let mut best: std::collections::BTreeMap<(i64, i8, String), usize> =
             std::collections::BTreeMap::new();
         for index in 0..ds.n_psm {
-            let key = (
-                ds.scan[index],
-                ds.labels[index],
-                ds.peptide[index].clone(),
-            );
+            let key = (ds.scan[index], ds.labels[index], ds.peptide[index].clone());
             match best.get(&key) {
                 Some(&previous) if scores[previous] >= scores[index] => {}
                 _ => {
@@ -66,18 +62,12 @@ pub fn build_reports<'a>(
     ensemble: bool,
 ) -> Reports<'a> {
     #[cfg(feature = "profiling")]
-    let psm_context =
-        crate::profile::context(Some("psm_level_processing"), None, None, None);
+    let psm_context = crate::profile::context(Some("psm_level_processing"), None, None, None);
     #[cfg(feature = "profiling")]
     let psm_processing = crate::profile::Scope::new("stage", "psm_level_processing");
 
-    let reported_indices = select_reported_indices(
-        ds,
-        &rescoring.score,
-        psm_competition,
-        ensemble,
-        params.seed,
-    );
+    let reported_indices =
+        select_reported_indices(ds, &rescoring.score, psm_competition, ensemble, params.seed);
     // Statistics belong to the list that is actually reported. Whenever
     // competition or ensemble deduplication has removed rows, the q-values
     // computed over the full training list no longer describe it.
@@ -138,8 +128,8 @@ pub fn build_reports<'a>(
         crate::profile::allocation_site(
             "main::psm output row vectors",
             2,
-            ((target_psms.capacity() + decoy_psms.capacity())
-                * std::mem::size_of::<output::Row>()) as u64,
+            ((target_psms.capacity() + decoy_psms.capacity()) * std::mem::size_of::<output::Row>())
+                as u64,
         );
         crate::profile::allocation_site(
             "main::psm output row strings",
@@ -174,8 +164,7 @@ pub fn build_reports<'a>(
         .filter(|&&index| ds.labels[index] > 0)
         .count();
     let mut target_peptides = Vec::with_capacity(peptide_target_capacity);
-    let mut decoy_peptides =
-        Vec::with_capacity(peptides.indices.len() - peptide_target_capacity);
+    let mut decoy_peptides = Vec::with_capacity(peptides.indices.len() - peptide_target_capacity);
     for (peptide_index, &psm_index) in peptides.indices.iter().enumerate() {
         let row = output::Row::new(
             Cow::Borrowed(&ds.spec_id[psm_index]),

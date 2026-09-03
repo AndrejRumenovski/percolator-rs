@@ -709,7 +709,12 @@ mod tests {
         let alpha_rows = [
             (11, 1, "K.ALPHA_TARGET.R", 4.0),
             (11, -1, "K.ALPHA_DECOY.R", 4.0),
-            (12, 1, "K.ALPHA_NEAR.R", f64::from_bits(4.0f64.to_bits() + 1)),
+            (
+                12,
+                1,
+                "K.ALPHA_NEAR.R",
+                f64::from_bits(4.0f64.to_bits() + 1),
+            ),
         ];
         let beta_rows = [
             (21, -1, "K.BETA_DECOY.R", -3.0),
@@ -767,7 +772,12 @@ mod tests {
                     .enumerate()
                     .map(|(index, row)| {
                         let bit = 1u32 << (offset + index as u32);
-                        (row.0, if mask & bit != 0 { -row.1 } else { row.1 }, row.2, row.3)
+                        (
+                            row.0,
+                            if mask & bit != 0 { -row.1 } else { row.1 },
+                            row.2,
+                            row.3,
+                        )
                     })
                     .collect::<Vec<_>>()
             };
@@ -874,7 +884,10 @@ mod tests {
     /// zero, so the run must stop instead.
     #[test]
     fn a_malformed_feature_is_rejected() {
-        rejects(&GOOD.replace("\t1.5\t", "\tnot-a-number\t"), "not a finite number");
+        rejects(
+            &GOOD.replace("\t1.5\t", "\tnot-a-number\t"),
+            "not a finite number",
+        );
     }
 
     #[test]
@@ -885,7 +898,10 @@ mod tests {
     #[test]
     fn non_finite_features_are_rejected() {
         for text in ["nan", "NaN", "inf", "-inf", "Infinity"] {
-            rejects(&GOOD.replace("\t1.5\t", &format!("\t{text}\t")), "not a finite number");
+            rejects(
+                &GOOD.replace("\t1.5\t", &format!("\t{text}\t")),
+                "not a finite number",
+            );
         }
     }
 
@@ -898,17 +914,26 @@ mod tests {
         };
         assert!(message.contains(":3:"), "no line number in '{message}'");
         assert!(message.contains("'f1'"), "no column name in '{message}'");
-        assert!(message.contains("'bad'"), "no offending text in '{message}'");
+        assert!(
+            message.contains("'bad'"),
+            "no offending text in '{message}'"
+        );
     }
 
     #[test]
     fn a_malformed_label_is_rejected() {
-        rejects(&GOOD.replace("s1\t1\t", "s1\ttarget\t"), "Label is not an integer");
+        rejects(
+            &GOOD.replace("s1\t1\t", "s1\ttarget\t"),
+            "Label is not an integer",
+        );
     }
 
     #[test]
     fn a_malformed_scan_number_is_rejected() {
-        rejects(&GOOD.replace("\t10\t", "\t10a\t"), "ScanNr is not an integer");
+        rejects(
+            &GOOD.replace("\t10\t", "\t10a\t"),
+            "ScanNr is not an integer",
+        );
     }
 
     #[test]

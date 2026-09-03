@@ -13,7 +13,12 @@ pub(crate) struct Normalization {
 
 /// Row features with the fold's retention-time residuals patched in.
 #[inline]
-fn feature_row<'a>(ds: &'a Dataset, row: usize, rt: Option<&RtColumns<'_>>, scratch: &'a mut [f64]) -> &'a [f64] {
+fn feature_row<'a>(
+    ds: &'a Dataset,
+    row: usize,
+    rt: Option<&RtColumns<'_>>,
+    scratch: &'a mut [f64],
+) -> &'a [f64] {
     match rt {
         None => ds.row(row),
         Some(rt) => {
@@ -31,7 +36,11 @@ pub(crate) struct RtColumns<'a> {
     values: &'a [f64],
 }
 
-pub(crate) fn fit_normalization(ds: &Dataset, fit_rows: &[usize], rt: Option<&RtColumns<'_>>) -> Normalization {
+pub(crate) fn fit_normalization(
+    ds: &Dataset,
+    fit_rows: &[usize],
+    rt: Option<&RtColumns<'_>>,
+) -> Normalization {
     #[cfg(feature = "profiling")]
     let _fit = crate::profile::Scope::with_elements(
         "normalization",
@@ -144,4 +153,3 @@ pub(crate) fn rt_columns<'a>(p: &Params, values: Option<&'a [f64]>) -> Option<Rt
         values: values?,
     })
 }
-

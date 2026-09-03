@@ -8,8 +8,8 @@ pub mod mlp;
 pub mod output;
 pub mod peptide;
 pub mod percolator;
-pub mod pipeline;
 pub mod pin;
+pub mod pipeline;
 mod preprocessing;
 #[cfg(feature = "profiling")]
 pub mod profile;

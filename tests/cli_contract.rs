@@ -33,9 +33,8 @@ fn explicit_options_override_profiles_in_either_order() {
     ] {
         let output = run(&arguments);
         assert!(output.status.success(), "{}", stderr(&output));
-        assert!(stderr(&output).contains(
-            "profile: fast (model=svm, maxiter=1, subset-max-train=20000)"
-        ));
+        assert!(stderr(&output)
+            .contains("profile: fast (model=svm, maxiter=1, subset-max-train=20000)"));
     }
 }
 

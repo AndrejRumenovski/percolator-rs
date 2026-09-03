@@ -13,8 +13,8 @@ use rayon::prelude::*;
 use std::collections::BTreeMap;
 
 pub struct Params {
-    pub maxiter: usize,          // semi-supervised iterations
-    pub test_fdr: f64,           // FDR to pick positive training examples
+    pub maxiter: usize, // semi-supervised iterations
+    pub test_fdr: f64,  // FDR to pick positive training examples
     /// Probability that an incorrect target outranks its paired decoy under the
     /// null.  0.5 for a 1:1 concatenated target-decoy competition; see
     /// [`crate::stats`] for the supported input contract.
@@ -130,7 +130,6 @@ impl Rng {
     }
 }
 
-
 fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) {
     if dim == 22 {
         for (k, &r) in rows.iter().enumerate() {
@@ -208,8 +207,7 @@ fn standardized_heldout_scores(
     train_rows: &[usize],
     heldout_rows: &[usize],
 ) -> Vec<f64> {
-    let (mean, standard_deviation) =
-        training_null_calibration(model, x, dim, labels, train_rows);
+    let (mean, standard_deviation) = training_null_calibration(model, x, dim, labels, train_rows);
     let mut heldout_scores = vec![0.0; heldout_rows.len()];
     model.score_rows(x, dim, heldout_rows, &mut heldout_scores);
     for score in &mut heldout_scores {
@@ -561,7 +559,8 @@ struct FoldSetup {
 
 fn fold_setup(ds: &Dataset, fold: &[u8], test: u8, p: &Params, seed: u64) -> FoldSetup {
     #[cfg(feature = "profiling")]
-    let _fold_context = crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
+    let _fold_context =
+        crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
     #[cfg(feature = "profiling")]
     let setup_start = std::time::Instant::now();
     let n = ds.n_psm;
@@ -1471,8 +1470,11 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
                 &train_rows,
                 rt_columns(p, rt_values.as_deref()).as_ref(),
             );
-            let (x, dim) =
-                transform_matrix(ds, &normalization, rt_columns(p, rt_values.as_deref()).as_ref());
+            let (x, dim) = transform_matrix(
+                ds,
+                &normalization,
+                rt_columns(p, rt_values.as_deref()).as_ref(),
+            );
             let ranking = rank_features(&x, dim, &ds.labels, &train_rows, p);
             let active_features = feature_mask(dim, &ranking, selected.feature_count);
             let initial = ranked_initial_direction(dim, &ranking);
@@ -2009,7 +2011,10 @@ mod tests {
             n_feat: 1,
             n_psm: scans.len(),
             features: scans.iter().map(|scan| *scan as f64).collect(),
-            labels: scans.iter().map(|scan| if scan % 2 == 0 { 1 } else { -1 }).collect(),
+            labels: scans
+                .iter()
+                .map(|scan| if scan % 2 == 0 { 1 } else { -1 })
+                .collect(),
             spec_id: scans.iter().map(|scan| format!("{name}:{scan}")).collect(),
             scan: scans.to_vec(),
             exp_mass: vec![500.0; scans.len()],
@@ -2025,10 +2030,7 @@ mod tests {
         reversed_alpha.reverse();
         let mut reversed_beta = beta.clone();
         reversed_beta.reverse();
-        let canonical = crate::pin::merge(vec![
-            part("alpha.pin", &alpha),
-            part("beta.pin", &beta),
-        ]);
+        let canonical = crate::pin::merge(vec![part("alpha.pin", &alpha), part("beta.pin", &beta)]);
         let permuted = crate::pin::merge(vec![
             part("beta.pin", &reversed_beta),
             part("alpha.pin", &reversed_alpha),

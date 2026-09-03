@@ -62,11 +62,8 @@ pub fn score(
 
     let scores: Vec<f64> = indices.iter().map(|&index| psm_scores[index]).collect();
     let labels: Vec<i8> = indices.iter().map(|&index| ds.labels[index]).collect();
-    let (q_values, peps) = stats::qvalues_and_peps(
-        &scores,
-        &labels,
-        stats::Tdc::reported(null_target_win_prob),
-    );
+    let (q_values, peps) =
+        stats::qvalues_and_peps(&scores, &labels, stats::Tdc::reported(null_target_win_prob));
     Scores {
         indices,
         scores,
@@ -120,11 +117,7 @@ pub fn protein_entries(
 mod tests {
     use super::*;
 
-    fn dataset(
-        labels: Vec<i8>,
-        peptide: Vec<&str>,
-        proteins: Vec<&str>,
-    ) -> pin::Dataset {
+    fn dataset(labels: Vec<i8>, peptide: Vec<&str>, proteins: Vec<&str>) -> pin::Dataset {
         let n_psm = labels.len();
         pin::Dataset {
             feature_names: vec!["score".to_string()],
@@ -209,10 +202,7 @@ mod tests {
                     peps: vec![0.25],
                 };
                 let entries = protein_entries(&ds, &[0, 1], &peptides);
-                assert_eq!(
-                    entries,
-                    vec![(5.0, 0.25, "PROT_A PROT_B".to_string())]
-                );
+                assert_eq!(entries, vec![(5.0, 0.25, "PROT_A PROT_B".to_string())]);
             }
         }
     }

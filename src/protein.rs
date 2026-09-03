@@ -153,8 +153,10 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
         .iter()
         .zip(&group_evidence)
         .map(|(members, (is_decoy, peptides))| {
-            let mut proteins: Vec<String> =
-                members.iter().map(|&index| names[index].to_string()).collect();
+            let mut proteins: Vec<String> = members
+                .iter()
+                .map(|&index| names[index].to_string())
+                .collect();
             proteins.sort();
             let score = peptides
                 .iter()
@@ -623,10 +625,7 @@ mod tests {
     #[test]
     fn decoy_proteins_flagged() {
         let groups = infer(
-            &[
-                entry(9.0, "sp|P1|REAL"),
-                entry(7.0, "DECOY_sp|P1|REAL"),
-            ],
+            &[entry(9.0, "sp|P1|REAL"), entry(7.0, "DECOY_sp|P1|REAL")],
             1,
         );
         assert!(groups.iter().any(|g| g.is_decoy));
@@ -636,10 +635,7 @@ mod tests {
     #[test]
     fn picked_keeps_the_higher_of_a_target_decoy_pair() {
         let groups = infer(
-            &[
-                entry(9.0, "sp|P1|REAL"),
-                entry(7.0, "DECOY_sp|P1|REAL"),
-            ],
+            &[entry(9.0, "sp|P1|REAL"), entry(7.0, "DECOY_sp|P1|REAL")],
             1,
         );
         assert!(groups.iter().find(|g| !g.is_decoy).unwrap().picked);
@@ -665,10 +661,7 @@ mod tests {
     #[test]
     fn exact_picked_ties_do_not_all_go_to_the_target() {
         let groups = infer(&tied_protein_pairs(400), 1);
-        let picked_targets = groups
-            .iter()
-            .filter(|g| g.picked && !g.is_decoy)
-            .count();
+        let picked_targets = groups.iter().filter(|g| g.picked && !g.is_decoy).count();
         assert_eq!(groups.iter().filter(|g| g.picked).count(), 400);
         // A fair coin over 400 pairs has SD 10; 5 SD is 50.
         assert!(
@@ -699,7 +692,10 @@ mod tests {
             .map(|g| (g.proteins, g.is_decoy))
             .collect();
         reversed.sort();
-        assert_eq!(reversed, reference, "reversing the entries changed the picks");
+        assert_eq!(
+            reversed, reference,
+            "reversing the entries changed the picks"
+        );
 
         // Interleave decoys first.
         let mut swapped = base.clone();
@@ -775,11 +771,13 @@ mod tests {
         ];
         let groups = infer(&entries, 1);
         assert_eq!(groups.iter().filter(|g| g.picked).count(), 5);
-        assert!(!groups
-            .iter()
-            .find(|g| g.proteins == ["DECOY_A"])
-            .unwrap()
-            .picked);
+        assert!(
+            !groups
+                .iter()
+                .find(|g| g.proteins == ["DECOY_A"])
+                .unwrap()
+                .picked
+        );
     }
 
     #[test]

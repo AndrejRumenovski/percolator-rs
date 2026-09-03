@@ -3,9 +3,9 @@
 mod cli;
 
 use cli::{ensemble_input, parse_args, ProteinInference};
+use percolator_rs::percolator::Model;
 #[cfg(feature = "profiling")]
 use percolator_rs::profile;
-use percolator_rs::percolator::Model;
 use percolator_rs::{output, percolator, pin, pipeline, rt};
 
 #[cfg(feature = "profiling")]
@@ -226,7 +226,6 @@ fn main() {
         );
     }
 
-
     let pipeline::Reports {
         target_psms,
         decoy_psms,
@@ -236,13 +235,7 @@ fn main() {
         peptides,
         target_psms_q01,
         target_peptides_q01,
-    } = pipeline::build_reports(
-        &ds,
-        &out,
-        &args.params,
-        args.psm_competition,
-        args.ensemble,
-    );
+    } = pipeline::build_reports(&ds, &out, &args.params, args.psm_competition, args.ensemble);
 
     #[cfg(feature = "profiling")]
     let _output_context = profile::context(Some("result_output"), None, None, None);
@@ -290,13 +283,7 @@ fn main() {
             picked_q01,
             classic_q01,
             bayesian_diagnostics,
-        } = pipeline::infer_proteins(
-            &ds,
-            &reported_indices,
-            &peptides,
-            args.params.seed,
-            method,
-        );
+        } = pipeline::infer_proteins(&ds, &reported_indices, &peptides, args.params.seed, method);
         if let Some(diagnostics) = bayesian_diagnostics {
             eprintln!(
                 "Bayesian protein model: alpha={:.4}, beta={:.4}, gamma={:.4}, peptide-prior={:.4}; components: {} ({} tree-exact, {} loopy); BP iterations: {}, converged: {}",

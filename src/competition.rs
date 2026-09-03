@@ -232,7 +232,9 @@ mod competition_tests {
         let reference = fixture.winner_identities(&target_first, 1);
 
         // Decoy row before target row, within every pair.
-        let pair_reversed: Vec<usize> = (0..n).map(|i| if i % 2 == 0 { i + 1 } else { i - 1 }).collect();
+        let pair_reversed: Vec<usize> = (0..n)
+            .map(|i| if i % 2 == 0 { i + 1 } else { i - 1 })
+            .collect();
         assert_eq!(
             fixture.winner_identities(&pair_reversed, 1),
             reference,
@@ -313,7 +315,14 @@ mod competition_tests {
         let mut rows = Vec::new();
         for scan in 1..=2_000i64 {
             for candidate in 0..3 {
-                rows.push((0u32, scan, 500.0, 1i8, format!("TARGET{scan}_{candidate}"), 7.5));
+                rows.push((
+                    0u32,
+                    scan,
+                    500.0,
+                    1i8,
+                    format!("TARGET{scan}_{candidate}"),
+                    7.5,
+                ));
             }
             rows.push((0u32, scan, 500.0, -1i8, format!("DECOY{scan}"), 7.5));
         }
@@ -356,7 +365,14 @@ mod competition_tests {
     fn one_winner_per_precursor() {
         // Two spectra, five candidates each, mixed targets and decoys.
         let rows: Vec<(u32, i64, f64, i8)> = (0..10)
-            .map(|i| (0u32, (i / 5) as i64, 800.0, if i % 2 == 0 { 1i8 } else { -1 }))
+            .map(|i| {
+                (
+                    0u32,
+                    (i / 5) as i64,
+                    800.0,
+                    if i % 2 == 0 { 1i8 } else { -1 },
+                )
+            })
             .collect();
         let ds = dataset(&rows);
         let score: Vec<f64> = vec![1.0, 5.0, 2.0, 3.0, 4.0, 9.0, 8.0, 7.0, 6.0, 5.5];
@@ -401,14 +417,18 @@ mod competition_tests {
     #[test]
     fn already_competed_input_is_unchanged() {
         let rows: Vec<(u32, i64, f64, i8)> = (0..6)
-            .map(|i| (0u32, i as i64, 700.0 + i as f64, if i % 2 == 0 { 1i8 } else { -1 }))
+            .map(|i| {
+                (
+                    0u32,
+                    i as i64,
+                    700.0 + i as f64,
+                    if i % 2 == 0 { 1i8 } else { -1 },
+                )
+            })
             .collect();
         let ds = dataset(&rows);
         let score = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        assert_eq!(
-            winner_indices(&ds, &score, 1),
-            (0..6).collect::<Vec<_>>()
-        );
+        assert_eq!(winner_indices(&ds, &score, 1), (0..6).collect::<Vec<_>>());
     }
 
     /// A PIN without an ExpMass column reports 0.0 for every row, which must

@@ -549,8 +549,7 @@ fn peps_from_competition_into(
                 let estimated_false = (tdc.pi0 * lambda * decoys)
                     .min(targets)
                     .min(assigned + group_targets as f64);
-                let share =
-                    ((estimated_false - assigned) / group_targets as f64).max(0.0);
+                let share = ((estimated_false - assigned) / group_targets as f64).max(0.0);
                 for slot in &mut workspace.target_pep[group_first_target..] {
                     *slot = share;
                 }
@@ -1152,7 +1151,11 @@ mod tests {
         scores.push(-100.0);
         labels.push(1);
         let pep = peps(&scores, &labels, reported());
-        assert!((pep[0] - 1.0).abs() < 1e-12, "leading target PEP {}", pep[0]);
+        assert!(
+            (pep[0] - 1.0).abs() < 1e-12,
+            "leading target PEP {}",
+            pep[0]
+        );
         assert!(
             (pep[scores.len() - 1] - 1.0).abs() < 1e-12,
             "trailing target PEP {}",

@@ -1,8 +1,8 @@
 //! Stable tabular output contracts and serialization.
 
-use crate::{percolator, protein};
 #[cfg(feature = "profiling")]
 use crate::profile;
+use crate::{percolator, protein};
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufWriter, Write};
