@@ -3,6 +3,10 @@
 
 use crate::mlp;
 use crate::pin::Dataset;
+use crate::preprocessing::{
+    build_matrix_fit, fit_normalization, fold_rt_columns, rt_columns, transform_matrix,
+    Normalization,
+};
 use crate::stats;
 use crate::svm::{train, Problem, Workspace as SvmWorkspace};
 use rayon::prelude::*;
@@ -126,147 +130,6 @@ impl Rng {
     }
 }
 
-/// Per-feature centering and scaling learned from a training partition.
-/// Kept separately so explanatory reports can convert SVM coefficients back to
-/// the original PIN units.
-struct Normalization {
-    mean: Vec<f64>,
-    std: Vec<f64>,
-}
-
-/// Row features with the fold's retention-time residuals patched in.
-#[inline]
-fn feature_row<'a>(ds: &'a Dataset, row: usize, rt: Option<&RtColumns<'_>>, scratch: &'a mut [f64]) -> &'a [f64] {
-    match rt {
-        None => ds.row(row),
-        Some(rt) => {
-            scratch.copy_from_slice(ds.row(row));
-            scratch[rt.first_column] = rt.values[row * 2];
-            scratch[rt.first_column + 1] = rt.values[row * 2 + 1];
-            scratch
-        }
-    }
-}
-
-/// The two retention-time residual columns computed for one fold.
-struct RtColumns<'a> {
-    first_column: usize,
-    values: &'a [f64],
-}
-
-fn fit_normalization(ds: &Dataset, fit_rows: &[usize], rt: Option<&RtColumns<'_>>) -> Normalization {
-    #[cfg(feature = "profiling")]
-    let _fit = crate::profile::Scope::with_elements(
-        "normalization",
-        "fit_mean_and_variance",
-        fit_rows.len(),
-    );
-    assert!(!fit_rows.is_empty());
-    let nf = ds.n_feat;
-    let mut mean = vec![0.0f64; nf];
-    let mut var = vec![0.0f64; nf];
-    let mut scratch = vec![0.0f64; nf];
-    for &i in fit_rows {
-        let row = feature_row(ds, i, rt, &mut scratch);
-        for j in 0..nf {
-            mean[j] += row[j];
-        }
-    }
-    for m in &mut mean {
-        *m /= fit_rows.len() as f64;
-    }
-    for &i in fit_rows {
-        let row = feature_row(ds, i, rt, &mut scratch);
-        for j in 0..nf {
-            let difference = row[j] - mean[j];
-            var[j] += difference * difference;
-        }
-    }
-    let mut std = vec![1.0f64; nf];
-    #[cfg(feature = "profiling")]
-    crate::profile::allocation_site(
-        "percolator::fit_normalization vectors",
-        3,
-        (3 * nf * std::mem::size_of::<f64>()) as u64,
-    );
-    for j in 0..nf {
-        let value = (var[j] / fit_rows.len() as f64).sqrt();
-        std[j] = if value > 1e-12 { value } else { 1.0 };
-    }
-    Normalization { mean, std }
-}
-
-fn transform_matrix(
-    ds: &Dataset,
-    normalization: &Normalization,
-    rt: Option<&RtColumns<'_>>,
-) -> (Vec<f64>, usize) {
-    let nf = ds.n_feat;
-    let dim = nf + 1;
-    #[cfg(feature = "profiling")]
-    let allocation_start = std::time::Instant::now();
-    let mut x = vec![0.0f64; ds.n_psm * dim];
-    #[cfg(feature = "profiling")]
-    {
-        crate::profile::record(
-            "normalization",
-            "matrix_allocation_and_zeroing",
-            allocation_start.elapsed(),
-            Some(x.len() as u64),
-            Some((x.len() * std::mem::size_of::<f64>()) as u64),
-        );
-        crate::profile::allocation_site(
-            "percolator::normalized design matrix",
-            1,
-            (x.capacity() * std::mem::size_of::<f64>()) as u64,
-        );
-    }
-    #[cfg(feature = "profiling")]
-    let transform_start = std::time::Instant::now();
-    let mut scratch = vec![0.0f64; nf];
-    for i in 0..ds.n_psm {
-        let row = feature_row(ds, i, rt, &mut scratch);
-        let base = i * dim;
-        for j in 0..nf {
-            x[base + j] = (row[j] - normalization.mean[j]) / normalization.std[j];
-        }
-        x[base + nf] = 1.0;
-    }
-    #[cfg(feature = "profiling")]
-    crate::profile::record(
-        "normalization",
-        "matrix_transform",
-        transform_start.elapsed(),
-        Some(ds.n_psm as u64),
-        Some((x.len() * std::mem::size_of::<f64>()) as u64),
-    );
-    (x, dim)
-}
-
-/// Normalize from `fit_rows` only, then transform every row. Nested selection
-/// uses this to keep outer-test and inner-validation features out of fitting.
-fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize], p: &Params) -> (Vec<f64>, usize) {
-    let rt_values = fold_rt_columns(ds, fit_rows, p);
-    let rt = rt_columns(p, rt_values.as_deref());
-    let normalization = fit_normalization(ds, fit_rows, rt.as_ref());
-    transform_matrix(ds, &normalization, rt.as_ref())
-}
-
-/// Refit the retention-time alignment inside `fit_rows` and materialize its two
-/// residual columns for every row.
-fn fold_rt_columns(ds: &Dataset, fit_rows: &[usize], p: &Params) -> Option<Vec<f64>> {
-    let alignment = p.rt.as_ref()?;
-    let mut values = vec![0.0f64; ds.n_psm * 2];
-    alignment.residuals(&ds.labels, &ds.source, fit_rows, &mut values);
-    Some(values)
-}
-
-fn rt_columns<'a>(p: &Params, values: Option<&'a [f64]>) -> Option<RtColumns<'a>> {
-    Some(RtColumns {
-        first_column: p.rt.as_ref()?.first_column,
-        values: values?,
-    })
-}
 
 fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) {
     if dim == 22 {
