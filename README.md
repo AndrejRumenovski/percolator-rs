@@ -221,6 +221,22 @@ cargo build --release
   --results-peptides t.pep --decoy-results-peptides d.pep \
   input.pin
 ```
+
+### Library architecture
+
+The executable is a thin process boundary over reusable library modules. The
+scientific composition lives in [`pipeline`](src/pipeline.rs), with separate
+modules for [spectrum competition](src/competition.rs),
+[peptide inference](src/peptide.rs), [protein inference](src/protein.rs), and
+[stable output serialization](src/output.rs). Fold-local normalization and RT
+materialization are isolated from learner orchestration in
+[`preprocessing`](src/preprocessing.rs), while the numerical learning and
+statistics implementations remain structurally unchanged.
+
+The full pre-refactor map, risk assessment, frozen artifacts, final benchmark,
+and repeatable byte/adversarial verification command are documented in the
+[`refactor/`](refactor/README.md) record.
+
 Flags mirror the reference subset: `--seed`, `--maxiter`, `--subset-max-train`, `--num-threads`.
 `--rescore-model svm|mlp` selects the fold-local learner; SVM is the default. The MLP architecture
 and negative yield result are documented in [`bench/DEEP_LEARNING.md`](bench/DEEP_LEARNING.md).

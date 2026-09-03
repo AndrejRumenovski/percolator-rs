@@ -9,6 +9,8 @@ The files have distinct roles:
 
 - `ARCHITECTURE.md` records the pre-refactor dependency map, risk classification,
   target boundaries, and intentionally excluded work.
+- `RESULT.md` records the resulting boundaries, deliberate non-changes, and
+  final acceptance and performance evidence.
 - `freeze_baseline.py` builds and exercises one exact revision and writes a
   machine-readable artifact directory.
 - `baseline/e8d83d1/` is the baseline captured before production source was
