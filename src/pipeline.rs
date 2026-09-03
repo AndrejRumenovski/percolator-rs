@@ -30,6 +30,12 @@ fn select_reported_indices(
     ensemble: bool,
     seed: u64,
 ) -> Vec<usize> {
+    #[cfg(feature = "profiling")]
+    let _selection = crate::profile::Scope::with_elements(
+        "competition",
+        "psm_competition_and_selection",
+        ds.n_psm,
+    );
     if psm_competition {
         competition::winner_indices(ds, scores, seed)
     } else if ensemble {
@@ -97,6 +103,8 @@ pub fn build_reports<'a>(
     let mut decoy_psms = Vec::with_capacity(reported_indices.len() - target_capacity);
     #[cfg(feature = "profiling")]
     let mut psm_row_string_bytes = 0u64;
+    #[cfg(feature = "profiling")]
+    let psm_rows_start = std::time::Instant::now();
     for (output_index, &index) in reported_indices.iter().enumerate() {
         let row = output::Row::new(
             if ensemble {
@@ -125,6 +133,13 @@ pub fn build_reports<'a>(
     }
     #[cfg(feature = "profiling")]
     {
+        crate::profile::record(
+            "materialization",
+            "psm_row_construction",
+            psm_rows_start.elapsed(),
+            Some(reported_indices.len() as u64),
+            None,
+        );
         crate::profile::allocation_site(
             "main::psm output row vectors",
             2,
@@ -165,6 +180,8 @@ pub fn build_reports<'a>(
         .count();
     let mut target_peptides = Vec::with_capacity(peptide_target_capacity);
     let mut decoy_peptides = Vec::with_capacity(peptides.indices.len() - peptide_target_capacity);
+    #[cfg(feature = "profiling")]
+    let peptide_rows_start = std::time::Instant::now();
     for (peptide_index, &psm_index) in peptides.indices.iter().enumerate() {
         let row = output::Row::new(
             Cow::Borrowed(&ds.spec_id[psm_index]),
@@ -181,12 +198,21 @@ pub fn build_reports<'a>(
         }
     }
     #[cfg(feature = "profiling")]
-    crate::profile::allocation_site(
-        "main::peptide output row vectors",
-        2,
-        ((target_peptides.capacity() + decoy_peptides.capacity())
-            * std::mem::size_of::<output::Row>()) as u64,
-    );
+    {
+        crate::profile::record(
+            "materialization",
+            "peptide_row_construction",
+            peptide_rows_start.elapsed(),
+            Some(peptides.indices.len() as u64),
+            None,
+        );
+        crate::profile::allocation_site(
+            "main::peptide output row vectors",
+            2,
+            ((target_peptides.capacity() + decoy_peptides.capacity())
+                * std::mem::size_of::<output::Row>()) as u64,
+        );
+    }
     let target_peptides_q01 = target_peptides
         .iter()
         .filter(|row| row.q_value() < 0.01)
@@ -231,17 +257,28 @@ pub fn infer_proteins(
     seed: u64,
     method: ProteinMethod<'_>,
 ) -> ProteinResults {
+    #[cfg(feature = "profiling")]
+    let entries_start = std::time::Instant::now();
     let entries = peptide::protein_entries(ds, reported_indices, peptides);
     #[cfg(feature = "profiling")]
-    crate::profile::allocation_site(
-        "main::protein inference entries",
-        (entries.len() + 1) as u64,
-        (entries.capacity() * std::mem::size_of::<(f64, f64, String)>()) as u64
-            + entries
-                .iter()
-                .map(|entry| entry.2.capacity() as u64)
-                .sum::<u64>(),
-    );
+    {
+        crate::profile::record(
+            "protein_inference",
+            "protein_entry_materialization",
+            entries_start.elapsed(),
+            Some(entries.len() as u64),
+            None,
+        );
+        crate::profile::allocation_site(
+            "main::protein inference entries",
+            (entries.len() + 1) as u64,
+            (entries.capacity() * std::mem::size_of::<(f64, f64, String)>()) as u64
+                + entries
+                    .iter()
+                    .map(|entry| entry.2.capacity() as u64)
+                    .sum::<u64>(),
+        );
+    }
     let picked_groups = protein::infer(&entries, seed);
     let picked_q01 = picked_groups
         .iter()

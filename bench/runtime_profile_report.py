@@ -43,8 +43,18 @@ def read_timings(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         if not line:
             continue
         row = dict(zip(header, line.split("\t")))
-        for key in ("repetition", "wall_ns", "processes", "intra_file_threads", "cpu_sampling"):
-            row[key] = int(row[key])
+        for key in (
+            "repetition",
+            "wall_ns",
+            "processes",
+            "intra_file_threads",
+            "cpu_sampling",
+            "peak_tree_rss_bytes",
+            "minor_faults",
+            "major_faults",
+        ):
+            if key in row:
+                row[key] = int(row[key])
         rows.append(row)
     grouped: dict[tuple[str, str], list[int]] = collections.defaultdict(list)
     for row in rows:
@@ -141,7 +151,7 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
                     and event["name"] == "model_score_rows"
                 ):
                     fold_heldout_ns[fold_number] += event["duration_ns"]
-            if event["name"] == "fold_total":
+            if event["name"] == "fold_total" and event.get("fold") is not None:
                 fold_times[int(event["fold"])] = event["duration_ns"]
             elif event["name"] == "fold_dispatch_and_join":
                 dispatch += event["duration_ns"]
@@ -160,6 +170,7 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
         return event_totals.get(name, {"calls": 0, "total_ns": 0, "elements": 0, "bytes": 0})
 
     top_stage_names = [
+        "cli_and_setup",
         "input_loading",
         "rescoring",
         "psm_level_processing",
@@ -180,7 +191,10 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
 
     operation_names = [
         "pin_parse_total",
+        "input_joining",
+        "preprocessing_total",
         "normalization_total",
+        "rt_fold_preprocessing",
         "initial_direction_selection",
         "fold_creation_and_setup",
         "model_score_rows",
@@ -188,10 +202,27 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
         "confident_positive_selection",
         "svm_training_total",
         "pep_pava_total",
+        "pep_from_competition_total",
+        "psm_competition_and_selection",
+        "psm_row_construction",
         "peptide_level_processing",
+        "peptide_identity_dedup_and_representative",
+        "peptide_statistics_materialization",
+        "peptide_row_construction",
+        "peptide_mapping_union",
+        "peptide_mapping_materialization",
         "picked_protein_inference",
+        "protein_entry_materialization",
+        "protein_evidence_collection",
+        "protein_evidence_set_and_grouping",
+        "protein_group_scoring",
+        "protein_target_decoy_pairing",
+        "protein_picked_competition",
+        "protein_qvalue_and_assignment",
         "result_format_and_buffer",
         "result_file_write",
+        "protein_format_and_buffer",
+        "protein_file_write",
     ]
     operations = {name: dict(named(name)) for name in operation_names if named(name)["calls"]}
     for operation in operations.values():
@@ -199,6 +230,7 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
 
     svm_names = [
         "allocation_and_buffer_initialization",
+        "initial_objective_and_active_set",
         "active_set_and_margin_scoring",
         "gradient_computation",
         "hessian_construction",
@@ -207,6 +239,7 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
         "convergence_logic",
         "solver_buffer_update",
         "line_search_weight_update",
+        "line_search_objective_evaluation",
         "line_search_total",
     ]
     svm_total = named("svm_training_total")["total_ns"]
@@ -244,6 +277,12 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
             value = totals.get(event_name, {}).get("total_ns", 0)
             row[f"{label}_total_ns"] = value
             row[f"{label}_mean_ns_per_fold"] = value / iteration_calls if iteration_calls else 0.0
+        for label, event_name in {
+            "newton_iterations": "newton_iteration_total",
+            "line_search_evaluations": "line_search_objective_evaluation",
+            "active_set_evaluations": "active_set_and_margin_scoring",
+        }.items():
+            row[label] = totals.get(event_name, {}).get("calls", 0)
         iteration_output.append(row)
 
     fold_output: list[dict[str, Any]] = []
@@ -332,6 +371,8 @@ def aggregate_profiles(paths: list[Path]) -> dict[str, Any]:
         "allocator_totals": dict(allocator),
         "allocation_sites": allocation_sites,
         "cpu": cpu,
+        "events": event_totals,
+        "category_events": category_name_totals,
     }
 
 
@@ -362,7 +403,9 @@ def aggregate_cpu(paths: list[str]) -> dict[str, Any]:
     def top(counter: collections.Counter[str]) -> list[dict[str, Any]]:
         return [
             {"symbol": symbol, "samples": count, "percent": percent(count, total)}
-            for symbol, count in counter.most_common(30)
+            for symbol, count in sorted(
+                counter.items(), key=lambda item: (-item[1], item[0])
+            )[:30]
         ]
 
     return {
@@ -382,6 +425,9 @@ def sha256(path: Path) -> str:
 
 
 def output_equivalence(artifacts: Path) -> list[dict[str, Any]]:
+    manifests = artifacts / "manifests"
+    if manifests.exists() and any(manifests.glob("*.json")):
+        return manifest_output_equivalence(manifests)
     output = artifacts / "outputs"
     pairs = []
     for normal in sorted(output.glob("*_normal_r*")):
@@ -423,7 +469,78 @@ def output_equivalence(artifacts: Path) -> list[dict[str, Any]]:
     return results
 
 
+def manifest_processes(path: Path) -> dict[str, dict[str, Any]]:
+    manifest = json.loads(path.read_text())
+    output = {}
+    for process in manifest["processes"]:
+        command = process["command"]
+        key = Path(command[-1]).name
+        output[key] = {
+            "outputs": process["outputs"],
+            "target_psms_q_lt_0_01": process["target_psms_q_lt_0_01"],
+            "target_peptides_q_lt_0_01": process["target_peptides_q_lt_0_01"],
+        }
+    return output
+
+
+def manifest_output_equivalence(manifests: Path) -> list[dict[str, Any]]:
+    pairs: list[tuple[str, Path, Path]] = []
+    for normal in sorted(manifests.glob("*_normal_r*.json")):
+        instrumented = Path(str(normal).replace("_normal_r", "_instrumented_r"))
+        if instrumented.exists():
+            pairs.append((instrumented.stem, normal, instrumented))
+        match = re.match(r"(.+)_normal_r(\d+)\.json$", normal.name)
+        if match:
+            cpu = manifests / f"{match.group(1)}_cpu_cpu_r{match.group(2)}.json"
+            if cpu.exists():
+                pairs.append((cpu.stem, normal, cpu))
+    for configuration in ("single_file_t1", "full_sequential", "full_n4"):
+        normal = manifests / f"{configuration}_normal_r1.json"
+        allocation = manifests / f"{configuration}_allocations_instrumented_r1.json"
+        if normal.exists() and allocation.exists():
+            pairs.append((allocation.stem, normal, allocation))
+
+    results = []
+    for name, left, right in pairs:
+        left_processes = manifest_processes(left)
+        right_processes = manifest_processes(right)
+        differences = []
+        for key in sorted(set(left_processes) | set(right_processes)):
+            if left_processes.get(key) != right_processes.get(key):
+                differences.append(key)
+        results.append(
+            {
+                "comparison": name,
+                "files_compared": len(set(left_processes) | set(right_processes)),
+                "byte_identical": not differences,
+                "differences": differences,
+            }
+        )
+    return results
+
+
 def workload_outcomes(artifacts: Path) -> dict[str, dict[str, int]]:
+    manifests = artifacts / "manifests"
+    if manifests.exists() and any(manifests.glob("*.json")):
+        outcomes = {}
+        for path in sorted(manifests.glob("full_*.json")):
+            processes = json.loads(path.read_text())["processes"]
+            valid = [
+                process
+                for process in processes
+                if process["target_psms_q_lt_0_01"] is not None
+                and process["target_peptides_q_lt_0_01"] is not None
+            ]
+            outcomes[path.stem] = {
+                "valid_files": len(valid),
+                "target_psms_q_lt_0_01": sum(
+                    process["target_psms_q_lt_0_01"] for process in valid
+                ),
+                "target_peptides_q_lt_0_01": sum(
+                    process["target_peptides_q_lt_0_01"] for process in valid
+                ),
+            }
+        return outcomes
     psm_pattern = re.compile(r"target PSMs q<0\.01: (\d+)")
     peptide_pattern = re.compile(r"target peptides q<0\.01: (\d+)")
     outcomes: dict[str, dict[str, int]] = {}
@@ -448,7 +565,7 @@ def workload_outcomes(artifacts: Path) -> dict[str, dict[str, int]]:
     return outcomes
 
 
-def environment(artifacts: Path) -> dict[str, str]:
+def environment(artifacts: Path) -> dict[str, Any]:
     build = artifacts / "build"
     output = {}
     for name in ("git-head", "rustc", "cargo", "uname", "perf-probe-exit-code"):
@@ -462,7 +579,79 @@ def environment(artifacts: Path) -> dict[str, str]:
                 output["cpu_model"] = line.split(":", 1)[1].strip()
             elif line.startswith("CPU(s):") and "cpu_count" not in output:
                 output["cpu_count"] = line.split(":", 1)[1].strip()
+    binary_hashes = build / "binary-sha256.json"
+    if binary_hashes.exists():
+        output["binary_sha256"] = json.loads(binary_hashes.read_text())
+    cargo_config = build / "cargo-config.toml"
+    if cargo_config.exists():
+        output["cargo_config"] = cargo_config.read_text(errors="replace").strip()
     return output
+
+
+def supporting_measurements(path: Path) -> dict[str, Any]:
+    """Keep conditional-path and allocation evidence beside corrected timings."""
+    source = json.loads(path.read_text())
+    configurations = source.get("configurations", {})
+    names = (
+        "single_file_t1_allocations",
+        "full_sequential_allocations",
+        "full_n4_allocations",
+        "single_file_t1_rt",
+        "joined_two_file_t1",
+        "protein_f3_t1",
+    )
+    return {
+        "note": (
+            "Process-internal stage, allocation, and conditional-path measurements. "
+            "End-to-end wall medians come from the primary timing campaign."
+        ),
+        "configurations": {
+            name: configurations[name] for name in names if name in configurations
+        },
+        "timing_summary": {
+            name: source.get("timing_summary", {}).get(name, {})
+            for name in names
+            if name in source.get("timing_summary", {})
+        },
+    }
+
+
+def corrected_fold_measurement(path: Path) -> dict[str, Any]:
+    """Summarize a trace collected after the fold-context label was corrected."""
+    profile = json.loads(path.read_text())
+    rows = []
+    for fold in range(3):
+        events = [event for event in profile["events"] if event.get("fold") == fold]
+
+        def total(name: str, phase: str | None = None) -> int:
+            return sum(
+                event["duration_ns"]
+                for event in events
+                if event["name"] == name
+                and (phase is None or event.get("phase") == phase)
+            )
+
+        rows.append(
+            {
+                "fold": fold,
+                "setup_ns": total("fold_setup"),
+                "training_ns": total("fold_training_total"),
+                "training_scoring_ns": total(
+                    "model_score_rows", "semi_supervised_iteration"
+                ),
+                "qvalue_ns": total("qvalues_total"),
+                "heldout_scoring_ns": total(
+                    "model_score_rows", "final_heldout_scoring"
+                ),
+                "total_ns": total("fold_total"),
+            }
+        )
+    return {
+        "source": str(path),
+        "elapsed_ns": profile["elapsed_ns"],
+        "metadata": profile.get("metadata", {}),
+        "folds": rows,
+    }
 
 
 def format_ms(value: float) -> str:
@@ -647,6 +836,16 @@ def markdown_report(result: dict[str, Any]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts", required=True, type=Path)
+    parser.add_argument(
+        "--supporting-json",
+        type=Path,
+        help="aggregate containing allocation and conditional-path profiles",
+    )
+    parser.add_argument(
+        "--corrected-fold-profile",
+        type=Path,
+        help="representative per-process trace with fold context labels",
+    )
     parser.add_argument("--json", required=True, type=Path)
     parser.add_argument("--markdown", required=True, type=Path)
     args = parser.parse_args()
@@ -668,6 +867,12 @@ def main() -> None:
         "output_equivalence": output_equivalence(args.artifacts),
         "configurations": configurations,
     }
+    if args.supporting_json is not None:
+        result["supporting_measurements"] = supporting_measurements(args.supporting_json)
+    if args.corrected_fold_profile is not None:
+        result["corrected_fold_measurement"] = corrected_fold_measurement(
+            args.corrected_fold_profile
+        )
     args.json.parent.mkdir(parents=True, exist_ok=True)
     args.markdown.parent.mkdir(parents=True, exist_ok=True)
     args.json.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")

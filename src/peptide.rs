@@ -33,6 +33,8 @@ pub fn score(
     psm_scores: &[f64],
     null_target_win_prob: f64,
 ) -> Scores {
+    #[cfg(feature = "profiling")]
+    let representative_start = std::time::Instant::now();
     let mut best: ahash::AHashMap<(i8, &str), usize> =
         ahash::AHashMap::with_capacity(reported_indices.len());
     for &index in reported_indices {
@@ -44,6 +46,14 @@ pub fn score(
             }
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "peptide",
+        "peptide_identity_dedup_and_representative",
+        representative_start.elapsed(),
+        Some(reported_indices.len() as u64),
+        None,
+    );
 
     // HashMap iteration is process-randomized. Preserve input order so tied
     // peptide statistics and the loopy-BP message schedule are reproducible.
@@ -60,8 +70,18 @@ pub fn score(
         None,
     );
 
+    #[cfg(feature = "profiling")]
+    let materialization_start = std::time::Instant::now();
     let scores: Vec<f64> = indices.iter().map(|&index| psm_scores[index]).collect();
     let labels: Vec<i8> = indices.iter().map(|&index| ds.labels[index]).collect();
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "peptide",
+        "peptide_statistics_materialization",
+        materialization_start.elapsed(),
+        Some(indices.len() as u64),
+        None,
+    );
     let (q_values, peps) =
         stats::qvalues_and_peps(&scores, &labels, stats::Tdc::reported(null_target_win_prob));
     Scores {
@@ -88,14 +108,26 @@ pub fn protein_entries(
     debug_assert_eq!(peptides.indices.len(), peptides.scores.len());
     debug_assert_eq!(peptides.indices.len(), peptides.peps.len());
 
+    #[cfg(feature = "profiling")]
+    let mapping_union_start = std::time::Instant::now();
     let mut proteins_by_peptide: BTreeMap<(i8, &str), BTreeSet<&str>> = BTreeMap::new();
     for &index in reported_indices {
         let key = (ds.labels[index], core(&ds.peptide[index]));
         let proteins = proteins_by_peptide.entry(key).or_default();
         proteins.extend(protein::split_proteins(&ds.proteins[index]));
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "peptide",
+        "peptide_mapping_union",
+        mapping_union_start.elapsed(),
+        Some(reported_indices.len() as u64),
+        None,
+    );
 
-    peptides
+    #[cfg(feature = "profiling")]
+    let entry_materialization_start = std::time::Instant::now();
+    let entries = peptides
         .indices
         .iter()
         .enumerate()
@@ -110,7 +142,16 @@ pub fn protein_entries(
                 .join(" ");
             (peptides.scores[peptide], peptides.peps[peptide], proteins)
         })
-        .collect()
+        .collect();
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "peptide",
+        "peptide_mapping_materialization",
+        entry_materialization_start.elapsed(),
+        Some(peptides.indices.len() as u64),
+        None,
+    );
+    entries
 }
 
 #[cfg(test)]

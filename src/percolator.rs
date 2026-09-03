@@ -630,6 +630,9 @@ fn cv_scores(ds: &Dataset, fold: &[u8], p: &Params, hp: Hp, seed: u64) -> Vec<f6
 
     let per_fold = |&test: &u8| -> (Vec<usize>, Vec<f64>) {
         #[cfg(feature = "profiling")]
+        let _fold_context =
+            crate::profile::context(Some("cross_validation_fold"), Some(test), None, None);
+        #[cfg(feature = "profiling")]
         let _fold_total = crate::profile::Scope::new("cross_validation", "fold_total");
         let setup = fold_setup(ds, fold, test, p, seed);
         let scores = setup.train_and_score(ds, p, hp);

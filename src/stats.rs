@@ -239,6 +239,12 @@ pub fn qvalues_into(
     let n = scores.len();
     #[cfg(feature = "profiling")]
     let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    #[cfg(feature = "profiling")]
+    let old_capacities = (
+        workspace.order.capacity(),
+        workspace.fdr_at.capacity(),
+        q.capacity(),
+    );
     // Fail closed.  A non-finite score has no place in a score ordering: it
     // cannot be compared, it cannot join a tie group, and admitting one lets a
     // single row silently move the q-values of every row above it.  The PIN
@@ -249,12 +255,38 @@ pub fn qvalues_into(
         "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
     );
 
+    #[cfg(feature = "profiling")]
+    let buffer_start = std::time::Instant::now();
     workspace.order.clear();
     workspace.order.extend(0..n);
     workspace.fdr_at.clear();
     workspace.fdr_at.resize(n, 1.0);
     q.clear();
     q.resize(n, 1.0);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_buffer_setup",
+        buffer_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "stats::qvalue materialization buffers",
+        u64::from(workspace.order.capacity() > old_capacities.0)
+            + u64::from(workspace.fdr_at.capacity() > old_capacities.1)
+            + u64::from(q.capacity() > old_capacities.2),
+        (usize::from(workspace.order.capacity() > old_capacities.0)
+            * workspace.order.capacity()
+            * std::mem::size_of::<usize>()
+            + usize::from(workspace.fdr_at.capacity() > old_capacities.1)
+                * workspace.fdr_at.capacity()
+                * std::mem::size_of::<f64>()
+            + usize::from(q.capacity() > old_capacities.2)
+                * q.capacity()
+                * std::mem::size_of::<f64>()) as u64,
+    );
 
     #[cfg(feature = "profiling")]
     let sort_start = std::time::Instant::now();
@@ -269,7 +301,7 @@ pub fn qvalues_into(
     );
 
     #[cfg(feature = "profiling")]
-    let evaluate_start = std::time::Instant::now();
+    let tie_scan_start = std::time::Instant::now();
     // Forward pass: one raw FDP per tie group, shared by every member.
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
@@ -287,8 +319,18 @@ pub fn qvalues_into(
             group_start = rank + 1;
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_tie_group_scan",
+        tie_scan_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
     // Reverse cumulative minimum: q is the best achievable FDP of any set that
     // still contains this PSM.
+    #[cfg(feature = "profiling")]
+    let monotonic_start = std::time::Instant::now();
     let mut running = 1.0f64;
     for rank in (0..n).rev() {
         if workspace.fdr_at[rank] < running {
@@ -299,8 +341,8 @@ pub fn qvalues_into(
     #[cfg(feature = "profiling")]
     crate::profile::record(
         "qvalue",
-        "qvalue_scan_and_monotonize",
-        evaluate_start.elapsed(),
+        "qvalue_monotonic_scan",
+        monotonic_start.elapsed(),
         Some(n as u64),
         None,
     );
@@ -327,17 +369,52 @@ pub fn target_mask_at_fdr_into(
     let n = scores.len();
     #[cfg(feature = "profiling")]
     let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    #[cfg(feature = "profiling")]
+    let old_capacities = (workspace.order.capacity(), accepted.capacity());
     assert!(
         scores.iter().all(|value| value.is_finite()),
         "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
     );
+    #[cfg(feature = "profiling")]
+    let buffer_start = std::time::Instant::now();
     workspace.order.clear();
     workspace.order.extend(0..n);
     accepted.clear();
     accepted.resize(n, 0);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_buffer_setup",
+        buffer_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    crate::profile::allocation_site(
+        "stats::training qvalue buffers",
+        u64::from(workspace.order.capacity() > old_capacities.0)
+            + u64::from(accepted.capacity() > old_capacities.1),
+        (usize::from(workspace.order.capacity() > old_capacities.0)
+            * workspace.order.capacity()
+            * std::mem::size_of::<usize>()
+            + usize::from(accepted.capacity() > old_capacities.1) * accepted.capacity())
+            as u64,
+    );
 
+    #[cfg(feature = "profiling")]
+    let sort_start = std::time::Instant::now();
     sort_score_order(&mut workspace.order, scores);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "qvalue_score_order",
+        sort_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
 
+    #[cfg(feature = "profiling")]
+    let tie_scan_start = std::time::Instant::now();
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
     let mut last_accepted_rank = None;
@@ -354,6 +431,16 @@ pub fn target_mask_at_fdr_into(
             last_accepted_rank = Some(rank);
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_tie_group_scan",
+        tie_scan_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    let selection_start = std::time::Instant::now();
     if let Some(rank) = last_accepted_rank {
         for &i in &workspace.order[..=rank] {
             if labels[i] > 0 {
@@ -361,6 +448,14 @@ pub fn target_mask_at_fdr_into(
             }
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_positive_materialization",
+        selection_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
 }
 
 /// Count target scores whose q-value is strictly below `threshold` without
@@ -376,14 +471,49 @@ pub fn target_count_at_fdr_into(
     threshold: f64,
     order: &mut Vec<usize>,
 ) -> usize {
+    let n = scores.len();
+    #[cfg(feature = "profiling")]
+    let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    #[cfg(feature = "profiling")]
+    let old_order_capacity = order.capacity();
     assert!(
         scores.iter().all(|value| value.is_finite()),
         "target-decoy estimation requires finite scores; a non-finite score reached the estimator"
     );
+    #[cfg(feature = "profiling")]
+    let buffer_start = std::time::Instant::now();
     order.clear();
-    order.extend(0..scores.len());
+    order.extend(0..n);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_buffer_setup",
+        buffer_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    if order.capacity() > old_order_capacity {
+        crate::profile::allocation_site(
+            "stats::initial-direction sort buffer",
+            1,
+            (order.capacity() * std::mem::size_of::<usize>()) as u64,
+        );
+    }
+    #[cfg(feature = "profiling")]
+    let sort_start = std::time::Instant::now();
     sort_score_order(order, scores);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "qvalue_score_order",
+        sort_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
 
+    #[cfg(feature = "profiling")]
+    let tie_scan_start = std::time::Instant::now();
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
     let mut accepted_targets = 0usize;
@@ -398,6 +528,14 @@ pub fn target_count_at_fdr_into(
             accepted_targets = targets as usize;
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_tie_group_scan",
+        tie_scan_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
     accepted_targets
 }
 
@@ -410,10 +548,45 @@ pub fn target_count_at_reversed_ranks_into(
     threshold: f64,
     order: &mut Vec<usize>,
 ) -> usize {
+    let n = ranks.len();
+    #[cfg(feature = "profiling")]
+    let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
+    #[cfg(feature = "profiling")]
+    let old_order_capacity = order.capacity();
+    #[cfg(feature = "profiling")]
+    let buffer_start = std::time::Instant::now();
     order.clear();
-    order.extend(0..ranks.len());
+    order.extend(0..n);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_buffer_setup",
+        buffer_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    if order.capacity() > old_order_capacity {
+        crate::profile::allocation_site(
+            "stats::initial-direction rank-sort buffer",
+            1,
+            (order.capacity() * std::mem::size_of::<usize>()) as u64,
+        );
+    }
+    #[cfg(feature = "profiling")]
+    let sort_start = std::time::Instant::now();
     sort_reversed_rank_order(order, ranks);
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "qvalue_reversed_rank_order",
+        sort_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
 
+    #[cfg(feature = "profiling")]
+    let tie_scan_start = std::time::Instant::now();
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
     let mut accepted_targets = 0usize;
@@ -428,6 +601,14 @@ pub fn target_count_at_reversed_ranks_into(
             accepted_targets = targets as usize;
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "qvalue",
+        "qvalue_tie_group_scan",
+        tie_scan_start.elapsed(),
+        Some(n as u64),
+        None,
+    );
     accepted_targets
 }
 
@@ -509,6 +690,15 @@ fn peps_from_competition_into(
     let n = workspace.order.len();
     #[cfg(feature = "profiling")]
     let _peps = crate::profile::Scope::with_elements("pep", "pep_from_competition_total", n);
+    #[cfg(feature = "profiling")]
+    let old_capacities = (
+        pep.capacity(),
+        workspace.target_ranks.capacity(),
+        workspace.target_pep.capacity(),
+        workspace.pava_value.capacity(),
+        workspace.pava_weight.capacity(),
+        workspace.pava_len.capacity(),
+    );
     #[cfg(feature = "profiling")]
     let pep_start = std::time::Instant::now();
     pep.clear();
@@ -610,6 +800,48 @@ fn peps_from_competition_into(
         Some(n as u64),
         None,
     );
+    #[cfg(feature = "profiling")]
+    {
+        let capacities = [
+            pep.capacity(),
+            workspace.target_ranks.capacity(),
+            workspace.target_pep.capacity(),
+            workspace.pava_value.capacity(),
+            workspace.pava_weight.capacity(),
+            workspace.pava_len.capacity(),
+        ];
+        let old = [
+            old_capacities.0,
+            old_capacities.1,
+            old_capacities.2,
+            old_capacities.3,
+            old_capacities.4,
+            old_capacities.5,
+        ];
+        let element_sizes = [
+            std::mem::size_of::<f64>(),
+            std::mem::size_of::<usize>(),
+            std::mem::size_of::<f64>(),
+            std::mem::size_of::<f64>(),
+            std::mem::size_of::<f64>(),
+            std::mem::size_of::<usize>(),
+        ];
+        crate::profile::allocation_site(
+            "stats::PEP materialization/PAVA buffers",
+            capacities
+                .iter()
+                .zip(old)
+                .filter(|(new, old)| **new > *old)
+                .count() as u64,
+            capacities
+                .iter()
+                .zip(old)
+                .zip(element_sizes)
+                .filter(|((new, old), _)| **new > *old)
+                .map(|((capacity, _), size)| capacity * size)
+                .sum::<usize>() as u64,
+        );
+    }
 }
 
 #[cfg(test)]

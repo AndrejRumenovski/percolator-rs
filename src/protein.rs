@@ -103,6 +103,12 @@ struct ProteinEvidence<'a> {
 }
 
 fn collect_protein_evidence<'a>(entries: &'a [(f64, f64, String)]) -> ProteinEvidence<'a> {
+    #[cfg(feature = "profiling")]
+    let _evidence = crate::profile::Scope::with_elements(
+        "protein_inference",
+        "protein_evidence_collection",
+        entries.len(),
+    );
     let mut id_of: HashMap<&str, usize> = HashMap::new();
     let mut names: Vec<&str> = Vec::new();
     let mut peptide_sets: Vec<Vec<u32>> = Vec::new();
@@ -131,6 +137,12 @@ struct EvidenceGroups<'a> {
 }
 
 fn group_by_evidence(mut evidence: ProteinEvidence<'_>) -> EvidenceGroups<'_> {
+    #[cfg(feature = "profiling")]
+    let _grouping = crate::profile::Scope::with_elements(
+        "protein_inference",
+        "protein_evidence_set_and_grouping",
+        evidence.names.len(),
+    );
     for peptides in evidence.peptide_sets.iter_mut() {
         peptides.sort_unstable();
         peptides.dedup();
@@ -160,6 +172,12 @@ fn group_by_evidence(mut evidence: ProteinEvidence<'_>) -> EvidenceGroups<'_> {
 }
 
 fn score_groups(entries: &[(f64, f64, String)], groups: &EvidenceGroups<'_>) -> Vec<ProtGroup> {
+    #[cfg(feature = "profiling")]
+    let _scoring = crate::profile::Scope::with_elements(
+        "protein_inference",
+        "protein_group_scoring",
+        groups.members.len(),
+    );
     groups
         .members
         .iter()
@@ -208,14 +226,34 @@ pub fn infer(entries: &[(f64, f64, String)], seed: u64) -> Vec<ProtGroup> {
 
     // Deterministic order before any tie-sensitive step, so nothing downstream
     // can depend on hash-map iteration.
+    #[cfg(feature = "profiling")]
+    let canonical_sort_start = std::time::Instant::now();
     out.sort_by(|a, b| a.proteins.cmp(&b.proteins));
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "protein_group_canonical_order",
+        canonical_sort_start.elapsed(),
+        Some(out.len() as u64),
+        None,
+    );
     picked_fdr(&mut out, seed);
+    #[cfg(feature = "profiling")]
+    let score_sort_start = std::time::Instant::now();
     out.sort_by(|a, b| {
         b.score
             .partial_cmp(&a.score)
             .unwrap_or(std::cmp::Ordering::Equal)
             .then_with(|| a.proteins.cmp(&b.proteins))
     });
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "protein_group_score_order",
+        score_sort_start.elapsed(),
+        Some(out.len() as u64),
+        None,
+    );
     out
 }
 
@@ -258,6 +296,8 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
     // Bucket group indices by pairing key -> (best target idx, best decoy idx).
     // Within one slot a tie is broken by member names, which are unique per
     // group, so the choice is a function of content rather than of order.
+    #[cfg(feature = "profiling")]
+    let pairing_start = std::time::Instant::now();
     let mut buckets: HashMap<String, (Option<usize>, Option<usize>)> = HashMap::new();
     for gi in 0..groups.len() {
         let k = key_of(&groups[gi]);
@@ -279,11 +319,31 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
             *slot = Some(gi);
         }
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "protein_inference",
+        "protein_target_decoy_pairing",
+        pairing_start.elapsed(),
+        Some(groups.len() as u64),
+        None,
+    );
 
     // One competition entry per bucket: the higher-scoring of target/decoy, with
     // an exact tie decided by a fair coin on the pairing key.
     let mut keys: Vec<&String> = buckets.keys().collect();
+    #[cfg(feature = "profiling")]
+    let pairing_sort_start = std::time::Instant::now();
     keys.sort_unstable();
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "sort",
+        "protein_pairing_key_order",
+        pairing_sort_start.elapsed(),
+        Some(keys.len() as u64),
+        None,
+    );
+    #[cfg(feature = "profiling")]
+    let competition_start = std::time::Instant::now();
     let mut picks: Vec<(usize, f64, bool)> = Vec::with_capacity(buckets.len());
     for key in keys {
         let (t, d) = buckets[key];
@@ -306,8 +366,18 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
         };
         picks.push((pick.0, groups[pick.0].score, pick.1));
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "protein_inference",
+        "protein_picked_competition",
+        competition_start.elapsed(),
+        Some(picks.len() as u64),
+        None,
+    );
 
     // q-values over the picked list (pi0 = 1)
+    #[cfg(feature = "profiling")]
+    let qvalue_start = std::time::Instant::now();
     let scores: Vec<f64> = picks.iter().map(|p| p.1).collect();
     let labels: Vec<i8> = picks.iter().map(|p| if p.2 { -1 } else { 1 }).collect();
     let q = stats::qvalues(&scores, &labels, stats::Tdc::reported(0.5));
@@ -315,6 +385,14 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
         groups[pk.0].picked = true;
         groups[pk.0].qval = qi;
     }
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "protein_inference",
+        "protein_qvalue_and_assignment",
+        qvalue_start.elapsed(),
+        Some(picks.len() as u64),
+        None,
+    );
 }
 
 #[cfg(test)]

@@ -132,8 +132,14 @@ pub(crate) fn transform_matrix(
 /// Normalize from `fit_rows` only, then transform every row. Nested selection
 /// uses this to keep outer-test and inner-validation features out of fitting.
 pub(crate) fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize], p: &Params) -> (Vec<f64>, usize) {
+    #[cfg(feature = "profiling")]
+    let _preprocessing =
+        crate::profile::Scope::with_elements("preprocessing", "preprocessing_total", ds.n_psm);
     let rt_values = fold_rt_columns(ds, fit_rows, p);
     let rt = rt_columns(p, rt_values.as_deref());
+    #[cfg(feature = "profiling")]
+    let _normalization =
+        crate::profile::Scope::with_elements("normalization", "normalization_total", ds.n_psm);
     let normalization = fit_normalization(ds, fit_rows, rt.as_ref());
     transform_matrix(ds, &normalization, rt.as_ref())
 }
@@ -142,6 +148,9 @@ pub(crate) fn build_matrix_fit(ds: &Dataset, fit_rows: &[usize], p: &Params) -> 
 /// residual columns for every row.
 pub(crate) fn fold_rt_columns(ds: &Dataset, fit_rows: &[usize], p: &Params) -> Option<Vec<f64>> {
     let alignment = p.rt.as_ref()?;
+    #[cfg(feature = "profiling")]
+    let _rt =
+        crate::profile::Scope::with_elements("preprocessing", "rt_fold_preprocessing", ds.n_psm);
     let mut values = vec![0.0f64; ds.n_psm * 2];
     alignment.residuals(&ds.labels, &ds.source, fit_rows, &mut values);
     Some(values)

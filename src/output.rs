@@ -143,6 +143,8 @@ fn write_fixed_6<W: Write>(writer: &mut W, value: f64) -> std::io::Result<()> {
 
 pub fn write_results(path: &str, mut rows: Vec<Row<'_>>) -> std::io::Result<()> {
     #[cfg(feature = "profiling")]
+    profile::allocation_site("output::result buffered writer", 1, 1 << 20);
+    #[cfg(feature = "profiling")]
     let sort_start = std::time::Instant::now();
     rows.sort_unstable_by(|x, y| {
         y.score
@@ -270,6 +272,8 @@ pub fn write_proteins(
     groups: &[protein::ProtGroup],
     want_decoy: bool,
 ) -> std::io::Result<()> {
+    #[cfg(feature = "profiling")]
+    profile::allocation_site("output::protein buffered writer", 1, 1 << 20);
     #[cfg(feature = "profiling")]
     let create_start = std::time::Instant::now();
     let f = File::create(path)?;

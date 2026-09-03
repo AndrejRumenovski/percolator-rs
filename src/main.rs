@@ -13,6 +13,8 @@ use percolator_rs::{output, percolator, pin, pipeline, rt};
 static PROFILING_ALLOCATOR: profile::CountingAllocator = profile::CountingAllocator;
 
 fn main() {
+    #[cfg(feature = "profiling")]
+    let cli_setup_start = std::time::Instant::now();
     let mut args = parse_args();
     if args.pins.is_empty() {
         eprintln!("usage: percolator-rs [flags] input.pin [more.pin ...]");
@@ -40,6 +42,8 @@ fn main() {
         std::process::exit(2);
     }
     #[cfg(feature = "profiling")]
+    let cli_setup_elapsed = cli_setup_start.elapsed();
+    #[cfg(feature = "profiling")]
     let profile_session = profile::Session::start(
         args.profile_json.clone(),
         args.profile_cpu.clone(),
@@ -51,6 +55,7 @@ fn main() {
     });
     #[cfg(feature = "profiling")]
     {
+        profile::record("stage", "cli_and_setup", cli_setup_elapsed, None, None);
         profile::metadata("profile_name", args.profile);
         profile::metadata("seed", args.params.seed);
         profile::metadata("num_threads", args.params.num_threads);
@@ -113,6 +118,8 @@ fn main() {
             std::process::exit(1);
         }));
     }
+    #[cfg(feature = "profiling")]
+    let input_join_start = std::time::Instant::now();
     let ds = if args.ensemble {
         pin::merge_ensemble(
             parts,
@@ -130,12 +137,30 @@ fn main() {
     } else {
         pin::merge(parts)
     };
+    #[cfg(feature = "profiling")]
+    profile::record(
+        "input",
+        "input_joining",
+        input_join_start.elapsed(),
+        Some(ds.n_psm as u64),
+        None,
+    );
     let mut ds = ds;
     if args.rt_features {
         // Reserve the residual columns now; the alignment behind them is
         // label-dependent, so it is refitted inside every outer training
         // partition rather than once here.
+        #[cfg(feature = "profiling")]
+        let rt_setup_start = std::time::Instant::now();
         args.params.rt = rt::augment(&mut ds);
+        #[cfg(feature = "profiling")]
+        profile::record(
+            "preprocessing",
+            "rt_input_augmentation",
+            rt_setup_start.elapsed(),
+            Some(ds.n_psm as u64),
+            None,
+        );
     }
     let ds = ds;
     #[cfg(feature = "profiling")]
@@ -272,6 +297,8 @@ fn main() {
     // Protein inference uses the best score/PEP for each peptide sequence and
     // the union of its protein mappings across all reported PSM occurrences.
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
+        #[cfg(feature = "profiling")]
+        let _protein_context = profile::context(Some("protein_inference"), None, None, None);
         #[cfg(feature = "profiling")]
         let _protein_inference = profile::Scope::new("stage", "protein_inference_and_output");
         let method = match args.protein_inference {

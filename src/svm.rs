@@ -320,6 +320,8 @@ pub fn train(
     }
 
     debug_assert_eq!(initial_scores.len(), n);
+    #[cfg(feature = "profiling")]
+    let initial_objective_start = std::time::Instant::now();
     let mut f = if p.feature_mask.is_none() {
         let mut objective = 0.0;
         for &weight in w.iter().take(dim) {
@@ -338,6 +340,14 @@ pub fn train(
     } else {
         p.f_and_active(w, z, active)
     };
+    #[cfg(feature = "profiling")]
+    crate::profile::record(
+        "svm",
+        "initial_objective_and_active_set",
+        initial_objective_start.elapsed(),
+        Some(n as u64),
+        Some(active.len() as u64),
+    );
     for newton_iteration in 0..max_newton {
         #[cfg(not(feature = "profiling"))]
         let _ = newton_iteration;
@@ -408,7 +418,17 @@ pub fn train(
                 Some(dim as u64),
                 None,
             );
+            #[cfg(feature = "profiling")]
+            let objective_start = std::time::Instant::now();
             let f_new = p.f_and_active(w_new, z, active);
+            #[cfg(feature = "profiling")]
+            crate::profile::record(
+                "svm",
+                "line_search_objective_evaluation",
+                objective_start.elapsed(),
+                Some(n as u64),
+                Some(active.len() as u64),
+            );
             if f_new <= f + 1e-4 * step * gd {
                 w.copy_from_slice(w_new);
                 f = f_new;
