@@ -88,7 +88,7 @@ fn strip_decoy(id: &str) -> &str {
 
 /// Split the raw proteins field (tab- or space-separated protein ids).
 #[allow(clippy::manual_pattern_char_comparison)]
-pub(crate) fn split_proteins(s: &str) -> Vec<&str> {
+pub fn split_proteins(s: &str) -> Vec<&str> {
     s.split(|c: char| c == '\t' || c == ' ' || c == ';')
         .filter(|p| !p.is_empty())
         .collect()

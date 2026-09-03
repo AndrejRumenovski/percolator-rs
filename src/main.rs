@@ -1,21 +1,9 @@
-//! percolator-rs — a from-scratch Rust reimplementation of the Percolator
-//! semi-supervised PSM rescoring algorithm. CLI mirrors the subset of reference
-//! flags used by our benchmark.
-
-mod mlp;
-mod percolator;
-mod pin;
-#[cfg(feature = "profiling")]
-mod profile;
-mod protein;
-mod protein_bayes;
-mod rt;
-mod simd;
-mod stats;
-mod svm;
-mod tiebreak;
+//! percolator-rs command-line orchestration.
 
 use percolator::{Model, Params};
+#[cfg(feature = "profiling")]
+use percolator_rs::profile;
+use percolator_rs::{percolator, pin, protein, protein_bayes, rt, stats, tiebreak};
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufWriter, Write};
