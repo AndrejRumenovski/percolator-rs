@@ -6,68 +6,12 @@ use cli::{ensemble_input, parse_args, ProteinInference};
 #[cfg(feature = "profiling")]
 use percolator_rs::profile;
 use percolator_rs::percolator::Model;
-use percolator_rs::{competition, output, percolator, pin, protein, protein_bayes, rt, stats};
+use percolator_rs::{competition, output, peptide, percolator, pin, protein, protein_bayes, rt, stats};
 use std::borrow::Cow;
 
 #[cfg(feature = "profiling")]
 #[global_allocator]
 static PROFILING_ALLOCATOR: profile::CountingAllocator = profile::CountingAllocator;
-
-fn core_peptide(p: &str) -> &str {
-    // strip flanking residues: A.PEPTIDE.B -> PEPTIDE (keep mods)
-    let bytes = p.as_bytes();
-    let first = p.find('.');
-    let last = p.rfind('.');
-    match (first, last) {
-        (Some(a), Some(b)) if b > a => &p[a + 1..b],
-        _ => {
-            let _ = bytes;
-            p
-        }
-    }
-}
-
-/// Build one protein-inference entry per reported peptide while retaining the
-/// complete peptide-to-protein association observed across repeated PSM rows.
-///
-/// Peptide score and PEP still come from the existing best-PSM selection.  The
-/// protein mapping is a property of the peptide identity, however, and must not
-/// depend on which equal-scoring occurrence happened to be encountered first.
-fn protein_entries(
-    ds: &pin::Dataset,
-    reported_indices: &[usize],
-    peptide_indices: &[usize],
-    peptide_scores: &[f64],
-    peptide_peps: &[f64],
-) -> Vec<(f64, f64, String)> {
-    use std::collections::{BTreeMap, BTreeSet};
-
-    debug_assert_eq!(peptide_indices.len(), peptide_scores.len());
-    debug_assert_eq!(peptide_indices.len(), peptide_peps.len());
-
-    let mut proteins_by_peptide: BTreeMap<(i8, &str), BTreeSet<&str>> = BTreeMap::new();
-    for &index in reported_indices {
-        let key = (ds.labels[index], core_peptide(&ds.peptide[index]));
-        let proteins = proteins_by_peptide.entry(key).or_default();
-        proteins.extend(protein::split_proteins(&ds.proteins[index]));
-    }
-
-    peptide_indices
-        .iter()
-        .enumerate()
-        .map(|(peptide, &index)| {
-            let key = (ds.labels[index], core_peptide(&ds.peptide[index]));
-            let proteins = proteins_by_peptide
-                .get(&key)
-                .expect("reported peptide is missing its protein associations")
-                .iter()
-                .copied()
-                .collect::<Vec<_>>()
-                .join(" ");
-            (peptide_scores[peptide], peptide_peps[peptide], proteins)
-        })
-        .collect()
-}
 
 fn main() {
     let mut args = parse_args();
@@ -388,56 +332,31 @@ fn main() {
     let _peptide_context = profile::context(Some("peptide_level_processing"), None, None, None);
     #[cfg(feature = "profiling")]
     let _peptide_processing = profile::Scope::new("stage", "peptide_level_processing");
-    let mut best: ahash::AHashMap<(i8, &str), usize> =
-        ahash::AHashMap::with_capacity(reported_indices.len());
-    for &i in &reported_indices {
-        let key = (ds.labels[i], core_peptide(&ds.peptide[i]));
-        match best.get(&key) {
-            Some(&j) if out.score[j] >= out.score[i] => {}
-            _ => {
-                best.insert(key, i);
-            }
-        }
-    }
-    // HashMap iteration is process-randomized. Preserve input order so tied
-    // peptide statistics and the loopy-BP message schedule are reproducible.
-    let mut pep_idx: Vec<usize> = best.values().copied().collect();
-    #[cfg(feature = "profiling")]
-    let peptide_index_sort = std::time::Instant::now();
-    pep_idx.sort_unstable();
-    #[cfg(feature = "profiling")]
-    profile::record(
-        "sort",
-        "peptide_input_order",
-        peptide_index_sort.elapsed(),
-        Some(pep_idx.len() as u64),
-        None,
-    );
-    let pscore: Vec<f64> = pep_idx.iter().map(|&i| out.score[i]).collect();
-    let plabel: Vec<i8> = pep_idx.iter().map(|&i| ds.labels[i]).collect();
-    let (pq, ppep) = stats::qvalues_and_peps(
-        &pscore,
-        &plabel,
-        stats::Tdc::reported(args.params.null_target_win_prob),
+    let peptides = peptide::score(
+        &ds,
+        &reported_indices,
+        &out.score,
+        args.params.null_target_win_prob,
     );
 
-    let peptide_target_capacity = pep_idx
+    let peptide_target_capacity = peptides
+        .indices
         .iter()
         .filter(|&&index| ds.labels[index] > 0)
         .count();
     let mut ptargets: Vec<output::Row<'_>> = Vec::with_capacity(peptide_target_capacity);
     let mut pdecoys: Vec<output::Row<'_>> =
-        Vec::with_capacity(pep_idx.len() - peptide_target_capacity);
-    for (k, &i) in pep_idx.iter().enumerate() {
+        Vec::with_capacity(peptides.indices.len() - peptide_target_capacity);
+    for (peptide_index, &psm_index) in peptides.indices.iter().enumerate() {
         let r = output::Row::new(
-            Cow::Borrowed(&ds.spec_id[i]),
-            pscore[k],
-            pq[k],
-            ppep[k],
-            &ds.peptide[i],
-            &ds.proteins[i],
+            Cow::Borrowed(&ds.spec_id[psm_index]),
+            peptides.scores[peptide_index],
+            peptides.q_values[peptide_index],
+            peptides.peps[peptide_index],
+            &ds.peptide[psm_index],
+            &ds.proteins[psm_index],
         );
-        if ds.labels[i] > 0 {
+        if ds.labels[psm_index] > 0 {
             ptargets.push(r);
         } else {
             pdecoys.push(r);
@@ -495,7 +414,7 @@ fn main() {
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
         #[cfg(feature = "profiling")]
         let _protein_inference = profile::Scope::new("stage", "protein_inference_and_output");
-        let entries = protein_entries(&ds, &reported_indices, &pep_idx, &pscore, &ppep);
+        let entries = peptide::protein_entries(&ds, &reported_indices, &peptides);
         #[cfg(feature = "profiling")]
         profile::allocation_site(
             "main::protein inference entries",
@@ -577,51 +496,4 @@ fn main() {
         eprintln!("profiling error: {message}");
         std::process::exit(1);
     });
-}
-
-#[cfg(test)]
-mod protein_entry_tests {
-    use super::*;
-
-    fn two_row_dataset(order: [usize; 2]) -> pin::Dataset {
-        let proteins = ["PROT_A", "PROT_B"];
-        pin::Dataset {
-            feature_names: vec!["score".to_string()],
-            n_feat: 1,
-            n_psm: 2,
-            features: vec![5.0, f64::from_bits(5.0f64.to_bits() - 1)],
-            labels: vec![1, 1],
-            spec_id: order.iter().map(|&i| format!("AMB_{i}")).collect(),
-            scan: vec![1, 1],
-            exp_mass: vec![500.0, 500.0],
-            peptide: vec!["K.AMBIGUOUS.R".to_string(); 2],
-            proteins: order.iter().map(|&i| proteins[i].to_string()).collect(),
-            source: vec![0, 0],
-            source_names: vec!["fixture.pin".to_string()],
-            ensemble: false,
-        }
-    }
-
-    /// The two-row minimum for the upstream defect. Protein association is a
-    /// set-valued property of peptide identity, independent of which exact- or
-    /// near-tied occurrence supplied the peptide score.
-    #[test]
-    fn complete_peptide_association_survives_representative_and_row_order() {
-        for order in [[0, 1], [1, 0]] {
-            let ds = two_row_dataset(order);
-            for representative in [0, 1] {
-                let entries = protein_entries(
-                    &ds,
-                    &[0, 1],
-                    &[representative],
-                    &[5.0],
-                    &[0.25],
-                );
-                assert_eq!(
-                    entries,
-                    vec![(5.0, 0.25, "PROT_A PROT_B".to_string())]
-                );
-            }
-        }
-    }
 }
