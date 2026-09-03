@@ -31,6 +31,9 @@ use crate::{pin, tiebreak};
 /// ([`tiebreak`]), which is the resolution the target-decoy literature
 /// prescribes and the only one that keeps the null win probability at the
 /// declared `p`. Permuting the rows of the input cannot move the coin.
+// The row index intentionally addresses every parallel Dataset column; an
+// iterator over only `score` would weaken that shared-length contract.
+#[allow(clippy::needless_range_loop)]
 pub fn winner_indices(ds: &pin::Dataset, score: &[f64], seed: u64) -> Vec<usize> {
     #[derive(Clone, Copy)]
     struct Best {

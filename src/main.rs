@@ -320,13 +320,12 @@ fn main() {
             );
         } else {
             eprintln!(
-                "protein groups: {} ({} target, {} decoy); reported entries: {} | target proteins q<0.01: {} ({}) vs {} (picked-FDR) vs {} (classic)",
+                "protein groups: {} ({} target, {} decoy); reported entries: {} | target proteins q<0.01: {} (Bayesian) vs {} (picked-FDR) vs {} (classic)",
                 groups.len(),
                 groups.iter().filter(|g| !g.is_decoy).count(),
                 groups.iter().filter(|g| g.is_decoy).count(),
                 groups.iter().filter(|g| g.picked).count(),
                 n_prot_q01,
-                "Bayesian",
                 picked_q01,
                 classic_q01
             );

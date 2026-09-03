@@ -282,7 +282,7 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
     let scores: Vec<f64> = picks.iter().map(|p| p.1).collect();
     let labels: Vec<i8> = picks.iter().map(|p| if p.2 { -1 } else { 1 }).collect();
     let q = stats::qvalues(&scores, &labels, stats::Tdc::reported(0.5));
-    for (pk, qi) in picks.iter().zip(q.into_iter()) {
+    for (pk, qi) in picks.iter().zip(q) {
         groups[pk.0].picked = true;
         groups[pk.0].qval = qi;
     }

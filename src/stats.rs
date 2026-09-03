@@ -1288,11 +1288,10 @@ mod tests {
         scores.push(0.0);
         labels.push(-1);
         let pep = peps(&scores, &labels, reported());
-        for k in 0..20 {
+        for (k, value) in pep.iter().enumerate().take(20) {
             assert!(
-                (pep[k] - 0.05).abs() < 1e-12,
-                "target {k} PEP {} is not 0.05",
-                pep[k]
+                (value - 0.05).abs() < 1e-12,
+                "target {k} PEP {value} is not 0.05",
             );
         }
     }
