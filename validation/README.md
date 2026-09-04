@@ -17,10 +17,34 @@ Read in this order:
    — the independent adversarial audit that **rejected** the repaired build, with the attack scripts
    `adversarial_competition.py`, `adversarial_cv.py`, `adversarial_parser.py`,
    `adversarial_protein.rs` and `independent_stats_probe.rs`.
-6. [`SECOND_REPAIR.md`](SECOND_REPAIR.md) — **current.** The response to that audit: competition tie
+6. [`SECOND_REPAIR.md`](SECOND_REPAIR.md) — the response to that audit: competition tie
    handling, the PEP estimator, protein grouping/competition/posterior, the two leaking CV modes, a
    root-cause attribution of the entrapment failure that remains, and a twelve-mutation test of the
    suite itself.
+7. [`POST_REPAIR_AUDIT.md`](POST_REPAIR_AUDIT.md) — the independent adversarial audit of
+   the second repair. It preserves the successful repairs but rejects the build scientifically after
+   new joined-input tie, PEP, and protein-construction failures and unchanged signal-present
+   anti-conservatism.
+8. [`ENTRAPMENT_ROOTCAUSE.md`](ENTRAPMENT_ROOTCAUSE.md) + [`ENTRAPMENT_ROOTCAUSE_RESULTS.json`](ENTRAPMENT_ROOTCAUSE_RESULTS.json)
+   — why the signal-present entrapment experiment reports ~1.81% adjusted FDP at nominal q<0.01.
+   Diagnosis only; no production code was changed.
+9. [`PEP_ROOTCAUSE.md`](PEP_ROOTCAUSE.md) + [`PEP_ROOTCAUSE_RESULTS.json`](PEP_ROOTCAUSE_RESULTS.json)
+   — why the reported PEPs remain optimistic after the exact-zero repair. Reconstructs
+   the estimator from source, verifies every transformation against an independent
+   greatest-convex-minorant oracle, measures calibration under a generative model where the
+   assumptions hold, and compares against QVALITY 3.09 on byte-identical inputs. Diagnosis only;
+   no production code was changed and nothing was fitted to the calibration outcome. Probes:
+   `pep_rootcause_probe.rs`, `pep_rootcause_lib.py`, `pep_rootcause_synth.py`,
+   `pep_rootcause_violation.py`, `pep_rootcause_mechanism.py`, `pep_rootcause_real.py`,
+   `pep_rootcause_tables.py`, `pep_rootcause_controls.py`, `pep_rootcause_depth.py`,
+   `pep_rootcause_qvality.py`, `pep_rootcause_uncertainty.py`.
+10. [`homology_depleted_entrapment/`](homology_depleted_entrapment/) — **current.** A prospective,
+    preregistered, pre-search intervention testing whether native-homologous entrapment proteins
+    cause the high-confidence target/decoy exchangeability failure. It compares a freshly searched
+    original database, a homology-depleted database, and three source/length-matched random controls;
+    preserves all search, PIN, rescoring, analysis, uncertainty, and integrity artifacts; and finds
+    the hypothesis supported for the q<0.01 failure in this dataset without recommending a production
+    methodology change.
 
 Documents 1–3 describe an implementation that no longer exists. They are the record of the failure
 that document 4 responds to, and they are deliberately unchanged. Document 4's own claims are

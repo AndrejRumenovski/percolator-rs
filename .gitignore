@@ -6,6 +6,16 @@
 /reference
 /reference_fast
 
+# Homology-depleted entrapment: heavyweight regenerated search artifacts.
+# Their paths and hashes remain recorded in the committed artifact manifests.
+/validation/homology_depleted_entrapment/ablation_pins/*/
+/validation/homology_depleted_entrapment/baseline_reproduction/entrapment_targets.fasta
+/validation/homology_depleted_entrapment/baseline_reproduction/results/
+/validation/homology_depleted_entrapment/characterize_databases
+/validation/homology_depleted_entrapment/databases/*.fasta
+/validation/homology_depleted_entrapment/percolator/
+/validation/homology_depleted_entrapment/searches/
+
 # Scratch
 *.log
 __pycache__/

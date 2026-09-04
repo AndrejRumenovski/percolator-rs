@@ -1,0 +1,920 @@
+{
+  "competition_key": "ScanNr + ExpMass, highest Xcorr, per PIN",
+  "conditions": {
+    "homology_depleted": {
+      "condition": "homology_depleted",
+      "f_global": 0.5681197560734044,
+      "matched_entrapment_decoy_depths": {
+        "100": {
+          "entrapment_decoys": 100,
+          "entrapment_targets": 90,
+          "rank_depth": 6983,
+          "ratio": 0.9
+        },
+        "133": {
+          "entrapment_decoys": 133,
+          "entrapment_targets": 129,
+          "rank_depth": 7638,
+          "ratio": 0.9699248120300752
+        },
+        "25": {
+          "entrapment_decoys": 25,
+          "entrapment_targets": 33,
+          "rank_depth": 5276,
+          "ratio": 1.32
+        },
+        "250": {
+          "entrapment_decoys": 250,
+          "entrapment_targets": 224,
+          "rank_depth": 8967,
+          "ratio": 0.896
+        },
+        "50": {
+          "entrapment_decoys": 50,
+          "entrapment_targets": 49,
+          "rank_depth": 5858,
+          "ratio": 0.98
+        },
+        "500": {
+          "entrapment_decoys": 500,
+          "entrapment_targets": 436,
+          "rank_depth": 11145,
+          "ratio": 0.872
+        }
+      },
+      "per_run": [
+        {
+          "decoys": 14139,
+          "pure_entrapment_decoys": 7858,
+          "pure_entrapment_targets": 8076,
+          "rows_after_spectrum_competition": 30340,
+          "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+          "targets": 16201
+        },
+        {
+          "decoys": 13430,
+          "pure_entrapment_decoys": 7784,
+          "pure_entrapment_targets": 7707,
+          "rows_after_spectrum_competition": 35994,
+          "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+          "targets": 22564
+        },
+        {
+          "decoys": 4420,
+          "pure_entrapment_decoys": 2429,
+          "pure_entrapment_targets": 2319,
+          "rows_after_spectrum_competition": 9380,
+          "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+          "targets": 4960
+        },
+        {
+          "decoys": 2829,
+          "pure_entrapment_decoys": 1520,
+          "pure_entrapment_targets": 1592,
+          "rows_after_spectrum_competition": 6370,
+          "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+          "targets": 3541
+        },
+        {
+          "decoys": 12971,
+          "pure_entrapment_decoys": 7394,
+          "pure_entrapment_targets": 7312,
+          "rows_after_spectrum_competition": 32138,
+          "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+          "targets": 19167
+        },
+        {
+          "decoys": 22955,
+          "pure_entrapment_decoys": 13168,
+          "pure_entrapment_targets": 13046,
+          "rows_after_spectrum_competition": 53392,
+          "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+          "targets": 30437
+        }
+      ],
+      "pins": [
+        {
+          "bytes": 65045292,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+          "sha256": "3f9d9db6ba93e7a0a02f9620a4896b6087e03923849db54cab8371fe02593086"
+        },
+        {
+          "bytes": 74904415,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+          "sha256": "9627c67185f4679265a07f3271ab037a098c4a40a67c4134af5c61c2114feedb"
+        },
+        {
+          "bytes": 19980394,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+          "sha256": "64b7ec52f58fc15c27b41fa27588670eab2d2b25f445103d62b2da20436ff3b6"
+        },
+        {
+          "bytes": 13506686,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+          "sha256": "02f5f02f03f389d9917320c89d52e3ba4c921876e295744e258eb8a48aa98842"
+        },
+        {
+          "bytes": 68549924,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+          "sha256": "3a0b8d6cf6e9483f6e4204ae2745757d28782e454ae8a0fc961f4d48adafafa4"
+        },
+        {
+          "bytes": 114465806,
+          "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+          "sha256": "ca930d2893853186b10fe614c53b4fd0a3308a0af642f33b9b470405f1bf43af"
+        }
+      ],
+      "q_thresholds": [
+        {
+          "adjusted_fdp_global_f": null,
+          "direct_known_false_fraction": null,
+          "ent_target_over_ent_decoy": null,
+          "entrapment_decoys": 0,
+          "entrapment_targets": 0,
+          "targets": 0,
+          "threshold": 0.001
+        },
+        {
+          "adjusted_fdp_global_f": 0.0026264992756845824,
+          "direct_known_false_fraction": 0.0014921661278288984,
+          "ent_target_over_ent_decoy": 0.6,
+          "entrapment_decoys": 10,
+          "entrapment_targets": 6,
+          "targets": 4021,
+          "threshold": 0.005
+        },
+        {
+          "adjusted_fdp_global_f": 0.009008478049435685,
+          "direct_known_false_fraction": 0.005117894352038019,
+          "ent_target_over_ent_decoy": 1.0769230769230769,
+          "entrapment_decoys": 26,
+          "entrapment_targets": 28,
+          "targets": 5471,
+          "threshold": 0.01
+        },
+        {
+          "adjusted_fdp_global_f": 0.018293909663589188,
+          "direct_known_false_fraction": 0.010393131495707185,
+          "ent_target_over_ent_decoy": 1.0147058823529411,
+          "entrapment_decoys": 68,
+          "entrapment_targets": 69,
+          "targets": 6639,
+          "threshold": 0.02
+        },
+        {
+          "adjusted_fdp_global_f": 0.04677066202992208,
+          "direct_known_false_fraction": 0.02657133710383097,
+          "ent_target_over_ent_decoy": 0.8829787234042553,
+          "entrapment_decoys": 282,
+          "entrapment_targets": 249,
+          "targets": 9371,
+          "threshold": 0.05
+        },
+        {
+          "adjusted_fdp_global_f": 0.09825567586209219,
+          "direct_known_false_fraction": 0.055820990603599296,
+          "ent_target_over_ent_decoy": 0.88510101010101,
+          "entrapment_decoys": 792,
+          "entrapment_targets": 701,
+          "targets": 12558,
+          "threshold": 0.1
+        }
+      ],
+      "rows": 167614
+    },
+    "original": {
+      "condition": "original",
+      "f_global": 0.7766015696294944,
+      "matched_entrapment_decoy_depths": {
+        "100": {
+          "entrapment_decoys": 100,
+          "entrapment_targets": 112,
+          "rank_depth": 5605,
+          "ratio": 1.12
+        },
+        "133": {
+          "entrapment_decoys": 133,
+          "entrapment_targets": 134,
+          "rank_depth": 6117,
+          "ratio": 1.0075187969924813
+        },
+        "25": {
+          "entrapment_decoys": 25,
+          "entrapment_targets": 32,
+          "rank_depth": 4046,
+          "ratio": 1.28
+        },
+        "250": {
+          "entrapment_decoys": 250,
+          "entrapment_targets": 242,
+          "rank_depth": 7408,
+          "ratio": 0.968
+        },
+        "50": {
+          "entrapment_decoys": 50,
+          "entrapment_targets": 55,
+          "rank_depth": 4666,
+          "ratio": 1.1
+        },
+        "500": {
+          "entrapment_decoys": 500,
+          "entrapment_targets": 492,
+          "rank_depth": 9274,
+          "ratio": 0.984
+        }
+      },
+      "per_run": [
+        {
+          "decoys": 14235,
+          "pure_entrapment_decoys": 10964,
+          "pure_entrapment_targets": 11293,
+          "rows_after_spectrum_competition": 30343,
+          "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+          "targets": 16108
+        },
+        {
+          "decoys": 13609,
+          "pure_entrapment_decoys": 10681,
+          "pure_entrapment_targets": 10719,
+          "rows_after_spectrum_competition": 35995,
+          "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+          "targets": 22386
+        },
+        {
+          "decoys": 4336,
+          "pure_entrapment_decoys": 3267,
+          "pure_entrapment_targets": 3404,
+          "rows_after_spectrum_competition": 9380,
+          "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+          "targets": 5044
+        },
+        {
+          "decoys": 2858,
+          "pure_entrapment_decoys": 2135,
+          "pure_entrapment_targets": 2228,
+          "rows_after_spectrum_competition": 6374,
+          "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+          "targets": 3516
+        },
+        {
+          "decoys": 13185,
+          "pure_entrapment_decoys": 10250,
+          "pure_entrapment_targets": 10145,
+          "rows_after_spectrum_competition": 32139,
+          "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+          "targets": 18954
+        },
+        {
+          "decoys": 23075,
+          "pure_entrapment_decoys": 18018,
+          "pure_entrapment_targets": 18042,
+          "rows_after_spectrum_competition": 53396,
+          "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+          "targets": 30321
+        }
+      ],
+      "pins": [
+        {
+          "bytes": 64045090,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+          "sha256": "857aefe53b668d75f3a3a3618f1b7681090d2977377b5e0cb085bca1e2fc626c"
+        },
+        {
+          "bytes": 73737254,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+          "sha256": "fbffd03a0fbd789b3578c6ce1ee1b584b1acc4c70e1da12b3598dac4e468534a"
+        },
+        {
+          "bytes": 19691630,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+          "sha256": "c6527cb471c0282e3275276d1410bd6284a69586782facf74772d819a41a18b0"
+        },
+        {
+          "bytes": 13347130,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+          "sha256": "43a37da0fe795165247e594db778d480a35a49c57c350199f810013176cabd80"
+        },
+        {
+          "bytes": 67643917,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+          "sha256": "e09218f5b84c860cfb46a8e0ce3eea99002724051e55b657ca005f70e505d161"
+        },
+        {
+          "bytes": 112756661,
+          "path": "validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+          "sha256": "08e66cb76ae084b332de538315961e0b6ec8a5a762815d3b69233c5c59261f61"
+        }
+      ],
+      "q_thresholds": [
+        {
+          "adjusted_fdp_global_f": null,
+          "direct_known_false_fraction": null,
+          "ent_target_over_ent_decoy": null,
+          "entrapment_decoys": 0,
+          "entrapment_targets": 0,
+          "targets": 0,
+          "threshold": 0.001
+        },
+        {
+          "adjusted_fdp_global_f": 0.007772605078177643,
+          "direct_known_false_fraction": 0.006036217303822937,
+          "ent_target_over_ent_decoy": 1.75,
+          "entrapment_decoys": 12,
+          "entrapment_targets": 21,
+          "targets": 3479,
+          "threshold": 0.005
+        },
+        {
+          "adjusted_fdp_global_f": 0.01281255298127459,
+          "direct_known_false_fraction": 0.009950248756218905,
+          "ent_target_over_ent_decoy": 1.3333333333333333,
+          "entrapment_decoys": 33,
+          "entrapment_targets": 44,
+          "targets": 4422,
+          "threshold": 0.01
+        },
+        {
+          "adjusted_fdp_global_f": 0.02130827872588665,
+          "direct_known_false_fraction": 0.016548042704626335,
+          "ent_target_over_ent_decoy": 1.0689655172413792,
+          "entrapment_decoys": 87,
+          "entrapment_targets": 93,
+          "targets": 5620,
+          "threshold": 0.02
+        },
+        {
+          "adjusted_fdp_global_f": 0.04854474329291376,
+          "direct_known_false_fraction": 0.0376999238385377,
+          "ent_target_over_ent_decoy": 0.9580645161290322,
+          "entrapment_decoys": 310,
+          "entrapment_targets": 297,
+          "targets": 7878,
+          "threshold": 0.05
+        },
+        {
+          "adjusted_fdp_global_f": 0.10664293158897747,
+          "direct_known_false_fraction": 0.08281906806189071,
+          "ent_target_over_ent_decoy": 1.0300333704115685,
+          "entrapment_decoys": 899,
+          "entrapment_targets": 926,
+          "targets": 11181,
+          "threshold": 0.1
+        }
+      ],
+      "rows": 167627
+    },
+    "size_control_130363": {
+      "condition": "size_control_130363",
+      "f_global": 0.584472049689441,
+      "matched_entrapment_decoy_depths": {
+        "100": {
+          "entrapment_decoys": 100,
+          "entrapment_targets": 80,
+          "rank_depth": 6396,
+          "ratio": 0.8
+        },
+        "133": {
+          "entrapment_decoys": 133,
+          "entrapment_targets": 113,
+          "rank_depth": 7210,
+          "ratio": 0.849624060150376
+        },
+        "25": {
+          "entrapment_decoys": 25,
+          "entrapment_targets": 31,
+          "rank_depth": 4801,
+          "ratio": 1.24
+        },
+        "250": {
+          "entrapment_decoys": 250,
+          "entrapment_targets": 243,
+          "rank_depth": 8880,
+          "ratio": 0.972
+        },
+        "50": {
+          "entrapment_decoys": 50,
+          "entrapment_targets": 53,
+          "rank_depth": 5503,
+          "ratio": 1.06
+        },
+        "500": {
+          "entrapment_decoys": 500,
+          "entrapment_targets": 471,
+          "rank_depth": 11091,
+          "ratio": 0.942
+        }
+      },
+      "per_run": [
+        {
+          "decoys": 14177,
+          "pure_entrapment_decoys": 8099,
+          "pure_entrapment_targets": 8342,
+          "rows_after_spectrum_competition": 30342,
+          "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+          "targets": 16165
+        },
+        {
+          "decoys": 13478,
+          "pure_entrapment_decoys": 8005,
+          "pure_entrapment_targets": 7960,
+          "rows_after_spectrum_competition": 35994,
+          "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+          "targets": 22516
+        },
+        {
+          "decoys": 4398,
+          "pure_entrapment_decoys": 2457,
+          "pure_entrapment_targets": 2440,
+          "rows_after_spectrum_competition": 9380,
+          "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+          "targets": 4982
+        },
+        {
+          "decoys": 2811,
+          "pure_entrapment_decoys": 1537,
+          "pure_entrapment_targets": 1690,
+          "rows_after_spectrum_competition": 6367,
+          "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+          "targets": 3556
+        },
+        {
+          "decoys": 13088,
+          "pure_entrapment_decoys": 7726,
+          "pure_entrapment_targets": 7517,
+          "rows_after_spectrum_competition": 32136,
+          "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+          "targets": 19048
+        },
+        {
+          "decoys": 22961,
+          "pure_entrapment_decoys": 13580,
+          "pure_entrapment_targets": 13553,
+          "rows_after_spectrum_competition": 53388,
+          "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+          "targets": 30427
+        }
+      ],
+      "pins": [
+        {
+          "bytes": 65095832,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+          "sha256": "7f4e8448fbcfd0be4fd8d17b81f34471072a49eb9909059b0102894c873883cc"
+        },
+        {
+          "bytes": 74978042,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+          "sha256": "8f82d80aaa556ea927ca7dcc607c642490c15a5c473a82a0e4267abbbc73edf3"
+        },
+        {
+          "bytes": 19982493,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+          "sha256": "f6c1a47d70a265ab9fd54f22e73e7cc69330b538ed02ff37fe05b288b7512411"
+        },
+        {
+          "bytes": 13507326,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+          "sha256": "9f21cba8224c7e19bbb8520d9f9c4faa6a043450332b96ec4ebdbe3c414ca747"
+        },
+        {
+          "bytes": 68617800,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+          "sha256": "6cd2fd89cdede736733d8f39c7592822ad22b84243b923d4a9e4325fb9dbb60e"
+        },
+        {
+          "bytes": 114613915,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+          "sha256": "ec86ed59d883721c6743ddf62acaed3f4a976768036313801cd19db914963086"
+        }
+      ],
+      "q_thresholds": [
+        {
+          "adjusted_fdp_global_f": 0.00300165930234726,
+          "direct_known_false_fraction": 0.0017543859649122807,
+          "ent_target_over_ent_decoy": null,
+          "entrapment_decoys": 0,
+          "entrapment_targets": 2,
+          "targets": 1140,
+          "threshold": 0.001
+        },
+        {
+          "adjusted_fdp_global_f": 0.007896672933867407,
+          "direct_known_false_fraction": 0.004615384615384616,
+          "ent_target_over_ent_decoy": 1.6363636363636365,
+          "entrapment_decoys": 11,
+          "entrapment_targets": 18,
+          "targets": 3900,
+          "threshold": 0.005
+        },
+        {
+          "adjusted_fdp_global_f": 0.013252872210208662,
+          "direct_known_false_fraction": 0.0077459333849728895,
+          "ent_target_over_ent_decoy": 1.3793103448275863,
+          "entrapment_decoys": 29,
+          "entrapment_targets": 40,
+          "targets": 5164,
+          "threshold": 0.01
+        },
+        {
+          "adjusted_fdp_global_f": 0.020308744686298945,
+          "direct_known_false_fraction": 0.011869893633420687,
+          "ent_target_over_ent_decoy": 0.9625,
+          "entrapment_decoys": 80,
+          "entrapment_targets": 77,
+          "targets": 6487,
+          "threshold": 0.02
+        },
+        {
+          "adjusted_fdp_global_f": 0.05040914842243492,
+          "direct_known_false_fraction": 0.029462738301559793,
+          "ent_target_over_ent_decoy": 0.9477351916376306,
+          "entrapment_decoys": 287,
+          "entrapment_targets": 272,
+          "targets": 9232,
+          "threshold": 0.05
+        },
+        {
+          "adjusted_fdp_global_f": 0.10259929253645589,
+          "direct_known_false_fraction": 0.059966418805468935,
+          "ent_target_over_ent_decoy": 0.9517766497461929,
+          "entrapment_decoys": 788,
+          "entrapment_targets": 750,
+          "targets": 12507,
+          "threshold": 0.1
+        }
+      ],
+      "rows": 167607
+    },
+    "size_control_155921": {
+      "condition": "size_control_155921",
+      "f_global": 0.585937056183605,
+      "matched_entrapment_decoy_depths": {
+        "100": {
+          "entrapment_decoys": 100,
+          "entrapment_targets": 103,
+          "rank_depth": 6890,
+          "ratio": 1.03
+        },
+        "133": {
+          "entrapment_decoys": 133,
+          "entrapment_targets": 149,
+          "rank_depth": 7479,
+          "ratio": 1.1203007518796992
+        },
+        "25": {
+          "entrapment_decoys": 25,
+          "entrapment_targets": 24,
+          "rank_depth": 4761,
+          "ratio": 0.96
+        },
+        "250": {
+          "entrapment_decoys": 250,
+          "entrapment_targets": 267,
+          "rank_depth": 8982,
+          "ratio": 1.068
+        },
+        "50": {
+          "entrapment_decoys": 50,
+          "entrapment_targets": 61,
+          "rank_depth": 5743,
+          "ratio": 1.22
+        },
+        "500": {
+          "entrapment_decoys": 500,
+          "entrapment_targets": 528,
+          "rank_depth": 11295,
+          "ratio": 1.056
+        }
+      },
+      "per_run": [
+        {
+          "decoys": 14286,
+          "pure_entrapment_decoys": 8189,
+          "pure_entrapment_targets": 8259,
+          "rows_after_spectrum_competition": 30342,
+          "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+          "targets": 16056
+        },
+        {
+          "decoys": 13297,
+          "pure_entrapment_decoys": 7919,
+          "pure_entrapment_targets": 8073,
+          "rows_after_spectrum_competition": 35992,
+          "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+          "targets": 22695
+        },
+        {
+          "decoys": 4352,
+          "pure_entrapment_decoys": 2420,
+          "pure_entrapment_targets": 2486,
+          "rows_after_spectrum_competition": 9377,
+          "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+          "targets": 5025
+        },
+        {
+          "decoys": 2804,
+          "pure_entrapment_decoys": 1542,
+          "pure_entrapment_targets": 1706,
+          "rows_after_spectrum_competition": 6364,
+          "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+          "targets": 3560
+        },
+        {
+          "decoys": 12838,
+          "pure_entrapment_decoys": 7542,
+          "pure_entrapment_targets": 7812,
+          "rows_after_spectrum_competition": 32135,
+          "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+          "targets": 19297
+        },
+        {
+          "decoys": 22919,
+          "pure_entrapment_decoys": 13645,
+          "pure_entrapment_targets": 13578,
+          "rows_after_spectrum_competition": 53389,
+          "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+          "targets": 30470
+        }
+      ],
+      "pins": [
+        {
+          "bytes": 65082791,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+          "sha256": "5ebd14105eb84d938cf2c38068dafa8ee7881637166e92073d830eaf7a03cbf2"
+        },
+        {
+          "bytes": 74990356,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+          "sha256": "b51b294ac9e3daaf4485f88ec5ec69852c6bba49e52809085be2ccc46e2c6749"
+        },
+        {
+          "bytes": 19968486,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+          "sha256": "a5779d089db354bcb4d1b0275c791b55d2f72bb37975ea6848603eab36f20759"
+        },
+        {
+          "bytes": 13499420,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+          "sha256": "f9b2f0137d176f280d45682c29fa8bdac3667599819a62cf1b7e5f02126e9757"
+        },
+        {
+          "bytes": 68622927,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+          "sha256": "3cb4225253807fa1996e718dd5662a900d9453219de46de912c737cd81675821"
+        },
+        {
+          "bytes": 114586392,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+          "sha256": "8ce4dd50d80707c0ec68c45c5cd029059e89fead28e695ac8ad740954cce008c"
+        }
+      ],
+      "q_thresholds": [
+        {
+          "adjusted_fdp_global_f": 0.0,
+          "direct_known_false_fraction": 0.0,
+          "ent_target_over_ent_decoy": null,
+          "entrapment_decoys": 0,
+          "entrapment_targets": 0,
+          "targets": 1140,
+          "threshold": 0.001
+        },
+        {
+          "adjusted_fdp_global_f": 0.00483849163740786,
+          "direct_known_false_fraction": 0.0028350515463917525,
+          "ent_target_over_ent_decoy": 1.0,
+          "entrapment_decoys": 11,
+          "entrapment_targets": 11,
+          "targets": 3880,
+          "threshold": 0.005
+        },
+        {
+          "adjusted_fdp_global_f": 0.00999610284679768,
+          "direct_known_false_fraction": 0.005857087075361187,
+          "ent_target_over_ent_decoy": 1.0714285714285714,
+          "entrapment_decoys": 28,
+          "entrapment_targets": 30,
+          "targets": 5122,
+          "threshold": 0.01
+        },
+        {
+          "adjusted_fdp_global_f": 0.02093131508658098,
+          "direct_known_false_fraction": 0.01226443314388274,
+          "ent_target_over_ent_decoy": 1.0789473684210527,
+          "entrapment_decoys": 76,
+          "entrapment_targets": 82,
+          "targets": 6686,
+          "threshold": 0.02
+        },
+        {
+          "adjusted_fdp_global_f": 0.0532875940105781,
+          "direct_known_false_fraction": 0.031223175965665238,
+          "ent_target_over_ent_decoy": 1.028268551236749,
+          "entrapment_decoys": 283,
+          "entrapment_targets": 291,
+          "targets": 9320,
+          "threshold": 0.05
+        },
+        {
+          "adjusted_fdp_global_f": 0.1107654697158659,
+          "direct_known_false_fraction": 0.06490159325210872,
+          "ent_target_over_ent_decoy": 1.029739776951673,
+          "entrapment_decoys": 807,
+          "entrapment_targets": 831,
+          "targets": 12804,
+          "threshold": 0.1
+        }
+      ],
+      "rows": 167599
+    },
+    "size_control_196613": {
+      "condition": "size_control_196613",
+      "f_global": 0.5843272073907446,
+      "matched_entrapment_decoy_depths": {
+        "100": {
+          "entrapment_decoys": 100,
+          "entrapment_targets": 104,
+          "rank_depth": 6740,
+          "ratio": 1.04
+        },
+        "133": {
+          "entrapment_decoys": 133,
+          "entrapment_targets": 142,
+          "rank_depth": 7262,
+          "ratio": 1.0676691729323309
+        },
+        "25": {
+          "entrapment_decoys": 25,
+          "entrapment_targets": 33,
+          "rank_depth": 4784,
+          "ratio": 1.32
+        },
+        "250": {
+          "entrapment_decoys": 250,
+          "entrapment_targets": 265,
+          "rank_depth": 8791,
+          "ratio": 1.06
+        },
+        "50": {
+          "entrapment_decoys": 50,
+          "entrapment_targets": 64,
+          "rank_depth": 5683,
+          "ratio": 1.28
+        },
+        "500": {
+          "entrapment_decoys": 500,
+          "entrapment_targets": 502,
+          "rank_depth": 11144,
+          "ratio": 1.004
+        }
+      },
+      "per_run": [
+        {
+          "decoys": 14240,
+          "pure_entrapment_decoys": 8060,
+          "pure_entrapment_targets": 8284,
+          "rows_after_spectrum_competition": 30343,
+          "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+          "targets": 16103
+        },
+        {
+          "decoys": 13437,
+          "pure_entrapment_decoys": 8008,
+          "pure_entrapment_targets": 8074,
+          "rows_after_spectrum_competition": 35994,
+          "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+          "targets": 22557
+        },
+        {
+          "decoys": 4369,
+          "pure_entrapment_decoys": 2441,
+          "pure_entrapment_targets": 2477,
+          "rows_after_spectrum_competition": 9380,
+          "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+          "targets": 5011
+        },
+        {
+          "decoys": 2818,
+          "pure_entrapment_decoys": 1563,
+          "pure_entrapment_targets": 1662,
+          "rows_after_spectrum_competition": 6370,
+          "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+          "targets": 3552
+        },
+        {
+          "decoys": 13005,
+          "pure_entrapment_decoys": 7682,
+          "pure_entrapment_targets": 7596,
+          "rows_after_spectrum_competition": 32138,
+          "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+          "targets": 19133
+        },
+        {
+          "decoys": 22917,
+          "pure_entrapment_decoys": 13548,
+          "pure_entrapment_targets": 13571,
+          "rows_after_spectrum_competition": 53391,
+          "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+          "targets": 30474
+        }
+      ],
+      "pins": [
+        {
+          "bytes": 65090053,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+          "sha256": "f221be166e45204825e6ec196533ea37c738d6dd1036c5a8999e02dffbe66ffc"
+        },
+        {
+          "bytes": 74981466,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+          "sha256": "eb9ef25b4f23f184e0707ccd79cbfd09eca26ec270185e5da2696fbc8b59e413"
+        },
+        {
+          "bytes": 19977274,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+          "sha256": "e8837129d81c567aac0520015f5cf76d853a3b63479ccd7b8c8cd3993bc5fa87"
+        },
+        {
+          "bytes": 13498160,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+          "sha256": "4c9450450ad8fd5f290ebffe02cf4eb840bbe444cfda7827dc51e0d7f8778bd6"
+        },
+        {
+          "bytes": 68600257,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+          "sha256": "a56e2f45731d5704b3154f75ec8ac197e4ccad88dea6f357a06fc169b4b66eb0"
+        },
+        {
+          "bytes": 114598102,
+          "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+          "sha256": "f3ae3333ef31c48af2401d8e374d164ad1d0222553246c1a2bedcf50d07348df"
+        }
+      ],
+      "q_thresholds": [
+        {
+          "adjusted_fdp_global_f": 0.0030024033499078673,
+          "direct_known_false_fraction": 0.0017543859649122807,
+          "ent_target_over_ent_decoy": null,
+          "entrapment_decoys": 0,
+          "entrapment_targets": 2,
+          "targets": 1140,
+          "threshold": 0.001
+        },
+        {
+          "adjusted_fdp_global_f": 0.011126170853619572,
+          "direct_known_false_fraction": 0.006501324343847821,
+          "ent_target_over_ent_decoy": 2.7,
+          "entrapment_decoys": 10,
+          "entrapment_targets": 27,
+          "targets": 4153,
+          "threshold": 0.005
+        },
+        {
+          "adjusted_fdp_global_f": 0.01454063831447807,
+          "direct_known_false_fraction": 0.008496490579977835,
+          "ent_target_over_ent_decoy": 1.7037037037037037,
+          "entrapment_decoys": 27,
+          "entrapment_targets": 46,
+          "targets": 5414,
+          "threshold": 0.01
+        },
+        {
+          "adjusted_fdp_global_f": 0.022245976801198372,
+          "direct_known_false_fraction": 0.012998929499923536,
+          "ent_target_over_ent_decoy": 1.118421052631579,
+          "entrapment_decoys": 76,
+          "entrapment_targets": 85,
+          "targets": 6539,
+          "threshold": 0.02
+        },
+        {
+          "adjusted_fdp_global_f": 0.05412465075059815,
+          "direct_known_false_fraction": 0.03162650602409638,
+          "ent_target_over_ent_decoy": 1.0315789473684212,
+          "entrapment_decoys": 285,
+          "entrapment_targets": 294,
+          "targets": 9296,
+          "threshold": 0.05
+        },
+        {
+          "adjusted_fdp_global_f": 0.10751349729332109,
+          "direct_known_false_fraction": 0.06282306163021868,
+          "ent_target_over_ent_decoy": 0.9887359198998749,
+          "entrapment_decoys": 799,
+          "entrapment_targets": 790,
+          "targets": 12575,
+          "threshold": 0.1
+        }
+      ],
+      "rows": 167616
+    }
+  },
+  "matched_depths": [
+    25,
+    50,
+    100,
+    133,
+    250,
+    500
+  ],
+  "schema_version": 1,
+  "stage": "raw Comet XCorr before Percolator interpretation"
+}

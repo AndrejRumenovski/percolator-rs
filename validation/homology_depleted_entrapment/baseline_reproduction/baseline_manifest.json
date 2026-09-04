@@ -1,0 +1,536 @@
+{
+  "baseline_gate_passed": true,
+  "commands": {
+    "rescore": "percolator-rs --canonical --no-select-c --seed 1 --num-threads 1 --results-psms TARGET --decoy-results-psms DECOY PIN",
+    "summarize": "python3 validation/pep_rootcause_experiments.py summarize --root RESULTS --output summary.json"
+  },
+  "databases": {
+    "combined_target": {
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/combined.fasta",
+      "sha256": "6b3b8c6738e756f3c4dfb33f05245738f6c74fcc8451d47f69198c76a29d61ee"
+    },
+    "entrapment_only": {
+      "bytes": 161080178,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/entrapment_targets.fasta",
+      "sha256": "fd5c41712e7886f1e6449193cfdfb3ac48bc979c6088254ec60c53dff300885b"
+    },
+    "native": {
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/native.fasta",
+      "sha256": "77ca1568e009d8c8d887b3a8dbba5a3d90df5044815c36155a1e6eafbeaa749a"
+    }
+  },
+  "environment": {
+    "numpy": "2.5.1",
+    "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+    "python": "3.14.4"
+  },
+  "expected": {
+    "adjusted_fdp": 0.01687315883053162,
+    "direct_known_false_fraction": 0.013200306983883347,
+    "entrapment_decoys": 133,
+    "entrapment_targets": 258,
+    "ratio": 1.9398496240601504,
+    "raw_xcorr_depth": 6117,
+    "raw_xcorr_entrapment_decoys": 133,
+    "raw_xcorr_entrapment_targets": 134,
+    "seed1_pooled_pep_error": 0.018505443259603106,
+    "targets": 19545
+  },
+  "fresh_seed1": {
+    "pep_calibration": {
+      "bins": [
+        {
+          "bin": "[1e-4,1e-3)",
+          "ent_target_over_ent_decoy": 21.0,
+          "entrapment_decoys": 2,
+          "entrapment_targets": 42,
+          "mean_predicted_pep": 0.00036582930624199164,
+          "n": 10926,
+          "native_decoys": 2,
+          "observed_adjusted": 0.004913607450968637,
+          "observed_f1": 0.003844041735310269,
+          "observed_f1_wilson95": [
+            0.0028452812175591997,
+            0.005191565350768977
+          ],
+          "observed_over_predicted_adjusted": 13.431421067502846,
+          "predicted_minus_observed_adjusted": -0.004547778144726645,
+          "predicted_minus_observed_f1": -0.0034782124290682775
+        },
+        {
+          "bin": "[1e-3,5e-3)",
+          "ent_target_over_ent_decoy": 2.2,
+          "entrapment_decoys": 10,
+          "entrapment_targets": 22,
+          "mean_predicted_pep": 0.0036938760913364675,
+          "n": 2978,
+          "native_decoys": 1,
+          "observed_adjusted": 0.009443007852859328,
+          "observed_f1": 0.007387508394895903,
+          "observed_f1_wilson95": [
+            0.00488371808890503,
+            0.011160548342220128
+          ],
+          "observed_over_predicted_adjusted": 2.5563954012985826,
+          "predicted_minus_observed_adjusted": -0.005749131761522861,
+          "predicted_minus_observed_f1": -0.003693632303559436
+        },
+        {
+          "bin": "[5e-3,.01)",
+          "ent_target_over_ent_decoy": 2.5714285714285716,
+          "entrapment_decoys": 7,
+          "entrapment_targets": 18,
+          "mean_predicted_pep": 0.0071477469621157984,
+          "n": 1399,
+          "native_decoys": 2,
+          "observed_adjusted": 0.016446260086577145,
+          "observed_f1": 0.012866333095067906,
+          "observed_f1_wilson95": [
+            0.008153909514186139,
+            0.020246633234377233
+          ],
+          "observed_over_predicted_adjusted": 2.300901273330597,
+          "predicted_minus_observed_adjusted": -0.009298513124461347,
+          "predicted_minus_observed_f1": -0.005718586132952107
+        },
+        {
+          "bin": "[.01,.02)",
+          "ent_target_over_ent_decoy": 2.4444444444444446,
+          "entrapment_decoys": 18,
+          "entrapment_targets": 44,
+          "mean_predicted_pep": 0.014092489136817378,
+          "n": 1703,
+          "native_decoys": 3,
+          "observed_adjusted": 0.033025575320980716,
+          "observed_f1": 0.025836758661186142,
+          "observed_f1_wilson95": [
+            0.01930225791486128,
+            0.03450558600999277
+          ],
+          "observed_over_predicted_adjusted": 2.343487726004318,
+          "predicted_minus_observed_adjusted": -0.01893308618416334,
+          "predicted_minus_observed_f1": -0.011744269524368764
+        },
+        {
+          "bin": "[.02,.05)",
+          "ent_target_over_ent_decoy": 1.7741935483870968,
+          "entrapment_decoys": 31,
+          "entrapment_targets": 55,
+          "mean_predicted_pep": 0.03544530920060332,
+          "n": 1326,
+          "native_decoys": 14,
+          "observed_adjusted": 0.05301899959618227,
+          "observed_f1": 0.04147812971342383,
+          "observed_f1_wilson95": [
+            0.032004459627462886,
+            0.053600826676100666
+          ],
+          "observed_over_predicted_adjusted": 1.4957973506767948,
+          "predicted_minus_observed_adjusted": -0.017573690395578948,
+          "predicted_minus_observed_f1": -0.0060328205128205095
+        },
+        {
+          "bin": "[.05,.10)",
+          "ent_target_over_ent_decoy": 1.12987012987013,
+          "entrapment_decoys": 77,
+          "entrapment_targets": 87,
+          "mean_predicted_pep": 0.07199481241743726,
+          "n": 1514,
+          "native_decoys": 32,
+          "observed_adjusted": 0.0734523577688817,
+          "observed_f1": 0.05746367239101717,
+          "observed_f1_wilson95": [
+            0.046822281861141846,
+            0.07034506640648965
+          ],
+          "observed_over_predicted_adjusted": 1.0202451440944573,
+          "predicted_minus_observed_adjusted": -0.0014575453514444475,
+          "predicted_minus_observed_f1": 0.014531140026420086
+        },
+        {
+          "bin": "[.10,.20)",
+          "ent_target_over_ent_decoy": 1.1957671957671958,
+          "entrapment_decoys": 189,
+          "entrapment_targets": 226,
+          "mean_predicted_pep": 0.15786125716104393,
+          "n": 1571,
+          "native_decoys": 60,
+          "observed_adjusted": 0.18388428589763925,
+          "observed_f1": 0.14385741565881605,
+          "observed_f1_wilson95": [
+            0.1273715808309462,
+            0.16208070420227036
+          ],
+          "observed_over_predicted_adjusted": 1.1648474692561686,
+          "predicted_minus_observed_adjusted": -0.026023028736595316,
+          "predicted_minus_observed_f1": 0.014003841502227887
+        },
+        {
+          "bin": "[.20,.50)",
+          "ent_target_over_ent_decoy": 1.0518292682926829,
+          "entrapment_decoys": 984,
+          "entrapment_targets": 1035,
+          "mean_predicted_pep": 0.34325608008429925,
+          "n": 3796,
+          "native_decoys": 314,
+          "observed_adjusted": 0.3485190403093999,
+          "observed_f1": 0.2726554267650158,
+          "observed_f1_wilson95": [
+            0.2587240718453472,
+            0.28704645076596313
+          ],
+          "observed_over_predicted_adjusted": 1.0153324603130354,
+          "predicted_minus_observed_adjusted": -0.0052629602251006435,
+          "predicted_minus_observed_f1": 0.07060065331928345
+        },
+        {
+          "bin": "[.50,1]",
+          "ent_target_over_ent_decoy": 1.023505005519394,
+          "entrapment_decoys": 52542,
+          "entrapment_targets": 53777,
+          "mean_predicted_pep": 0.9133493692075287,
+          "n": 73479,
+          "native_decoys": 14558,
+          "observed_adjusted": 0.9355041044361329,
+          "observed_f1": 0.7318689693653969,
+          "observed_f1_wilson95": [
+            0.7286539106707267,
+            0.7350597852550821
+          ],
+          "observed_over_predicted_adjusted": 1.024256583488777,
+          "predicted_minus_observed_adjusted": -0.022154735228604117,
+          "predicted_minus_observed_f1": 0.18148039984213182
+        }
+      ],
+      "f_global": 0.7823257705603811,
+      "summary": {
+        "entrapment_targets": 55306,
+        "n_targets": 98692,
+        "observed_minus_predicted_adjusted": 0.018505443259603106,
+        "observed_minus_predicted_f1": -0.13741737589672925,
+        "pure_entrapment_decoys": 53860,
+        "target_pep_sum": 68867.995662,
+        "usable_decoys": 68846
+      }
+    },
+    "q_regions": [
+      {
+        "adjusted_fdp": 0.005542392290297437,
+        "ent_target_over_ent_decoy": 9.0,
+        "entrapment_decoys": 6,
+        "entrapment_targets": 54,
+        "f1_fdp": 0.004335956319254858,
+        "mean_predicted_pep": 0.0008415183876666132,
+        "mixed_targets": 281,
+        "normal_targets": 12119,
+        "targets": 12454,
+        "threshold": 0.001
+      },
+      {
+        "adjusted_fdp": 0.012093295634457076,
+        "ent_target_over_ent_decoy": 2.7704918032786887,
+        "entrapment_decoys": 61,
+        "entrapment_targets": 169,
+        "f1_fdp": 0.009460896825841125,
+        "mean_predicted_pep": 0.004516025135755473,
+        "mixed_targets": 449,
+        "normal_targets": 17245,
+        "targets": 17863,
+        "threshold": 0.005
+      },
+      {
+        "adjusted_fdp": 0.01687315883053162,
+        "ent_target_over_ent_decoy": 1.9398496240601504,
+        "entrapment_decoys": 133,
+        "entrapment_targets": 258,
+        "f1_fdp": 0.013200306983883347,
+        "mean_predicted_pep": 0.009379544128933232,
+        "mixed_targets": 523,
+        "normal_targets": 18764,
+        "targets": 19545,
+        "threshold": 0.01
+      },
+      {
+        "adjusted_fdp": 0.026397376961186596,
+        "ent_target_over_ent_decoy": 1.4356435643564356,
+        "entrapment_decoys": 303,
+        "entrapment_targets": 435,
+        "f1_fdp": 0.020651348271933156,
+        "mean_predicted_pep": 0.018984132880744402,
+        "mixed_targets": 584,
+        "normal_targets": 20045,
+        "targets": 21064,
+        "threshold": 0.02
+      },
+      {
+        "adjusted_fdp": 0.05609375869593147,
+        "ent_target_over_ent_decoy": 1.1875,
+        "entrapment_decoys": 880,
+        "entrapment_targets": 1045,
+        "f1_fdp": 0.04388359299542267,
+        "mean_predicted_pep": 0.0486446438499979,
+        "mixed_targets": 681,
+        "normal_targets": 22087,
+        "targets": 23813,
+        "threshold": 0.05
+      },
+      {
+        "adjusted_fdp": 0.10585215316927164,
+        "ent_target_over_ent_decoy": 1.0963438735177866,
+        "entrapment_decoys": 2024,
+        "entrapment_targets": 2219,
+        "f1_fdp": 0.08281086729362591,
+        "mean_predicted_pep": 0.09820677298850576,
+        "mixed_targets": 788,
+        "normal_targets": 23789,
+        "targets": 26796,
+        "threshold": 0.1
+      }
+    ],
+    "raw_xcorr_matched_depth": {
+      "depth": 6117,
+      "entrapment_decoys": 133,
+      "entrapment_targets": 134,
+      "ratio": 1.0075187969924813
+    }
+  },
+  "percolator_rs": {
+    "bytes": 1136560,
+    "canonical_parameters": [
+      "--canonical",
+      "--no-select-c",
+      "--seed",
+      "1",
+      "--num-threads",
+      "1",
+      "default maxiter=10"
+    ],
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/target/release/percolator-rs",
+    "sha256": "be9bf670bfd69df4dc3ba3b8be6c4c164acaf56a91f4a2819d115f49604b2c45"
+  },
+  "pins": [
+    {
+      "bytes": 54344034,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+      "sha256": "85e8eab7d51769d60eac91401556fc2b9ef8bd0d80a062335ec4afc6062b24bd"
+    },
+    {
+      "bytes": 62224358,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+      "sha256": "2244c90dd3cd825c29a6975d5ebc90db7f45f4452a3a3077e87deb2b7501246d"
+    },
+    {
+      "bytes": 16696174,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+      "sha256": "299730400202c93aa3c664393be2deb776a122b30a586443410faee280226416"
+    },
+    {
+      "bytes": 11316602,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+      "sha256": "1900975fe17c23f0ef39b8629dbcd014c9a546ca419dc9c2838e13989b14b47c"
+    },
+    {
+      "bytes": 57367437,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+      "sha256": "0bbeb54533c1e90ff141cbd87291d410b24a40661f558d032a850a77974300d7"
+    },
+    {
+      "bytes": 95681589,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+      "sha256": "c93e05fda9aadb564cccb03d021e9ca99d2fe6d226611fa9dcdebc57fccbee4e"
+    }
+  ],
+  "random_seeds": {
+    "comet_decoys": "deterministic peptide reversal; no random seed",
+    "percolator_primary": 1,
+    "prior_canonical_reproducibility": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "repository": {
+    "commit": "e8d83d1c76e4cf651fdfcf22d98b0b499c35943a",
+    "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs",
+    "production_source_diff_empty": true,
+    "status_at_freeze": [
+      "M validation/README.md",
+      "?? validation/ENTRAPMENT_ROOTCAUSE.md",
+      "?? validation/ENTRAPMENT_ROOTCAUSE_RESULTS.json",
+      "?? validation/PEP_ROOTCAUSE.md",
+      "?? validation/PEP_ROOTCAUSE_CALIBRATION_TABLES.md",
+      "?? validation/PEP_ROOTCAUSE_FINAL_RESULTS.json",
+      "?? validation/PEP_ROOTCAUSE_RESULTS.json",
+      "?? validation/POST_REPAIR_AUDIT.md",
+      "?? validation/homology_depleted_entrapment/",
+      "?? validation/pep_rootcause_controls.py",
+      "?? validation/pep_rootcause_depth.py",
+      "?? validation/pep_rootcause_experiments.py",
+      "?? validation/pep_rootcause_features.py",
+      "?? validation/pep_rootcause_finalize.py",
+      "?? validation/pep_rootcause_homology.py",
+      "?? validation/pep_rootcause_lib.py",
+      "?? validation/pep_rootcause_mechanism.py",
+      "?? validation/pep_rootcause_probe.rs",
+      "?? validation/pep_rootcause_qvality.py",
+      "?? validation/pep_rootcause_real.py",
+      "?? validation/pep_rootcause_render_tables.py",
+      "?? validation/pep_rootcause_synth.py",
+      "?? validation/pep_rootcause_synthetic_matrix.py",
+      "?? validation/pep_rootcause_tables.py",
+      "?? validation/pep_rootcause_uncertainty.py",
+      "?? validation/pep_rootcause_violation.py",
+      "?? validation/post_repair_adversarial.py",
+      "?? validation/post_repair_protein_probe.rs",
+      "?? validation/post_repair_stats_probe.rs",
+      "?? validation/rootcause_bootstrap.py",
+      "?? validation/rootcause_consolidate.py",
+      "?? validation/rootcause_curve.py",
+      "?? validation/rootcause_multiplicity.py",
+      "?? validation/rootcause_run_cpp_tdc.sh",
+      "?? validation/rootcause_run_maxiter.sh",
+      "?? validation/rootcause_run_rank1.sh"
+    ]
+  },
+  "result_files": [
+    {
+      "bytes": 3307365,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/decoy.tsv",
+      "sha256": "33ba5c62fe58d080141aa86612e51838be3ba761e42e0443f50a6cda443d95eb"
+    },
+    {
+      "bytes": 3697217,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/target.tsv",
+      "sha256": "60348bf16dfa12a61b44359a3f7529d077995d73b111136758aa7b0ef31660b8"
+    },
+    {
+      "bytes": 2844313,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-22Oct2014-Anopheles-8-MAGs-S-01/decoy.tsv",
+      "sha256": "01a894642f8f9bc6b0b8981821d7189e5c3a46c9a1297246b7320ffedecb877c"
+    },
+    {
+      "bytes": 5370496,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-22Oct2014-Anopheles-8-MAGs-S-01/target.tsv",
+      "sha256": "e28ddbb406deb2cadadcb17ff42878f9ba10615689b1858ca149df0472d7faed"
+    },
+    {
+      "bytes": 1010401,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/decoy.tsv",
+      "sha256": "ca3f46c66d536ec211b086351232de846130ba11eabca7427bee9745b500ccdd"
+    },
+    {
+      "bytes": 1121984,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/target.tsv",
+      "sha256": "bff5a9efeb9e6a401b0f8fa02989be0740e8755affd082a2ce2800b24efe22ee"
+    },
+    {
+      "bytes": 671859,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/decoy.tsv",
+      "sha256": "96ab411f4a0a01c448b7e7354eb72cc3c51b13cf5274a811bc7038eb99c65505"
+    },
+    {
+      "bytes": 783846,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/target.tsv",
+      "sha256": "7b0f9e4a3ce6cd4d2fb9d996852b604872535bcd6225bc0d0029da1806af05bb"
+    },
+    {
+      "bytes": 2867182,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/decoy.tsv",
+      "sha256": "cba20feaa0c3258c8453acac7716c352bc14ff86fad867a9258350b581914487"
+    },
+    {
+      "bytes": 4862154,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/target.tsv",
+      "sha256": "308b3bd3648fc8a8ee74cf35e8522e81b5e2e3312cb12bdf998fafe7bbadac6c"
+    },
+    {
+      "bytes": 5141080,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/decoy.tsv",
+      "sha256": "69864f068db301b5c26b49a905ea878fbc3da92ff26e90f7b503691ad644ca4b"
+    },
+    {
+      "bytes": 7570697,
+      "path": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/results/seed-1/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/target.tsv",
+      "sha256": "d461f0cead99d536973e9437caeec784bf44f2e71da9f57069f5d25002e50fff"
+    }
+  ],
+  "schema_version": 1,
+  "search_engine": {
+    "decoy_generation": "Comet internal concatenated search (decoy_search=1): reverse each target peptide while retaining the enzyme-terminal residue",
+    "parameters": [
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt",
+        "sha256": "d070bdaa332dbb609b72f0b29335d74e4b0fffc9c2947bf3db93d2b55e0ca1c0",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt"
+      },
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt",
+        "sha256": "14770ea55e6d4086ec37f3d95b4103956575faae3d156b292cc968856e700d05",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt"
+      },
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt",
+        "sha256": "351b9c9308002f8f20d7f1c9fdef190a3ffa15176cf151a160010021a5a5c0e4",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt"
+      },
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt",
+        "sha256": "e4afdd7263706e1bf63af58203ab0875e602f59dba4ce5b67de93ea611c4b87c",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt"
+      },
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt",
+        "sha256": "163d5e6e58ed32fbff9cbf1d561acbd568e80bf29c2ee59ecdde3e294089966e",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt"
+      },
+      {
+        "bytes": 94009,
+        "copy": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt",
+        "sha256": "d0756a08d6c02cf39ed52c3231d49ae6d4d4b21c4405cdd3ae47972ca6a64744",
+        "source": "/home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt"
+      }
+    ],
+    "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux",
+    "sha256": "bad553f44f8fadbe8bc276c42caeb292ff58dcb8cbbac6215c852501d0adf687",
+    "version": "INFO: Beginning version.\nINFO: Elapsed time: 9.1e-05 s\nINFO: Finished crux version.\nINFO: Return Code:0\n====================\nCrux version 4.0-b854e9b-2021-06-01\n====================\nProteowizard version 3.0.21153\n====================\nPercolator version 3.05.nightly-111-80897c3, Build Date Jun  1 2021 20:06:15\nCopyright (c) 2006-9 University of Washington. All rights reserved.\nWritten by Lukas K\u00e4ll (lukall@u.washington.edu) in the\nDepartment of Genome Sciences at the University of Washington.\n====================\nComet version 2019.01 rev. 5\n====================\nBoost version 1_67\n===================="
+  },
+  "spectra": [
+    {
+      "bytes": 1127761831,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML",
+      "sha1": "6858f12eb939e065872844647e4e5f8e9cadc7b1"
+    },
+    {
+      "bytes": 1137388239,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML",
+      "sha1": "d0be7aa253d84067fa50af2d09872799b344c0f7"
+    },
+    {
+      "bytes": 982401968,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML",
+      "sha1": "c0a4bb0b8128fad1f605a0292c4a0ea8492d597a"
+    },
+    {
+      "bytes": 1017388325,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML",
+      "sha1": "2d2c0fbdc4cbe40587192d0431d2a6f08d98eff6"
+    },
+    {
+      "bytes": 1080442154,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML",
+      "sha1": "c896949013bb57ab9fd75924032a29fc25e1720a"
+    },
+    {
+      "bytes": 1193045522,
+      "path": "/home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML",
+      "sha1": "97c0bf16dde3c778f593b0987f0ed33a8c432150"
+    }
+  ]
+}

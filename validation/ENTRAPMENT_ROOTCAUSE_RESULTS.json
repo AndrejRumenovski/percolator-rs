@@ -1,0 +1,687 @@
+{
+  "arms": {
+    "comet_evalue_only": [
+      {
+        "accepted_decoys": 3,
+        "accepted_targets": 7203,
+        "adjusted_fdp": 0.011661807580174927,
+        "binomial_z": 5.0137741307804005,
+        "effective_entrapment_fraction": 0.3333333333333333,
+        "entrapment_target_over_decoy": 28.0,
+        "native_decoys": 2,
+        "pure_entrapment_decoys": 1,
+        "pure_entrapment_targets": 28,
+        "q_threshold": 0.001,
+        "unadjusted_entrapment_fdp": 0.003887269193391642
+      },
+      {
+        "accepted_decoys": 43,
+        "accepted_targets": 9562,
+        "adjusted_fdp": 0.008558743952877992,
+        "binomial_z": 2.9514591494904874,
+        "effective_entrapment_fraction": 0.7209302325581395,
+        "entrapment_target_over_decoy": 1.903225806451613,
+        "native_decoys": 12,
+        "pure_entrapment_decoys": 31,
+        "pure_entrapment_targets": 59,
+        "q_threshold": 0.005,
+        "unadjusted_entrapment_fdp": 0.006170257268353901
+      },
+      {
+        "accepted_decoys": 108,
+        "accepted_targets": 11728,
+        "adjusted_fdp": 0.01205093224192815,
+        "binomial_z": 1.8281810603178266,
+        "effective_entrapment_fraction": 0.75,
+        "entrapment_target_over_decoy": 1.308641975308642,
+        "native_decoys": 27,
+        "pure_entrapment_decoys": 81,
+        "pure_entrapment_targets": 106,
+        "q_threshold": 0.01,
+        "unadjusted_entrapment_fdp": 0.009038199181446112
+      },
+      {
+        "accepted_decoys": 259,
+        "accepted_targets": 13363,
+        "adjusted_fdp": 0.02234016156157812,
+        "binomial_z": 1.4339577116590314,
+        "effective_entrapment_fraction": 0.7335907335907336,
+        "entrapment_target_over_decoy": 1.1526315789473685,
+        "native_decoys": 69,
+        "pure_entrapment_decoys": 190,
+        "pure_entrapment_targets": 219,
+        "q_threshold": 0.02,
+        "unadjusted_entrapment_fdp": 0.0163885355084936
+      },
+      {
+        "accepted_decoys": 784,
+        "accepted_targets": 15876,
+        "adjusted_fdp": 0.05034785056500583,
+        "binomial_z": 0.3407771005482389,
+        "effective_entrapment_fraction": 0.7831632653061225,
+        "entrapment_target_over_decoy": 1.019543973941368,
+        "native_decoys": 170,
+        "pure_entrapment_decoys": 614,
+        "pure_entrapment_targets": 626,
+        "q_threshold": 0.05,
+        "unadjusted_entrapment_fdp": 0.03943058704963467
+      },
+      {
+        "accepted_decoys": 1857,
+        "accepted_targets": 18656,
+        "adjusted_fdp": 0.09920633840039993,
+        "binomial_z": -0.09148552676223441,
+        "effective_entrapment_fraction": 0.8056004308023694,
+        "entrapment_target_over_decoy": 0.9966577540106952,
+        "native_decoys": 361,
+        "pure_entrapment_decoys": 1496,
+        "pure_entrapment_targets": 1491,
+        "q_threshold": 0.1,
+        "unadjusted_entrapment_fdp": 0.07992066895368782
+      }
+    ],
+    "comet_xcorr_only": [
+      {
+        "accepted_decoys": 0,
+        "accepted_targets": 0,
+        "adjusted_fdp": null,
+        "binomial_z": null,
+        "effective_entrapment_fraction": null,
+        "entrapment_target_over_decoy": null,
+        "native_decoys": 0,
+        "pure_entrapment_decoys": 0,
+        "pure_entrapment_targets": 0,
+        "q_threshold": 0.001,
+        "unadjusted_entrapment_fdp": null
+      },
+      {
+        "accepted_decoys": 13,
+        "accepted_targets": 3479,
+        "adjusted_fdp": 0.006539235412474849,
+        "binomial_z": 1.5666989036012806,
+        "effective_entrapment_fraction": 0.9230769230769231,
+        "entrapment_target_over_decoy": 1.75,
+        "native_decoys": 1,
+        "pure_entrapment_decoys": 12,
+        "pure_entrapment_targets": 21,
+        "q_threshold": 0.005,
+        "unadjusted_entrapment_fdp": 0.006036217303822937
+      },
+      {
+        "accepted_decoys": 38,
+        "accepted_targets": 4422,
+        "adjusted_fdp": 0.01145786220413086,
+        "binomial_z": 1.2535663410560174,
+        "effective_entrapment_fraction": 0.868421052631579,
+        "entrapment_target_over_decoy": 1.3333333333333333,
+        "native_decoys": 5,
+        "pure_entrapment_decoys": 33,
+        "pure_entrapment_targets": 44,
+        "q_threshold": 0.01,
+        "unadjusted_entrapment_fdp": 0.009950248756218905
+      },
+      {
+        "accepted_decoys": 105,
+        "accepted_targets": 5620,
+        "adjusted_fdp": 0.0199717756779973,
+        "binomial_z": 0.4472135954999579,
+        "effective_entrapment_fraction": 0.8285714285714286,
+        "entrapment_target_over_decoy": 1.0689655172413792,
+        "native_decoys": 18,
+        "pure_entrapment_decoys": 87,
+        "pure_entrapment_targets": 93,
+        "q_threshold": 0.02,
+        "unadjusted_entrapment_fdp": 0.016548042704626335
+      },
+      {
+        "accepted_decoys": 384,
+        "accepted_targets": 7878,
+        "adjusted_fdp": 0.046699260496769285,
+        "binomial_z": -0.5276537230043293,
+        "effective_entrapment_fraction": 0.8072916666666666,
+        "entrapment_target_over_decoy": 0.9580645161290322,
+        "native_decoys": 74,
+        "pure_entrapment_decoys": 310,
+        "pure_entrapment_targets": 297,
+        "q_threshold": 0.05,
+        "unadjusted_entrapment_fdp": 0.0376999238385377
+      },
+      {
+        "accepted_decoys": 1110,
+        "accepted_targets": 11182,
+        "adjusted_fdp": 0.10224799151822937,
+        "binomial_z": 0.632022194859105,
+        "effective_entrapment_fraction": 0.80990990990991,
+        "entrapment_target_over_decoy": 1.0300333704115685,
+        "native_decoys": 211,
+        "pure_entrapment_decoys": 899,
+        "pure_entrapment_targets": 926,
+        "q_threshold": 0.1,
+        "unadjusted_entrapment_fdp": 0.08281166159899839
+      }
+    ],
+    "cpp_percolator_post_processing_tdc_seed1": [
+      {
+        "accepted_decoys": 9,
+        "accepted_targets": 13380,
+        "adjusted_fdp": 0.006149903907751441,
+        "binomial_z": 6.7646554517049635,
+        "effective_entrapment_fraction": 0.7777777777777778,
+        "entrapment_target_over_decoy": 9.142857142857142,
+        "native_decoys": 2,
+        "pure_entrapment_decoys": 7,
+        "pure_entrapment_targets": 64,
+        "q_threshold": 0.001,
+        "unadjusted_entrapment_fdp": 0.004783258594917788
+      },
+      {
+        "accepted_decoys": 82,
+        "accepted_targets": 18163,
+        "adjusted_fdp": 0.012933725388828286,
+        "binomial_z": 7.826839350973126,
+        "effective_entrapment_fraction": 0.7662337662337663,
+        "entrapment_target_over_decoy": 3.0508474576271185,
+        "native_decoys": 18,
+        "pure_entrapment_decoys": 59,
+        "pure_entrapment_targets": 180,
+        "q_threshold": 0.005,
+        "unadjusted_entrapment_fdp": 0.009910257116115179
+      },
+      {
+        "accepted_decoys": 185,
+        "accepted_targets": 19404,
+        "adjusted_fdp": 0.016889710429626396,
+        "binomial_z": 5.759013263245169,
+        "effective_entrapment_fraction": 0.7597765363128491,
+        "entrapment_target_over_decoy": 1.8308823529411764,
+        "native_decoys": 43,
+        "pure_entrapment_decoys": 136,
+        "pure_entrapment_targets": 249,
+        "q_threshold": 0.01,
+        "unadjusted_entrapment_fdp": 0.012832405689548547
+      },
+      {
+        "accepted_decoys": 412,
+        "accepted_targets": 21006,
+        "adjusted_fdp": 0.0261117447994991,
+        "binomial_z": 3.9781091127162482,
+        "effective_entrapment_fraction": 0.7438423645320197,
+        "entrapment_target_over_decoy": 1.3509933774834437,
+        "native_decoys": 104,
+        "pure_entrapment_decoys": 302,
+        "pure_entrapment_targets": 408,
+        "q_threshold": 0.02,
+        "unadjusted_entrapment_fdp": 0.01942302199371608
+      },
+      {
+        "accepted_decoys": 1176,
+        "accepted_targets": 23696,
+        "adjusted_fdp": 0.05772973155050902,
+        "binomial_z": 3.450583633987677,
+        "effective_entrapment_fraction": 0.7551369863013698,
+        "entrapment_target_over_decoy": 1.1712018140589568,
+        "native_decoys": 286,
+        "pure_entrapment_decoys": 882,
+        "pure_entrapment_targets": 1033,
+        "q_threshold": 0.05,
+        "unadjusted_entrapment_fdp": 0.04359385550303849
+      },
+      {
+        "accepted_decoys": 2654,
+        "accepted_targets": 26625,
+        "adjusted_fdp": 0.10751668200155709,
+        "binomial_z": 2.593280255530276,
+        "effective_entrapment_fraction": 0.7535024611889436,
+        "entrapment_target_over_decoy": 1.0839195979899499,
+        "native_decoys": 651,
+        "pure_entrapment_decoys": 1990,
+        "pure_entrapment_targets": 2157,
+        "q_threshold": 0.1,
+        "unadjusted_entrapment_fdp": 0.08101408450704226
+      }
+    ],
+    "percolator_rs_rank1_seed1": [
+      {
+        "accepted_decoys": 9,
+        "accepted_targets": 13166,
+        "adjusted_fdp": 0.004955947136563877,
+        "binomial_z": 6.154574548966636,
+        "effective_entrapment_fraction": 0.8888888888888888,
+        "entrapment_target_over_decoy": 7.25,
+        "native_decoys": 1,
+        "pure_entrapment_decoys": 8,
+        "pure_entrapment_targets": 58,
+        "q_threshold": 0.001,
+        "unadjusted_entrapment_fdp": 0.004405286343612335
+      },
+      {
+        "accepted_decoys": 81,
+        "accepted_targets": 18064,
+        "adjusted_fdp": 0.01102636890328014,
+        "binomial_z": 6.763460254842493,
+        "effective_entrapment_fraction": 0.8133333333333334,
+        "entrapment_target_over_decoy": 2.6557377049180326,
+        "native_decoys": 14,
+        "pure_entrapment_decoys": 61,
+        "pure_entrapment_targets": 162,
+        "q_threshold": 0.005,
+        "unadjusted_entrapment_fdp": 0.008968113374667847
+      },
+      {
+        "accepted_decoys": 188,
+        "accepted_targets": 19632,
+        "adjusted_fdp": 0.017167738235382896,
+        "binomial_z": 5.860942701532694,
+        "effective_entrapment_fraction": 0.7417582417582418,
+        "entrapment_target_over_decoy": 1.8518518518518519,
+        "native_decoys": 47,
+        "pure_entrapment_decoys": 135,
+        "pure_entrapment_targets": 250,
+        "q_threshold": 0.01,
+        "unadjusted_entrapment_fdp": 0.012734311328443357
+      },
+      {
+        "accepted_decoys": 418,
+        "accepted_targets": 21338,
+        "adjusted_fdp": 0.028314692742432243,
+        "binomial_z": 5.25465498046547,
+        "effective_entrapment_fraction": 0.7597087378640777,
+        "entrapment_target_over_decoy": 1.4664536741214058,
+        "native_decoys": 99,
+        "pure_entrapment_decoys": 313,
+        "pure_entrapment_targets": 459,
+        "q_threshold": 0.02,
+        "unadjusted_entrapment_fdp": 0.021510919486362357
+      },
+      {
+        "accepted_decoys": 1169,
+        "accepted_targets": 23575,
+        "adjusted_fdp": 0.056050450923901304,
+        "binomial_z": 2.8210976821983986,
+        "effective_entrapment_fraction": 0.7779690189328744,
+        "entrapment_target_over_decoy": 1.1371681415929205,
+        "native_decoys": 258,
+        "pure_entrapment_decoys": 904,
+        "pure_entrapment_targets": 1028,
+        "q_threshold": 0.05,
+        "unadjusted_entrapment_fdp": 0.04360551431601273
+      },
+      {
+        "accepted_decoys": 2574,
+        "accepted_targets": 25828,
+        "adjusted_fdp": 0.10747391516764654,
+        "binomial_z": 2.5085916944354714,
+        "effective_entrapment_fraction": 0.7709388391118036,
+        "entrapment_target_over_decoy": 1.0813542193026782,
+        "native_decoys": 588,
+        "pure_entrapment_decoys": 1979,
+        "pure_entrapment_targets": 2140,
+        "q_threshold": 0.1,
+        "unadjusted_entrapment_fdp": 0.08285581539414588
+      }
+    ],
+    "percolator_rs_top5_seed1": [
+      {
+        "accepted_decoys": 8,
+        "accepted_targets": 12454,
+        "adjusted_fdp": 0.005781275092339811,
+        "binomial_z": 6.196773353931867,
+        "effective_entrapment_fraction": 0.75,
+        "entrapment_target_over_decoy": 9.0,
+        "native_decoys": 2,
+        "pure_entrapment_decoys": 6,
+        "pure_entrapment_targets": 54,
+        "q_threshold": 0.001,
+        "unadjusted_entrapment_fdp": 0.004335956319254858
+      },
+      {
+        "accepted_decoys": 81,
+        "accepted_targets": 17863,
+        "adjusted_fdp": 0.0116322501957063,
+        "binomial_z": 7.121309112674499,
+        "effective_entrapment_fraction": 0.8133333333333334,
+        "entrapment_target_over_decoy": 2.7704918032786887,
+        "native_decoys": 14,
+        "pure_entrapment_decoys": 61,
+        "pure_entrapment_targets": 169,
+        "q_threshold": 0.005,
+        "unadjusted_entrapment_fdp": 0.009460896825841125
+      },
+      {
+        "accepted_decoys": 187,
+        "accepted_targets": 19545,
+        "adjusted_fdp": 0.01786507712104513,
+        "binomial_z": 6.32152171780217,
+        "effective_entrapment_fraction": 0.7388888888888889,
+        "entrapment_target_over_decoy": 1.9398496240601504,
+        "native_decoys": 47,
+        "pure_entrapment_decoys": 133,
+        "pure_entrapment_targets": 258,
+        "q_threshold": 0.01,
+        "unadjusted_entrapment_fdp": 0.013200306983883347
+      },
+      {
+        "accepted_decoys": 413,
+        "accepted_targets": 21064,
+        "adjusted_fdp": 0.027671443559091954,
+        "binomial_z": 4.858987147293249,
+        "effective_entrapment_fraction": 0.7463054187192119,
+        "entrapment_target_over_decoy": 1.4356435643564356,
+        "native_decoys": 103,
+        "pure_entrapment_decoys": 303,
+        "pure_entrapment_targets": 435,
+        "q_threshold": 0.02,
+        "unadjusted_entrapment_fdp": 0.020651348271933156
+      },
+      {
+        "accepted_decoys": 1181,
+        "accepted_targets": 23813,
+        "adjusted_fdp": 0.05844496703481292,
+        "binomial_z": 3.7606990231680526,
+        "effective_entrapment_fraction": 0.7508532423208191,
+        "entrapment_target_over_decoy": 1.1875,
+        "native_decoys": 292,
+        "pure_entrapment_decoys": 880,
+        "pure_entrapment_targets": 1045,
+        "q_threshold": 0.05,
+        "unadjusted_entrapment_fdp": 0.04388359299542267
+      },
+      {
+        "accepted_decoys": 2671,
+        "accepted_targets": 26796,
+        "adjusted_fdp": 0.10862789163269605,
+        "binomial_z": 2.993629814682838,
+        "effective_entrapment_fraction": 0.7623352165725047,
+        "entrapment_target_over_decoy": 1.0963438735177866,
+        "native_decoys": 631,
+        "pure_entrapment_decoys": 2024,
+        "pure_entrapment_targets": 2219,
+        "q_threshold": 0.1,
+        "unadjusted_entrapment_fdp": 0.08281086729362591
+      }
+    ]
+  },
+  "audited_binary_sha256": "be9bf670bfd69df4dc3ba3b8be6c4c164acaf56a91f4a2819d115f49604b2c45",
+  "classification": "ESTIMATOR LIMITATION (semi-supervised TDC) + ENTRAPMENT-MEASUREMENT AMPLIFICATION; not an implementation defect in percolator-rs",
+  "database_construction": {
+    "comment": "the design balanced amino acids; searchable sequence content is ~1.5x richer on the entrapment side and the realised opportunity ratio is ~3.5:1",
+    "declared_entrapment_fraction": 0.50000027,
+    "entrapment_amino_acids": 145351799,
+    "entrapment_distinct_7mers": 61699335,
+    "entrapment_distinct_7mers_per_aa": 0.4245,
+    "entrapment_proteins": 389504,
+    "native_amino_acids": 145351640,
+    "native_distinct_7mers": 40633136,
+    "native_distinct_7mers_per_aa": 0.2796,
+    "native_proteins": 139191,
+    "observed_effective_entrapment_fraction_from_decoys": 0.7823
+  },
+  "date": "2026-08-27",
+  "effective_sample_size_q_0_01_seed1": {
+    "distinct_entrapment_decoy_peptides": 115,
+    "distinct_entrapment_target_peptides": 150,
+    "entrapment_decoy_psms": 133,
+    "entrapment_target_psms": 258,
+    "peptide_level_binomial_z_by_seed": [
+      3.12,
+      2.5,
+      3.09,
+      3.67,
+      3.5
+    ],
+    "peptide_level_ratio_by_seed": [
+      1.439,
+      1.35,
+      1.438,
+      1.543,
+      1.504
+    ],
+    "psm_level_binomial_z": 6.32,
+    "psm_level_ratio": 1.94
+  },
+  "entrapment_hits_are_genuinely_false": {
+    "conserved_families_among_reviewed_hits": {
+      "actin": 6,
+      "histone": 2,
+      "tubulin_alpha": 9
+    },
+    "distinct_entrapment_proteins_touched": 215,
+    "exact_presence_of_top_hits_in_native_fasta": 0,
+    "plant_specific_abundance_markers_found": 0,
+    "proteins_with_3_or_more_distinct_peptides": 0,
+    "proteins_with_exactly_one_peptide": 211,
+    "verdict": "entrapment labels are sound; the hits are homology-driven false matches, not real plant protein"
+  },
+  "homology_channel": {
+    "accepted_entrapment_decoys": {
+      "frac_lcs_ge_12aa": 0.043,
+      "mean_lcs_over_len": 0.328,
+      "n": 115
+    },
+    "accepted_entrapment_targets": {
+      "frac_lcs_ge_12aa": 0.087,
+      "mean_lcs_over_len": 0.36,
+      "n": 150
+    },
+    "metric": "longest substring shared with the native proteome, I/L collapsed, k>=7",
+    "top_hits": [
+      {
+        "len": 18,
+        "native_shared_substring_aa": 17,
+        "peptide": "IAPEEHPVLLTEAPLNPK",
+        "psms": 26
+      },
+      {
+        "len": 15,
+        "native_shared_substring_aa": 10,
+        "peptide": "AVFVDLEPTVIDEVR",
+        "psms": 22
+      },
+      {
+        "len": 18,
+        "native_shared_substring_aa": 16,
+        "peptide": "VVPEEHPVLLTEAPLNPK",
+        "psms": 7
+      }
+    ],
+    "unaccepted_entrapment_targets": {
+      "frac_lcs_ge_12aa": 0.047,
+      "mean_lcs_over_len": 0.294,
+      "n": 6000
+    }
+  },
+  "identity": "adjusted_fdp == (accepted_decoys_used/accepted_targets) * (pure_entrapment_targets/pure_entrapment_decoys)",
+  "investigation": "causal diagnosis of the ~1.81% adjusted FDP at nominal q<0.01 in the signal-present entrapment experiment",
+  "per_dataset_at_q_0_01": {
+    "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01": {
+      "accepted_targets_seed1": 814,
+      "mean_adjusted_fdp": 0.02092245915163477,
+      "pure_entrapment_decoys_seed1": 5,
+      "pure_entrapment_targets_seed1": 11,
+      "seeds_with_defined_adjusted_fdp": 5
+    },
+    "comet-22Oct2014-Anopheles-8-MAGs-S-01": {
+      "accepted_targets_seed1": 7410,
+      "mean_adjusted_fdp": 0.01836327910927305,
+      "pure_entrapment_decoys_seed1": 52,
+      "pure_entrapment_targets_seed1": 96,
+      "seeds_with_defined_adjusted_fdp": 5
+    },
+    "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01": {
+      "accepted_targets_seed1": 345,
+      "mean_adjusted_fdp": 0.011972162136744098,
+      "pure_entrapment_decoys_seed1": 0,
+      "pure_entrapment_targets_seed1": 6,
+      "seeds_with_defined_adjusted_fdp": 2
+    },
+    "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01": {
+      "accepted_targets_seed1": 307,
+      "mean_adjusted_fdp": 0.0057830733046752795,
+      "pure_entrapment_decoys_seed1": 1,
+      "pure_entrapment_targets_seed1": 0,
+      "seeds_with_defined_adjusted_fdp": 5
+    },
+    "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02": {
+      "accepted_targets_seed1": 4988,
+      "mean_adjusted_fdp": 0.015436571170161279,
+      "pure_entrapment_decoys_seed1": 37,
+      "pure_entrapment_targets_seed1": 62,
+      "seeds_with_defined_adjusted_fdp": 5
+    },
+    "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02": {
+      "accepted_targets_seed1": 5681,
+      "mean_adjusted_fdp": 0.020472935738632063,
+      "pure_entrapment_decoys_seed1": 38,
+      "pure_entrapment_targets_seed1": 83,
+      "seeds_with_defined_adjusted_fdp": 5
+    }
+  },
+  "production_code_modified": false,
+  "provenance_leakage": {
+    "comment": "feature-space provenance signal is real but bulk-score AUC is 0.50: the violation is confined to the extreme upper tail",
+    "label_permuted_control_auc": 0.5024,
+    "largest_standardised_weights": {
+      "enzC": 0.1036,
+      "enzInt": -0.0283,
+      "enzN": 0.1386
+    },
+    "leave_one_file_out_auc_entrapment_target_vs_entrapment_decoy": 0.5209,
+    "percolator_score_bulk_auc_same_contrast": 0.5012
+  },
+  "schema_version": 1,
+  "training_dose_response_at_q_0_01": {
+    "0": {
+      "accepted_decoys": 108.66666666666667,
+      "accepted_targets": 11717.0,
+      "adjusted_fdp": 0.011961960385750295,
+      "binomial_z": 1.7306906179077917,
+      "effective_entrapment_fraction": 0.7515290519877675,
+      "entrapment_target_over_decoy": 1.2898223426678712,
+      "native_decoys": 27.0,
+      "pure_entrapment_decoys": 81.66666666666667,
+      "pure_entrapment_targets": 105.33333333333333,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.008989760930497135
+    },
+    "1": {
+      "accepted_decoys": 158.66666666666666,
+      "accepted_targets": 16769.333333333332,
+      "adjusted_fdp": 0.01429017514223318,
+      "binomial_z": 3.586666067261422,
+      "effective_entrapment_fraction": 0.7747411580531592,
+      "entrapment_target_over_decoy": 1.5135295924821541,
+      "native_decoys": 35.666666666666664,
+      "pure_entrapment_decoys": 122.66666666666667,
+      "pure_entrapment_targets": 185.66666666666666,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.011072542559792932
+    },
+    "10": {
+      "accepted_decoys": 186.66666666666666,
+      "accepted_targets": 19527.333333333332,
+      "adjusted_fdp": 0.017767769886061005,
+      "binomial_z": 6.215837012030502,
+      "effective_entrapment_fraction": 0.7338448946183753,
+      "entrapment_target_over_decoy": 1.924123285312518,
+      "native_decoys": 48.0,
+      "pure_entrapment_decoys": 132.33333333333334,
+      "pure_entrapment_targets": 254.66666666666666,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.013041208085881396
+    },
+    "2": {
+      "accepted_decoys": 175.66666666666666,
+      "accepted_targets": 18409.666666666668,
+      "adjusted_fdp": 0.017174550227461245,
+      "binomial_z": 5.576890646091172,
+      "effective_entrapment_fraction": 0.7438437992994361,
+      "entrapment_target_over_decoy": 1.8276474769012083,
+      "native_decoys": 44.333333333333336,
+      "pure_entrapment_decoys": 128.66666666666666,
+      "pure_entrapment_targets": 235.0,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.012765160970735866
+    },
+    "3": {
+      "accepted_decoys": 182.0,
+      "accepted_targets": 18997.666666666668,
+      "adjusted_fdp": 0.017827651198344178,
+      "binomial_z": 6.112174620407106,
+      "effective_entrapment_fraction": 0.7357635342185903,
+      "entrapment_target_over_decoy": 1.9176448874123293,
+      "native_decoys": 46.666666666666664,
+      "pure_entrapment_decoys": 130.0,
+      "pure_entrapment_targets": 249.0,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.013106256908083667
+    },
+    "5": {
+      "accepted_decoys": 185.66666666666666,
+      "accepted_targets": 19374.0,
+      "adjusted_fdp": 0.01719785407200077,
+      "binomial_z": 5.873193631945317,
+      "effective_entrapment_fraction": 0.7472170494516863,
+      "entrapment_target_over_decoy": 1.8579985064928766,
+      "native_decoys": 45.333333333333336,
+      "pure_entrapment_decoys": 134.0,
+      "pure_entrapment_targets": 249.0,
+      "q_threshold": 0.01,
+      "seeds": [
+        1,
+        2,
+        3
+      ],
+      "unadjusted_entrapment_fdp": 0.012851174211405284
+    }
+  },
+  "uncertainty": {
+    "audit_reported_mean": 0.018103981884256583,
+    "audit_reported_seed_sd": 0.000579,
+    "cluster_bootstrap_by_peptide_95": [
+      0.01253,
+      0.02472
+    ],
+    "cluster_bootstrap_by_run_95": [
+      0.01542,
+      0.0207
+    ],
+    "sd_over_6_runs": 0.00582,
+    "seed_sd_is_reproducibility_not_sampling_error": true,
+    "sensitivity_to_f": {
+      "f=0.5 (design's stated balance)": 0.0264,
+      "f=0.7389 (tail decoys, as audited)": 0.01787,
+      "f=0.7823 (all decoys)": 0.01687,
+      "f=1.0 (no adjustment, lower bound)": 0.0132
+    },
+    "t_interval_95_over_6_runs": [
+      0.0089,
+      0.02208
+    ],
+    "unweighted_mean_over_6_runs": 0.01549
+  }
+}

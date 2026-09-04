@@ -1,0 +1,1175 @@
+{
+  "databases": {
+    "homology_depleted": {
+      "bytes": 215766556,
+      "path": "validation/homology_depleted_entrapment/databases/homology_depleted.fasta",
+      "sha256": "5943eb56ef1625b2a358b0da8d66fa04f099577f455754303120f44402afe22f"
+    },
+    "original": {
+      "bytes": 319335127,
+      "path": "validation/homology_depleted_entrapment/databases/original.fasta",
+      "sha256": "6b3b8c6738e756f3c4dfb33f05245738f6c74fcc8451d47f69198c76a29d61ee"
+    },
+    "size_control_130363": {
+      "bytes": 215850387,
+      "path": "validation/homology_depleted_entrapment/databases/size_control_130363.fasta",
+      "sha256": "33775f09fab5b10a820e285302b06010da4727396a60a2f3b1c451fbdab3cd1b"
+    },
+    "size_control_155921": {
+      "bytes": 215845757,
+      "path": "validation/homology_depleted_entrapment/databases/size_control_155921.fasta",
+      "sha256": "7ccade5aea074ec1f4a3f1e52935ed304e8ab160d4bd452595b5943c89ee535c"
+    },
+    "size_control_196613": {
+      "bytes": 215846827,
+      "path": "validation/homology_depleted_entrapment/databases/size_control_196613.fasta",
+      "sha256": "879ab274e74d1505eedb7fff23122e29e967b6838f9ad07188843e64d51d057a"
+    }
+  },
+  "decoy_generation": "Comet decoy_search=1; enzyme-aware target-peptide reversal with terminal residue retained",
+  "from_raw_searches": 30,
+  "no_post_search_filtering": true,
+  "original_vs_prior_pin_reproduction": [
+    {
+      "field_comparison": {
+        "differing_rows": 60,
+        "field_differences": {
+          "CalcMass": 4,
+          "lnrSp": 56
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 151579
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "bd6ce48962ee7aae37fb2eab6184b962d7a643cad60d7f5a858c0cd49634cc44",
+      "old_normalized_specid_sha256": "93dd31e0673fba48db7870c7b84ab7502f65f4708423d7fceec030ab84859c21",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+      "old_sha256": "85e8eab7d51769d60eac91401556fc2b9ef8bd0d80a062335ec4afc6062b24bd",
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01"
+    },
+    {
+      "field_comparison": {
+        "differing_rows": 80,
+        "field_differences": {
+          "CalcMass": 2,
+          "lnrSp": 78
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 179889
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "215a42dfc1ef6da21401ae55acb092e70bb40db899cbed87237a77a0bdefaf36",
+      "old_normalized_specid_sha256": "d22b65a91202abde962b6f77cb135e645b5eee5c45c49a5bc80a04aaf51637ed",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+      "old_sha256": "2244c90dd3cd825c29a6975d5ebc90db7f45f4452a3a3077e87deb2b7501246d",
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01"
+    },
+    {
+      "field_comparison": {
+        "differing_rows": 32,
+        "field_differences": {
+          "CalcMass": 1,
+          "lnrSp": 31
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 46804
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "5a4b6785265c3bbfa707cfe3a0546d8f671a94f008fe91e42b907a3d71ea5a2c",
+      "old_normalized_specid_sha256": "17dc2722633c51efcf6bdb2af85b758fee251f48b74661259256d50c58542841",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+      "old_sha256": "299730400202c93aa3c664393be2deb776a122b30a586443410faee280226416",
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01"
+    },
+    {
+      "field_comparison": {
+        "differing_rows": 12,
+        "field_differences": {
+          "lnrSp": 12
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 31727
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "c550bba91d553fbd1c93ae53983323d258e3bcd325288882a5680ab354d19324",
+      "old_normalized_specid_sha256": "8d65bb8d1b0722a2aa9bd39324a6667945551ced4152934c3d112a0897c59d07",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+      "old_sha256": "1900975fe17c23f0ef39b8629dbcd014c9a546ca419dc9c2838e13989b14b47c",
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01"
+    },
+    {
+      "field_comparison": {
+        "differing_rows": 114,
+        "field_differences": {
+          "lnrSp": 114
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 160570
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "c632d737f4440f50056af527f070f99c94141f5d0062d161b7d0339aa7871420",
+      "old_normalized_specid_sha256": "4f717248cae950d55941c77ae6a751fd65455ec9ca57d9ba3f51216aa1631d20",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+      "old_sha256": "0bbeb54533c1e90ff141cbd87291d410b24a40661f558d032a850a77974300d7",
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02"
+    },
+    {
+      "field_comparison": {
+        "differing_rows": 96,
+        "field_differences": {
+          "CalcMass": 2,
+          "lnrSp": 94
+        },
+        "headers_identical": true,
+        "new_extra_rows": 0,
+        "old_extra_rows": 0,
+        "psm_identity_columns_unchanged": true,
+        "rows_compared": 266798
+      },
+      "identical_after_specid_path_normalization": false,
+      "new_normalized_specid_sha256": "ce59271808f3fafd8c68ad005074de10f021ca4de2dec1c44f595e95cf68f50c",
+      "old_normalized_specid_sha256": "3d02c0bc3e0d02e3da01d85039d59332d0b2024a04d3905a82a2464a79866c7c",
+      "old_pin": "/home/andrej-rumenovski/percolator_rs_out/entrapment/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+      "old_sha256": "c93e05fda9aadb564cccb03d021e9ca99d2fe6d226611fa9dcdebc57fccbee4e",
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02"
+    }
+  ],
+  "schema_version": 1,
+  "searches": [
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 74228,
+        "entrapment_decoy_rows": 56682,
+        "entrapment_target_rows": 57116,
+        "rows": 151579,
+        "target_rows_with_mixed_target_decoy_mapping": 468,
+        "target_rows_without_target_protein": 0,
+        "targets": 77351
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.log.txt",
+        "sha256": "5a0bda20d331d6a7300022855bb264c06f2f4cc914db4233eb5e980ee9c855ab"
+      },
+      "pepxml": {
+        "bytes": 125214809,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.target.pep.xml",
+        "sha256": "6969e6981aff75d40856c811d3bf4088c3613bc49aa106b11bde101701babf3c"
+      },
+      "pin": {
+        "bytes": 64045090,
+        "normalized_specid_sha256": "bd6ce48962ee7aae37fb2eab6184b962d7a643cad60d7f5a858c0cd49634cc44",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+        "sha256": "857aefe53b668d75f3a3a3618f1b7681090d2977377b5e0cb085bca1e2fc626c"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.params.txt",
+        "sha256": "04e91a01e0487827541c8cd7d3f93db6b36f7a86688318959c2a6cf41ef4b563"
+      },
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01\"\n\tUser time (seconds): 7954.49\n\tSystem time (seconds): 56.07\n\tPercent of CPU this job got: 1118%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 11:56.31\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3393640\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 851663\n\tVoluntary context switches: 1996118\n\tInvoluntary context switches: 1943053\n\tSwaps: 0\n\tFile system inputs: 369928\n\tFile system outputs: 370096\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 84144,
+        "entrapment_decoy_rows": 65850,
+        "entrapment_target_rows": 66478,
+        "rows": 179889,
+        "target_rows_with_mixed_target_decoy_mapping": 760,
+        "target_rows_without_target_protein": 0,
+        "targets": 95745
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.log.txt",
+        "sha256": "c3e34058e3fb942f47fbf5728cb2bbaec70f68e008c588e0050b119d2cd565b7"
+      },
+      "pepxml": {
+        "bytes": 150836582,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.target.pep.xml",
+        "sha256": "de18844ba91fece3cbcb3be665116da314f1a9c9983c8d9844c821034ec42771"
+      },
+      "pin": {
+        "bytes": 73737254,
+        "normalized_specid_sha256": "215a42dfc1ef6da21401ae55acb092e70bb40db899cbed87237a77a0bdefaf36",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+        "sha256": "fbffd03a0fbd789b3578c6ce1ee1b584b1acc4c70e1da12b3598dac4e468534a"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.params.txt",
+        "sha256": "b061b82e9cadd2e787077b61764e79b5b502edc93135f8d7b71ef7c665da91e3"
+      },
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01\"\n\tUser time (seconds): 10503.42\n\tSystem time (seconds): 62.66\n\tPercent of CPU this job got: 1122%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 15:41.09\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3418180\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 855030\n\tVoluntary context switches: 2077099\n\tInvoluntary context switches: 2588982\n\tSwaps: 0\n\tFile system inputs: 438888\n\tFile system outputs: 439056\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 22840,
+        "entrapment_decoy_rows": 17127,
+        "entrapment_target_rows": 17342,
+        "rows": 46804,
+        "target_rows_with_mixed_target_decoy_mapping": 258,
+        "target_rows_without_target_protein": 0,
+        "targets": 23964
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.log.txt",
+        "sha256": "08962e350889c9752e121d0e17bd494dd565236b888034a6ba3420de5dd0aebc"
+      },
+      "pepxml": {
+        "bytes": 38379463,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "4a78345ab2ce7f0df8d292f7f73e0e2dd11edd85e2c904b97de97399a731810a"
+      },
+      "pin": {
+        "bytes": 19691630,
+        "normalized_specid_sha256": "5a4b6785265c3bbfa707cfe3a0546d8f671a94f008fe91e42b907a3d71ea5a2c",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+        "sha256": "c6527cb471c0282e3275276d1410bd6284a69586782facf74772d819a41a18b0"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.params.txt",
+        "sha256": "0327a563405bf170292f7aba552473b371b90e7ba6548ccaee536179fc79933d"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01\"\n\tUser time (seconds): 2279.15\n\tSystem time (seconds): 17.99\n\tPercent of CPU this job got: 1102%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 3:28.34\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 2167276\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 539602\n\tVoluntary context switches: 664962\n\tInvoluntary context switches: 573642\n\tSwaps: 0\n\tFile system inputs: 113616\n\tFile system outputs: 113696\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 15191,
+        "entrapment_decoy_rows": 11333,
+        "entrapment_target_rows": 11725,
+        "rows": 31727,
+        "target_rows_with_mixed_target_decoy_mapping": 257,
+        "target_rows_without_target_protein": 0,
+        "targets": 16536
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.log.txt",
+        "sha256": "dd339c24c39ab2f9a60d67c74281dc2e6243401d68b55800ab7390bc192c2657"
+      },
+      "pepxml": {
+        "bytes": 25957983,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "ed15e24dac98938bdb9c29dea36a264b42e3ea6a89f17daa0afc19cfe432a583"
+      },
+      "pin": {
+        "bytes": 13347130,
+        "normalized_specid_sha256": "c550bba91d553fbd1c93ae53983323d258e3bcd325288882a5680ab354d19324",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+        "sha256": "43a37da0fe795165247e594db778d480a35a49c57c350199f810013176cabd80"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.params.txt",
+        "sha256": "6cfb0de24fed9b76b66d04bd2896825a85d57699c70be5866af0b351ed515fce"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01\"\n\tUser time (seconds): 1548.77\n\tSystem time (seconds): 12.38\n\tPercent of CPU this job got: 1082%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:24.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1479712\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 367708\n\tVoluntary context switches: 590003\n\tInvoluntary context switches: 382074\n\tSwaps: 0\n\tFile system inputs: 76968\n\tFile system outputs: 77048\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 76529,
+        "entrapment_decoy_rows": 59800,
+        "entrapment_target_rows": 59327,
+        "rows": 160570,
+        "target_rows_with_mixed_target_decoy_mapping": 820,
+        "target_rows_without_target_protein": 0,
+        "targets": 84041
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.log.txt",
+        "sha256": "c8b4c738f9e3e2998d19d0e197d546581dba62cfb6726a0b3a1e60cdbcd246e7"
+      },
+      "pepxml": {
+        "bytes": 133632548,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.target.pep.xml",
+        "sha256": "9710dc541ade7f71701abf5632e297419540c803a43d5f4279d31cffea7f08f5"
+      },
+      "pin": {
+        "bytes": 67643917,
+        "normalized_specid_sha256": "c632d737f4440f50056af527f070f99c94141f5d0062d161b7d0339aa7871420",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+        "sha256": "e09218f5b84c860cfb46a8e0ce3eea99002724051e55b657ca005f70e505d161"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.params.txt",
+        "sha256": "acfff4b1e0ad8895a589debd0c894a482805e8020da45f44298395f16392df65"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02\"\n\tUser time (seconds): 9446.34\n\tSystem time (seconds): 62.97\n\tPercent of CPU this job got: 1122%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 14:07.23\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3401456\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 850003\n\tVoluntary context switches: 2052107\n\tInvoluntary context switches: 2326163\n\tSwaps: 0\n\tFile system inputs: 393384\n\tFile system outputs: 393536\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "original",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 129174,
+        "entrapment_decoy_rows": 101003,
+        "entrapment_target_rows": 100264,
+        "rows": 266798,
+        "target_rows_with_mixed_target_decoy_mapping": 983,
+        "target_rows_without_target_protein": 0,
+        "targets": 137624
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.log.txt",
+        "sha256": "1d62f40619c7b6b0f1c627e3dd791c5c8b27e5d287e34e80f93758792c9a34f7"
+      },
+      "pepxml": {
+        "bytes": 221135120,
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.target.pep.xml",
+        "sha256": "2eed86fdb8f5167e4a205c3adc02bfbefe9473bed092c021419e198f59d3a9a3"
+      },
+      "pin": {
+        "bytes": 112756661,
+        "normalized_specid_sha256": "ce59271808f3fafd8c68ad005074de10f021ca4de2dec1c44f595e95cf68f50c",
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+        "sha256": "08e66cb76ae084b332de538315961e0b6ec8a5a762815d3b69233c5c59261f61"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.params.txt",
+        "sha256": "94e87b083cb0d8191ddc9c32399231756c1854ef557afb16b75cc44167a2670a"
+      },
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/original.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02\"\n\tUser time (seconds): 16303.59\n\tSystem time (seconds): 105.35\n\tPercent of CPU this job got: 1125%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 24:18.32\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3427780\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 11\n\tMinor (reclaiming a frame) page faults: 860819\n\tVoluntary context switches: 3347913\n\tInvoluntary context switches: 3915315\n\tSwaps: 0\n\tFile system inputs: 3670552\n\tFile system outputs: 652656\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 73918,
+        "entrapment_decoy_rows": 40347,
+        "entrapment_target_rows": 40741,
+        "rows": 151560,
+        "target_rows_with_mixed_target_decoy_mapping": 338,
+        "target_rows_without_target_protein": 0,
+        "targets": 77642
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.log.txt",
+        "sha256": "a7adfad0a701984d80e2238a48910e1134621461499904e569d031b15413f060"
+      },
+      "pepxml": {
+        "bytes": 128270015,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.target.pep.xml",
+        "sha256": "5afe6a60f0b6b0a52cce0e4df874f9fc800ab14c9abd1d76c46d67c1119736a9"
+      },
+      "pin": {
+        "bytes": 65045292,
+        "normalized_specid_sha256": "9ba1c1094cd97431d6b25ce6229b797db1946bdfe014beebb6954ebe4ed3911c",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+        "sha256": "3f9d9db6ba93e7a0a02f9620a4896b6087e03923849db54cab8371fe02593086"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.params.txt",
+        "sha256": "14a0dfe55e203c600738da125a47be18b5341b9aacdb298cedb182cff4057052"
+      },
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01\"\n\tUser time (seconds): 4948.54\n\tSystem time (seconds): 45.90\n\tPercent of CPU this job got: 1103%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 7:32.59\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3408936\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 851258\n\tVoluntary context switches: 1917771\n\tInvoluntary context switches: 1052846\n\tSwaps: 0\n\tFile system inputs: 2580464\n\tFile system outputs: 377976\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 84274,
+        "entrapment_decoy_rows": 48201,
+        "entrapment_target_rows": 48123,
+        "rows": 179878,
+        "target_rows_with_mixed_target_decoy_mapping": 602,
+        "target_rows_without_target_protein": 0,
+        "targets": 95604
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.log.txt",
+        "sha256": "489edc08adf2474561e3d8ad96305421f5a8c1862e7876f013b5873727f77e62"
+      },
+      "pepxml": {
+        "bytes": 153923073,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.target.pep.xml",
+        "sha256": "8c271c44a75347a00be1e89a5abbf7a2d4ae5cff825e5f40865fe3b5fe97125f"
+      },
+      "pin": {
+        "bytes": 74904415,
+        "normalized_specid_sha256": "3422d30efc649a9e3bc0719897352481f89c950cd0cb950815452d0d8bc82965",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+        "sha256": "9627c67185f4679265a07f3271ab037a098c4a40a67c4134af5c61c2114feedb"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.params.txt",
+        "sha256": "d5c0853db152754320376a52c671d2c97c6de89a4d2b08fb56ce7d449a5f456a"
+      },
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01\"\n\tUser time (seconds): 6345.99\n\tSystem time (seconds): 53.60\n\tPercent of CPU this job got: 1113%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 9:34.85\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3397376\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 848835\n\tVoluntary context switches: 2003655\n\tInvoluntary context switches: 1362844\n\tSwaps: 0\n\tFile system inputs: 2668648\n\tFile system outputs: 447344\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 22986,
+        "entrapment_decoy_rows": 12466,
+        "entrapment_target_rows": 12134,
+        "rows": 46804,
+        "target_rows_with_mixed_target_decoy_mapping": 187,
+        "target_rows_without_target_protein": 0,
+        "targets": 23818
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.log.txt",
+        "sha256": "abe46f1087c4a042e4d03709e5ecbf7825da76c40ebdfd557d57b3881fa29930"
+      },
+      "pepxml": {
+        "bytes": 39238990,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "e66a8c968870c08b929825870d63fde67ee45fa14edf74e9f720a421c5fcff24"
+      },
+      "pin": {
+        "bytes": 19980394,
+        "normalized_specid_sha256": "7f9fd27e5d07689e1db292b7078f0ab5d04aff2cd9e63d90506f92aef8c0c570",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+        "sha256": "64b7ec52f58fc15c27b41fa27588670eab2d2b25f445103d62b2da20436ff3b6"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.params.txt",
+        "sha256": "e23e821845de0741090e373d129d3091947e2090eecf2cf214f43d90882efc47"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01\"\n\tUser time (seconds): 1440.61\n\tSystem time (seconds): 14.28\n\tPercent of CPU this job got: 1041%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:19.70\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 2163764\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 538642\n\tVoluntary context switches: 559400\n\tInvoluntary context switches: 355026\n\tSwaps: 0\n\tFile system inputs: 2456032\n\tFile system outputs: 115920\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 15252,
+        "entrapment_decoy_rows": 8116,
+        "entrapment_target_rows": 8139,
+        "rows": 31717,
+        "target_rows_with_mixed_target_decoy_mapping": 194,
+        "target_rows_without_target_protein": 0,
+        "targets": 16465
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.log.txt",
+        "sha256": "689647e168a82bf0013a796c24f07fe90714f4bb6743463d3f6bb26b62558937"
+      },
+      "pepxml": {
+        "bytes": 26459934,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "b4d6119fbae3cf2c38066acf91d77a44be2cfe19c13192fb8fd3eec510c61060"
+      },
+      "pin": {
+        "bytes": 13506686,
+        "normalized_specid_sha256": "263f7fa7b9cd6dea1225d56363b849c81f60fb5cf314785ba897c5898977c0ed",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+        "sha256": "02f5f02f03f389d9917320c89d52e3ba4c921876e295744e258eb8a48aa98842"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.params.txt",
+        "sha256": "85881caa1b538663e4eef6fc498c8d4e58330345491aa01425aa4bbd18e79fd3"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01\"\n\tUser time (seconds): 996.84\n\tSystem time (seconds): 8.68\n\tPercent of CPU this job got: 988%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 1:41.68\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1477032\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 366992\n\tVoluntary context switches: 405811\n\tInvoluntary context switches: 246956\n\tSwaps: 0\n\tFile system inputs: 2065360\n\tFile system outputs: 78312\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 76362,
+        "entrapment_decoy_rows": 43830,
+        "entrapment_target_rows": 43011,
+        "rows": 160540,
+        "target_rows_with_mixed_target_decoy_mapping": 563,
+        "target_rows_without_target_protein": 0,
+        "targets": 84178
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.log.txt",
+        "sha256": "a7cbd2821a9e0328c65d74be27a32bd15e780d2b8c9ab8478110080b092c5aaa"
+      },
+      "pepxml": {
+        "bytes": 136078392,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.target.pep.xml",
+        "sha256": "d521cb67b1ecef5fd483736401db5548deb88803d4f8b770c1a54fbdb6393625"
+      },
+      "pin": {
+        "bytes": 68549924,
+        "normalized_specid_sha256": "a4957eb5b4d6f8ad299be51c59dfb89a7e687c456fa4c234800f29c17f55ed19",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+        "sha256": "3a0b8d6cf6e9483f6e4204ae2745757d28782e454ae8a0fc961f4d48adafafa4"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.params.txt",
+        "sha256": "15772bc62ce8ec023830a921eeb68804e895c17112153443e453297de7292431"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02\"\n\tUser time (seconds): 5759.62\n\tSystem time (seconds): 41.62\n\tPercent of CPU this job got: 1109%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 8:42.66\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3391784\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 11\n\tMinor (reclaiming a frame) page faults: 849871\n\tVoluntary context switches: 1649577\n\tInvoluntary context switches: 1235067\n\tSwaps: 0\n\tFile system inputs: 2995808\n\tFile system outputs: 400072\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "homology_depleted",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 128894,
+        "entrapment_decoy_rows": 73711,
+        "entrapment_target_rows": 72946,
+        "rows": 266744,
+        "target_rows_with_mixed_target_decoy_mapping": 704,
+        "target_rows_without_target_protein": 0,
+        "targets": 137850
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.log.txt",
+        "sha256": "417e313e1f0f6efc749808d2775cb202c49e12d6a77253fb65871fba852d97f6"
+      },
+      "pepxml": {
+        "bytes": 225614797,
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.target.pep.xml",
+        "sha256": "6ba39fdc1047b355414a9518f3b9658a324cb5d571cf23fa20f748b38758daca"
+      },
+      "pin": {
+        "bytes": 114465806,
+        "normalized_specid_sha256": "25ef9e18a85682e31a0b4d6d90520eb702392e89132d30eaffd711f21def30a8",
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+        "sha256": "ca930d2893853186b10fe614c53b4fd0a3308a0af642f33b9b470405f1bf43af"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.params.txt",
+        "sha256": "14c669beec9cbbca93423dd56d64ac377f25bd7485cb45f7b00c6d71eb5a29ce"
+      },
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/homology_depleted.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02\"\n\tUser time (seconds): 9345.95\n\tSystem time (seconds): 76.72\n\tPercent of CPU this job got: 1121%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 13:59.90\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3422228\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 858031\n\tVoluntary context switches: 2907591\n\tInvoluntary context switches: 2011746\n\tSwaps: 0\n\tFile system inputs: 2994664\n\tFile system outputs: 664704\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 74017,
+        "entrapment_decoy_rows": 41953,
+        "entrapment_target_rows": 42284,
+        "rows": 151570,
+        "target_rows_with_mixed_target_decoy_mapping": 348,
+        "target_rows_without_target_protein": 0,
+        "targets": 77553
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.log.txt",
+        "sha256": "3a3cce7bcb1b7e22b8943f3dc9c96a10152db647da3968b0b17fc568c534cbc2"
+      },
+      "pepxml": {
+        "bytes": 127293414,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.target.pep.xml",
+        "sha256": "80f0348a02cbfbbd82fab18d9bbd00decf431b92fe2486f00b3b2197c11abe09"
+      },
+      "pin": {
+        "bytes": 65095832,
+        "normalized_specid_sha256": "efdfc13457c383dc903483a7bc9c379d423f89975d98c60ae5539abb40b07d85",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+        "sha256": "7f4e8448fbcfd0be4fd8d17b81f34471072a49eb9909059b0102894c873883cc"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.params.txt",
+        "sha256": "c307083a0ad64ea17251a7d51dc61c7f8c83ee2b3edf2b9018cc44576159d54e"
+      },
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01\"\n\tUser time (seconds): 4856.14\n\tSystem time (seconds): 37.36\n\tPercent of CPU this job got: 1094%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 7:27.12\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3402540\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 852466\n\tVoluntary context switches: 1442194\n\tInvoluntary context switches: 1241373\n\tSwaps: 0\n\tFile system inputs: 376008\n\tFile system outputs: 376160\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 84123,
+        "entrapment_decoy_rows": 49813,
+        "entrapment_target_rows": 49785,
+        "rows": 179874,
+        "target_rows_with_mixed_target_decoy_mapping": 599,
+        "target_rows_without_target_protein": 0,
+        "targets": 95751
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.log.txt",
+        "sha256": "0673d8030159ec0ce0bfc2d1664f7718b3de9d736f96dfbb1c29546aab66ecc1"
+      },
+      "pepxml": {
+        "bytes": 152871446,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.target.pep.xml",
+        "sha256": "1b8464b359d20788ff0a7d0658ff15be28dc795382cc7e57853c04bda33f0f6e"
+      },
+      "pin": {
+        "bytes": 74978042,
+        "normalized_specid_sha256": "02f9c8c4103f687f37ee732183a4aa0d61a61992461c75ef4bfc65efefc32ecc",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+        "sha256": "8f82d80aaa556ea927ca7dcc607c642490c15a5c473a82a0e4267abbbc73edf3"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.params.txt",
+        "sha256": "6b6a24536dbb555702e32790c8e93c9b12e2a1a32b951b534b60f9e869f6bb7a"
+      },
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-22Oct2014-Anopheles-8-MAGs-S-01\"\n\tUser time (seconds): 6192.35\n\tSystem time (seconds): 47.14\n\tPercent of CPU this job got: 1112%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 9:20.76\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3407120\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 851112\n\tVoluntary context switches: 1700554\n\tInvoluntary context switches: 1507371\n\tSwaps: 0\n\tFile system inputs: 445272\n\tFile system outputs: 445440\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 22779,
+        "entrapment_decoy_rows": 12619,
+        "entrapment_target_rows": 12780,
+        "rows": 46804,
+        "target_rows_with_mixed_target_decoy_mapping": 203,
+        "target_rows_without_target_protein": 0,
+        "targets": 24025
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.log.txt",
+        "sha256": "ac03b61241c552eca07da7d8d7b834a3b636efc4a0d151b91e971c86db55279f"
+      },
+      "pepxml": {
+        "bytes": 38953135,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "c489905b88b2f13207be4f23de13b317a90ccd35d46dff49663d72381ca2406a"
+      },
+      "pin": {
+        "bytes": 19982493,
+        "normalized_specid_sha256": "f72021e337f93eefb539ec2811e2ae347ee5b16b00b2070cc19dcf2290426f3c",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+        "sha256": "f6c1a47d70a265ab9fd54f22e73e7cc69330b538ed02ff37fe05b288b7512411"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.params.txt",
+        "sha256": "669b3d7b7d0891e0873c2db8cffd90fe8ce6836b5725a6cae011186a7202dec2"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01\"\n\tUser time (seconds): 1407.18\n\tSystem time (seconds): 14.29\n\tPercent of CPU this job got: 1049%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:15.50\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 2163024\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 538538\n\tVoluntary context switches: 580548\n\tInvoluntary context switches: 303884\n\tSwaps: 0\n\tFile system inputs: 2455640\n\tFile system outputs: 115376\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 15090,
+        "entrapment_decoy_rows": 8225,
+        "entrapment_target_rows": 8629,
+        "rows": 31708,
+        "target_rows_with_mixed_target_decoy_mapping": 206,
+        "target_rows_without_target_protein": 0,
+        "targets": 16618
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.log.txt",
+        "sha256": "56b8cbbe3eb932fb771d10982ff66ced9ccc81a5a7dfe31688b6eeb1963592bf"
+      },
+      "pepxml": {
+        "bytes": 26243445,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "eca41c969bde4c531d89183adf21a25069cc83bef688626d217869cedd282cea"
+      },
+      "pin": {
+        "bytes": 13507326,
+        "normalized_specid_sha256": "db797dd6e5d629079c2f08e85a7442d11c00e74624a9263065135841013c39b7",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+        "sha256": "9f21cba8224c7e19bbb8520d9f9c4faa6a043450332b96ec4ebdbe3c414ca747"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.params.txt",
+        "sha256": "65ab09475b4646e9a233416c3a9b8633a123a93e976b091ff9e5af335e58d1e5"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01\"\n\tUser time (seconds): 996.86\n\tSystem time (seconds): 8.51\n\tPercent of CPU this job got: 976%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 1:42.94\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1476292\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 366897\n\tVoluntary context switches: 409315\n\tInvoluntary context switches: 262319\n\tSwaps: 0\n\tFile system inputs: 2064944\n\tFile system outputs: 77912\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 76547,
+        "entrapment_decoy_rows": 45342,
+        "entrapment_target_rows": 44412,
+        "rows": 160528,
+        "target_rows_with_mixed_target_decoy_mapping": 615,
+        "target_rows_without_target_protein": 0,
+        "targets": 83981
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.log.txt",
+        "sha256": "6a2f3fa6d64350bcb6a338bbc296bc10e032a7c9c24d8887329033846cc6973b"
+      },
+      "pepxml": {
+        "bytes": 135150608,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.target.pep.xml",
+        "sha256": "5b69a9232f4be39f861b55ca1c31521e71ed048b7e22e2285b5f0c62e0658419"
+      },
+      "pin": {
+        "bytes": 68617800,
+        "normalized_specid_sha256": "43f7f25e67115db16431a20b72be45b52cc2896d2ff0a0a27a8877a745ba3af3",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+        "sha256": "6cd2fd89cdede736733d8f39c7592822ad22b84243b923d4a9e4325fb9dbb60e"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.params.txt",
+        "sha256": "636517d6db2713f0b08b606ef3eaffe5f6d29133c111a8e1ad215faba8354dad"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02\"\n\tUser time (seconds): 5696.94\n\tSystem time (seconds): 43.09\n\tPercent of CPU this job got: 1072%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 8:55.02\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3407000\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 855094\n\tVoluntary context switches: 1473860\n\tInvoluntary context switches: 1581132\n\tSwaps: 0\n\tFile system inputs: 398224\n\tFile system outputs: 398392\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_130363",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 128837,
+        "entrapment_decoy_rows": 76171,
+        "entrapment_target_rows": 75394,
+        "rows": 266733,
+        "target_rows_with_mixed_target_decoy_mapping": 749,
+        "target_rows_without_target_protein": 0,
+        "targets": 137896
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.log.txt",
+        "sha256": "dd49a7b7271b1f571914efac8c16b15ff3414db0e50cbfc91424d5334455c91a"
+      },
+      "pepxml": {
+        "bytes": 224105635,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.target.pep.xml",
+        "sha256": "500932d69b391b116ca434648d50834d81b6fedb492d2d15b87a06d1565ae658"
+      },
+      "pin": {
+        "bytes": 114613915,
+        "normalized_specid_sha256": "9a68a1e70d06499fa90b285f4ae6a40ce2b6dae2c6526cce65170dab1671edc2",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+        "sha256": "ec86ed59d883721c6743ddf62acaed3f4a976768036313801cd19db914963086"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.params.txt",
+        "sha256": "b4747295deedd98825928b94d35dcc43d33c71aa026036a6d747de1186b43eee"
+      },
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_130363.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_130363/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02\"\n\tUser time (seconds): 9425.16\n\tSystem time (seconds): 66.04\n\tPercent of CPU this job got: 1117%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 14:09.02\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3417864\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 856517\n\tVoluntary context switches: 2307139\n\tInvoluntary context switches: 2313368\n\tSwaps: 0\n\tFile system inputs: 661832\n\tFile system outputs: 662048\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 73969,
+        "entrapment_decoy_rows": 41927,
+        "entrapment_target_rows": 42386,
+        "rows": 151567,
+        "target_rows_with_mixed_target_decoy_mapping": 322,
+        "target_rows_without_target_protein": 0,
+        "targets": 77598
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.log.txt",
+        "sha256": "63a79614230c5d993277ca8f09b224a26839e53f8874baee77d20bf1cb6509fd"
+      },
+      "pepxml": {
+        "bytes": 127274800,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.target.pep.xml",
+        "sha256": "da80b786aa6c1a726acc5cf71d70c65225b4e0c9a823d1cd5d8a8d8ab5d57389"
+      },
+      "pin": {
+        "bytes": 65082791,
+        "normalized_specid_sha256": "b81319b8c32dd4ead5f7e663c8c24222b4c701df415a64faf4051c915aa31a9e",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+        "sha256": "5ebd14105eb84d938cf2c38068dafa8ee7881637166e92073d830eaf7a03cbf2"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.params.txt",
+        "sha256": "60528d7b266b9bd1e39352f0085151bdad87ea9b929d4d6c255637b57059e211"
+      },
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01\"\n\tUser time (seconds): 5007.89\n\tSystem time (seconds): 36.60\n\tPercent of CPU this job got: 1104%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 7:36.54\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3384056\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 11\n\tMinor (reclaiming a frame) page faults: 847433\n\tVoluntary context switches: 1596323\n\tInvoluntary context switches: 1066587\n\tSwaps: 0\n\tFile system inputs: 3064416\n\tFile system outputs: 376112\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 84089,
+        "entrapment_decoy_rows": 49768,
+        "entrapment_target_rows": 50096,
+        "rows": 179872,
+        "target_rows_with_mixed_target_decoy_mapping": 621,
+        "target_rows_without_target_protein": 0,
+        "targets": 95783
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.log.txt",
+        "sha256": "2e9212b176a5cffed74694e381a2834b68ba0c21468371a774c2dfc64f8f7157"
+      },
+      "pepxml": {
+        "bytes": 152837315,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.target.pep.xml",
+        "sha256": "e1e37b5e749fa6fd0e88cae7d3f70c301575ac76b27976dba4ebbc78a23f3e30"
+      },
+      "pin": {
+        "bytes": 74990356,
+        "normalized_specid_sha256": "1e5a6c948d62978b2c432daa571027ef05dc2e9c63bddd743e752fd5aaef2361",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+        "sha256": "b51b294ac9e3daaf4485f88ec5ec69852c6bba49e52809085be2ccc46e2c6749"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.params.txt",
+        "sha256": "d9cd0b05722cf826e9b7e1fb706517ca4cfb934e84edca960ad1294b03788c35"
+      },
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-22Oct2014-Anopheles-8-MAGs-S-01\"\n\tUser time (seconds): 6364.48\n\tSystem time (seconds): 53.71\n\tPercent of CPU this job got: 1113%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 9:36.19\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3407232\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 854346\n\tVoluntary context switches: 1959870\n\tInvoluntary context switches: 1374501\n\tSwaps: 0\n\tFile system inputs: 2666696\n\tFile system outputs: 445392\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 22822,
+        "entrapment_decoy_rows": 12693,
+        "entrapment_target_rows": 12850,
+        "rows": 46798,
+        "target_rows_with_mixed_target_decoy_mapping": 191,
+        "target_rows_without_target_protein": 0,
+        "targets": 23976
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.log.txt",
+        "sha256": "b2a39790fc726dec68257e9ce75c480f16e6851388ce1be3c2c45bd50dc94296"
+      },
+      "pepxml": {
+        "bytes": 38870210,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "157cb248edf02c157d10b127d5ad92a31a339846a6c296cf1aa1c5890b10bca1"
+      },
+      "pin": {
+        "bytes": 19968486,
+        "normalized_specid_sha256": "88480362501d9ea938d54d891cfdb2ee2d5ca9f173312c0d09d26cf0a04dadb5",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+        "sha256": "a5779d089db354bcb4d1b0275c791b55d2f72bb37975ea6848603eab36f20759"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.params.txt",
+        "sha256": "968d70e13705ba50fea963426f800508555ed267d3403dc033801d5173627da5"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01\"\n\tUser time (seconds): 1422.01\n\tSystem time (seconds): 14.91\n\tPercent of CPU this job got: 1088%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:12.04\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 2162920\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 538527\n\tVoluntary context switches: 545210\n\tInvoluntary context switches: 345767\n\tSwaps: 0\n\tFile system inputs: 536672\n\tFile system outputs: 115184\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 15174,
+        "entrapment_decoy_rows": 8330,
+        "entrapment_target_rows": 8612,
+        "rows": 31692,
+        "target_rows_with_mixed_target_decoy_mapping": 203,
+        "target_rows_without_target_protein": 0,
+        "targets": 16518
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.log.txt",
+        "sha256": "2602b62041f203313230433ebf60b911bff27d0e82b0d8fa412f3abd6c9d8c8c"
+      },
+      "pepxml": {
+        "bytes": 26217407,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "f82d861548351317d47adc58f20438979381560e56a9586912cc7bde6f12dbdc"
+      },
+      "pin": {
+        "bytes": 13499420,
+        "normalized_specid_sha256": "43dbd003f1cd331ce29bd8998d2d562dd51f70c40adcf9f6206c3dc1e0f6b86d",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+        "sha256": "f9b2f0137d176f280d45682c29fa8bdac3667599819a62cf1b7e5f02126e9757"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.params.txt",
+        "sha256": "fa682b0f25dcf4cc0178b18b0d9c046238afd0a244f959be1b2eaf802c0ba809"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01\"\n\tUser time (seconds): 981.57\n\tSystem time (seconds): 7.99\n\tPercent of CPU this job got: 1067%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 1:32.69\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1476532\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 366895\n\tVoluntary context switches: 398335\n\tInvoluntary context switches: 238217\n\tSwaps: 0\n\tFile system inputs: 77776\n\tFile system outputs: 77840\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 76326,
+        "entrapment_decoy_rows": 45124,
+        "entrapment_target_rows": 44724,
+        "rows": 160539,
+        "target_rows_with_mixed_target_decoy_mapping": 593,
+        "target_rows_without_target_protein": 0,
+        "targets": 84213
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.log.txt",
+        "sha256": "430fc187c2275521165ba20a9b8c976ca6bd9bb1826fdcd900af3f60b21b5f47"
+      },
+      "pepxml": {
+        "bytes": 135157316,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.target.pep.xml",
+        "sha256": "9e8b71a92c653f6bdac98219b1c0fb7dee17fdad69df80da90c61100db64d210"
+      },
+      "pin": {
+        "bytes": 68622927,
+        "normalized_specid_sha256": "21d8ec95109f43809abd8e15771066fa0a0f291f4520892fcc5a67372d0195d5",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+        "sha256": "3cb4225253807fa1996e718dd5662a900d9453219de46de912c737cd81675821"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.params.txt",
+        "sha256": "46ac323fdb605dfd483734ba991b75beb3094d987db36dd1a5ecb2dde34ca916"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02\"\n\tUser time (seconds): 5737.53\n\tSystem time (seconds): 41.53\n\tPercent of CPU this job got: 1111%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 8:39.88\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3403012\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 855268\n\tVoluntary context switches: 1488363\n\tInvoluntary context switches: 1384391\n\tSwaps: 0\n\tFile system inputs: 398256\n\tFile system outputs: 398424\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_155921",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 129220,
+        "entrapment_decoy_rows": 76501,
+        "entrapment_target_rows": 75165,
+        "rows": 266725,
+        "target_rows_with_mixed_target_decoy_mapping": 726,
+        "target_rows_without_target_protein": 0,
+        "targets": 137505
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.log.txt",
+        "sha256": "518dc4691fbcef8756a6d043dcac99ffed89ee59e988b5767f098d45325b8491"
+      },
+      "pepxml": {
+        "bytes": 224123955,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.target.pep.xml",
+        "sha256": "394a4eff891d93a2980929e51194cace83e0db6f01aac983e5764ef5f5f82f09"
+      },
+      "pin": {
+        "bytes": 114586392,
+        "normalized_specid_sha256": "fe444177372187768e4152def3b5393938cbc89921be27573fbc571d609afe25",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+        "sha256": "8ce4dd50d80707c0ec68c45c5cd029059e89fead28e695ac8ad740954cce008c"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.params.txt",
+        "sha256": "475164b6f6d3034d134d40da32aa5d94649facbf67a9e7951c710b220bd1aaec"
+      },
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_155921.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_155921/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02\"\n\tUser time (seconds): 9663.50\n\tSystem time (seconds): 80.29\n\tPercent of CPU this job got: 1123%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 14:27.30\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3401276\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 852795\n\tVoluntary context switches: 3068122\n\tInvoluntary context switches: 2090640\n\tSwaps: 0\n\tFile system inputs: 2991992\n\tFile system outputs: 662032\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 73769,
+        "entrapment_decoy_rows": 41772,
+        "entrapment_target_rows": 42492,
+        "rows": 151564,
+        "target_rows_with_mixed_target_decoy_mapping": 356,
+        "target_rows_without_target_protein": 0,
+        "targets": 77795
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.log.txt",
+        "sha256": "a14ca77d0255fcf673da518cadc79b4a5c33a152323db3fcb18e4d95e0f97ea7"
+      },
+      "pepxml": {
+        "bytes": 127282305,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.target.pep.xml",
+        "sha256": "399fdbedd3dc00f8460873623add72e70be73f75cdfc2d610ec4845d6c4f5dbc"
+      },
+      "pin": {
+        "bytes": 65090053,
+        "normalized_specid_sha256": "ed0a91c3866cb6c1201ff9e8b6844f0a7facdf597634f48316d6b48c735403ae",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+        "sha256": "f221be166e45204825e6ec196533ea37c738d6dd1036c5a8999e02dffbe66ffc"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.params.txt",
+        "sha256": "df183d69e4b0c34bcb5739fef130d99ebb80068b99de4043c6ae019cba8ef49b"
+      },
+      "run": "comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01\"\n\tUser time (seconds): 4891.11\n\tSystem time (seconds): 40.43\n\tPercent of CPU this job got: 1114%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 7:22.62\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3394232\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 847951\n\tVoluntary context switches: 1607766\n\tInvoluntary context switches: 1059346\n\tSwaps: 0\n\tFile system inputs: 375976\n\tFile system outputs: 376128\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 83972,
+        "entrapment_decoy_rows": 49461,
+        "entrapment_target_rows": 49871,
+        "rows": 179876,
+        "target_rows_with_mixed_target_decoy_mapping": 639,
+        "target_rows_without_target_protein": 0,
+        "targets": 95904
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.log.txt",
+        "sha256": "cf711bef9f786cb920b214436c025f0f4b7bf66c34dc07e7b260eaba22a0970b"
+      },
+      "pepxml": {
+        "bytes": 152846853,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.target.pep.xml",
+        "sha256": "dc1581643dffde2a6065e706594daa517a8a672724735a67909f1022ab8f4267"
+      },
+      "pin": {
+        "bytes": 74981466,
+        "normalized_specid_sha256": "664747a0700ec8096c9b5aac6783197a633da148c69c8e893d2a4254eab1514d",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+        "sha256": "eb9ef25b4f23f184e0707ccd79cbfd09eca26ec270185e5da2696fbc8b59e413"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.params.txt",
+        "sha256": "a447055f348ca58f03030319c58ddba0634444421c65a1a6568ea6fd79203468"
+      },
+      "run": "comet-22Oct2014-Anopheles-8-MAGs-S-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/22Oct2014-Anopheles-8-MAGs-S-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/22Oct2014-Anopheles-8-MAGs-S-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-22Oct2014-Anopheles-8-MAGs-S-01\"\n\tUser time (seconds): 6147.79\n\tSystem time (seconds): 45.30\n\tPercent of CPU this job got: 1121%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 9:12.31\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3404504\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 851421\n\tVoluntary context switches: 1784029\n\tInvoluntary context switches: 1334538\n\tSwaps: 0\n\tFile system inputs: 445232\n\tFile system outputs: 445400\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 22828,
+        "entrapment_decoy_rows": 12818,
+        "entrapment_target_rows": 12769,
+        "rows": 46804,
+        "target_rows_with_mixed_target_decoy_mapping": 206,
+        "target_rows_without_target_protein": 0,
+        "targets": 23976
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.log.txt",
+        "sha256": "fba8ef0950bbfc7c3ff7ab37b4214423c7b3c70b60dc26bd1d4032e4014c9a39"
+      },
+      "pepxml": {
+        "bytes": 38893373,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "537d2c55528929b9cabe85fc7fb1bed41e813daac82a1b95d87117828f3bbb2e"
+      },
+      "pin": {
+        "bytes": 19977274,
+        "normalized_specid_sha256": "9fe160b794325989272829031168ea68b979715b598898c93866d8c0fa4b7496",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+        "sha256": "e8837129d81c567aac0520015f5cf76d853a3b63479ccd7b8c8cd3993bc5fa87"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.params.txt",
+        "sha256": "dbe192bb32728e07ce73bd3ce94c366a087808e6fdfaf0ec4502ef09679e939f"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01\"\n\tUser time (seconds): 1448.54\n\tSystem time (seconds): 13.55\n\tPercent of CPU this job got: 1050%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:19.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 2162908\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 538528\n\tVoluntary context switches: 536772\n\tInvoluntary context switches: 312168\n\tSwaps: 0\n\tFile system inputs: 2455504\n\tFile system outputs: 115248\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 15120,
+        "entrapment_decoy_rows": 8352,
+        "entrapment_target_rows": 8699,
+        "rows": 31705,
+        "target_rows_with_mixed_target_decoy_mapping": 189,
+        "target_rows_without_target_protein": 0,
+        "targets": 16585
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.log.txt",
+        "sha256": "001d131e78f228904768c404420a6da705390abde0971bb946d70edc6b3186b6"
+      },
+      "pepxml": {
+        "bytes": 26208873,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.target.pep.xml",
+        "sha256": "4a6ca5393b7c66bebcc645b69e93cd502f298727a546ac522d22883a1ea6b243"
+      },
+      "pin": {
+        "bytes": 13498160,
+        "normalized_specid_sha256": "c7d5696603cc0c75b4a11e29882176d6d37c653a147f27306a555c34d97aa8e7",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+        "sha256": "4c9450450ad8fd5f290ebffe02cf4eb840bbe444cfda7827dc51e0d7f8778bd6"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.params.txt",
+        "sha256": "2cb471f2fe94ccae18c138855433dc5e27698f20f022a5a37ea92138cb0c2e39"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01\"\n\tUser time (seconds): 1000.22\n\tSystem time (seconds): 8.58\n\tPercent of CPU this job got: 1002%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 1:40.65\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 1476468\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 366911\n\tVoluntary context switches: 405682\n\tInvoluntary context switches: 217388\n\tSwaps: 0\n\tFile system inputs: 2064856\n\tFile system outputs: 77824\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 76200,
+        "entrapment_decoy_rows": 45009,
+        "entrapment_target_rows": 44699,
+        "rows": 160505,
+        "target_rows_with_mixed_target_decoy_mapping": 627,
+        "target_rows_without_target_protein": 0,
+        "targets": 84305
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.log.txt",
+        "sha256": "5a5cf7f88198e0301cea52d19b83b81f62ecdc7db5011dd101047c0c4c5d5904"
+      },
+      "pepxml": {
+        "bytes": 135102932,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.target.pep.xml",
+        "sha256": "175a6c16955a202e459e9f2e059f9f5c7495032e791155482b89720e1629b6fb"
+      },
+      "pin": {
+        "bytes": 68600257,
+        "normalized_specid_sha256": "45d0f03a6d3b2e120cd71ed43058768c5f6389d65715081c1894d8039ee8463e",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+        "sha256": "a56e2f45731d5704b3154f75ec8ac197e4ccad88dea6f357a06fc169b4b66eb0"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.params.txt",
+        "sha256": "4be085da65f4818c9849332a44435a637b91f064604b5feff84242426945d9d6"
+      },
+      "run": "comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02\"\n\tUser time (seconds): 5710.14\n\tSystem time (seconds): 42.16\n\tPercent of CPU this job got: 1111%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 8:37.73\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3388784\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 847921\n\tVoluntary context switches: 1638493\n\tInvoluntary context switches: 1218559\n\tSwaps: 0\n\tFile system inputs: 2508360\n\tFile system outputs: 398280\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    },
+    {
+      "condition": "size_control_196613",
+      "label_check": {
+        "decoy_rows_without_decoy_protein": 0,
+        "decoys": 128728,
+        "entrapment_decoy_rows": 75944,
+        "entrapment_target_rows": 75741,
+        "rows": 266708,
+        "target_rows_with_mixed_target_decoy_mapping": 773,
+        "target_rows_without_target_protein": 0,
+        "targets": 137980
+      },
+      "log": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.log.txt",
+        "sha256": "fefcdd7bbb5c91b0c82bb73b28f9aed07f0aac2cf5e6d503ddf3e31fdfaf9b91"
+      },
+      "pepxml": {
+        "bytes": 224062091,
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.target.pep.xml",
+        "sha256": "53fba4aef090d8e337fbe91f327f93e7303e9e3c4166206c8eef4b2f1fc1a445"
+      },
+      "pin": {
+        "bytes": 114598102,
+        "normalized_specid_sha256": "b0b85485ecbc4537cb79ce128b3772b7ab81566918c0cfde59a566729ca4740f",
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+        "sha256": "f3ae3333ef31c48af2401d8e374d164ad1d0222553246c1a2bedcf50d07348df"
+      },
+      "resolved_parameters": {
+        "path": "validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.params.txt",
+        "sha256": "e47eff4fb48e8f4ccff3b2233a5d6bc80fc7032a32b0ad74054dbd088b2af7c9"
+      },
+      "run": "comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02",
+      "time": "\tCommand being timed: \"/home/andrej-rumenovski/percolator_rs_out/entrapment/crux-4.0.Linux.x86_64/bin/crux comet --parameter-file /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/baseline_reproduction/search_parameters/9March2015-29-MAGs-pellet-2ndRep-14N-male-02-comet.params.txt /home/andrej-rumenovski/percolator_rs_out/entrapment/9March2015-29-MAGs-pellet-2ndRep-14N-male-02.mzML /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/databases/size_control_196613.fasta --output-dir /run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/size_control_196613/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02\"\n\tUser time (seconds): 9318.98\n\tSystem time (seconds): 68.31\n\tPercent of CPU this job got: 1121%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 13:57.28\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3401920\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 864384\n\tVoluntary context switches: 2536921\n\tInvoluntary context switches: 2038585\n\tSwaps: 0\n\tFile system inputs: 661720\n\tFile system outputs: 661936\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+    }
+  ]
+}

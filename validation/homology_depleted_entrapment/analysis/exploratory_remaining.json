@@ -1,0 +1,1840 @@
+{
+  "entrapment_decoys": {
+    "charge_counts": {
+      "1": 0,
+      "2": 57,
+      "3": 35,
+      "4": 10,
+      "5": 0,
+      "6": 0
+    },
+    "distinct_peptides": 79,
+    "family_row_counts": {
+      "ATP synthase": 0,
+      "actin": 0,
+      "chaperon": 0,
+      "elongation factor": 0,
+      "heat shock": 0,
+      "histone": 0,
+      "keratin": 0,
+      "myosin": 0,
+      "ribosomal": 0,
+      "tubulin": 0,
+      "ubiquitin": 0
+    },
+    "features": {
+      "CalcMass": {
+        "mean": 1629.4249395588238,
+        "median": 1480.165498,
+        "n": 102,
+        "q10_q90": [
+          1002.4800414,
+          2356.6671093
+        ]
+      },
+      "ExpMass": {
+        "mean": 1629.6892427450978,
+        "median": 1480.162221,
+        "n": 102,
+        "q10_q90": [
+          1002.5817858,
+          2356.7737335
+        ]
+      },
+      "IonFrac": {
+        "mean": 0.39106274509803923,
+        "median": 0.4091,
+        "n": 102,
+        "q10_q90": [
+          0.13869,
+          0.6411100000000002
+        ]
+      },
+      "PepLen": {
+        "mean": 14.264705882352942,
+        "median": 13.0,
+        "n": 102,
+        "q10_q90": [
+          9.0,
+          20.0
+        ]
+      },
+      "Sp": {
+        "mean": 357.38509272549015,
+        "median": 292.60261549999996,
+        "n": 102,
+        "q10_q90": [
+          93.6911194,
+          637.5478145000002
+        ]
+      },
+      "Xcorr": {
+        "mean": 1.7411500980392158,
+        "median": 1.7358095,
+        "n": 102,
+        "q10_q90": [
+          1.27022,
+          2.1721463
+        ]
+      },
+      "absdM": {
+        "mean": 0.00013093137254901959,
+        "median": 5e-06,
+        "n": 102,
+        "q10_q90": [
+          1e-06,
+          0.0005886000000000004
+        ]
+      },
+      "dM": {
+        "mean": 0.00012704901960784316,
+        "median": 1e-06,
+        "n": 102,
+        "q10_q90": [
+          -8e-06,
+          0.0005886000000000004
+        ]
+      },
+      "deltCn": {
+        "mean": 0.19327617647058823,
+        "median": 0.178877,
+        "n": 102,
+        "q10_q90": [
+          0.04870360000000001,
+          0.3049413
+        ]
+      },
+      "deltLCn": {
+        "mean": 0.27512303921568626,
+        "median": 0.2549615,
+        "n": 102,
+        "q10_q90": [
+          0.1741763,
+          0.39316240000000025
+        ]
+      },
+      "enzC": {
+        "mean": 0.9411764705882353,
+        "median": 1.0,
+        "n": 102,
+        "q10_q90": [
+          1.0,
+          1.0
+        ]
+      },
+      "enzInt": {
+        "mean": 0.35294117647058826,
+        "median": 0.0,
+        "n": 102,
+        "q10_q90": [
+          0.0,
+          1.0
+        ]
+      },
+      "enzN": {
+        "mean": 0.8823529411764706,
+        "median": 1.0,
+        "n": 102,
+        "q10_q90": [
+          0.0,
+          1.0
+        ]
+      },
+      "lnExpect": {
+        "mean": -1.0002032352941175,
+        "median": -0.639343,
+        "n": 102,
+        "q10_q90": [
+          -3.9330812999999996,
+          0.9281408000000001
+        ]
+      },
+      "lnNumSP": {
+        "mean": 11.649848137254901,
+        "median": 12.146831500000001,
+        "n": 102,
+        "q10_q90": [
+          10.207157,
+          12.4605522
+        ]
+      },
+      "lnrSp": {
+        "mean": 1.1062880980392158,
+        "median": 1.098612,
+        "n": 102,
+        "q10_q90": [
+          0.0,
+          2.3883640000000006
+        ]
+      }
+    },
+    "native_substring_distance_le_2": {
+      "distance_0_1_2": [
+        0,
+        3,
+        10
+      ],
+      "distinct_hits": 13,
+      "matches": [
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP005281-PA | transcript=AGAP005281-RA | gene=AGAP005281 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_2L:13589239-13600295(-) | protein_length=602 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "AEEVLEVK",
+          "peptide": "AEFVTEVK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "AGAP004361-PA | transcript=AGAP004361-RA | gene=AGAP004361 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_2R:55046567-55053551(+) | protein_length=1889 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "AERAVTLK",
+          "peptide": "AEMAVTLK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "sp|Q12232|SLP1_YEAST Uncharacterized protein SLP1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=SLP1 PE=1 SV=1",
+          "native_substring": "ECLGEELE",
+          "peptide": "ECCGEECE"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP006280-PA | transcript=AGAP006280-RA | gene=AGAP006280 | organism=Anopheles_gambiae_PEST | gene_product=nuclear pore complex protein Nup210 | transcript_product=nuclear pore complex protein Nup210 | location=AgamP4_2L:29402129-29420159(-) | protein_length=1947 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "ESHELLLNLF",
+          "peptide": "ESGELLLNLK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP006500-PA | transcript=AGAP006500-RA | gene=AGAP006500 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_2L:33097857-33100042(-) | protein_length=695 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "ETYSFDSK",
+          "peptide": "ETLSFDEK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "CUFF.5480.14_1+",
+          "native_substring": "LVEEHAKSNK",
+          "peptide": "LMEELAKSNK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "sp|P38179|ALG3_YEAST Dol-P-Man:Man(5)GlcNAc(2)-PP-Dol alpha-1,3-mannosyltransferase OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=ALG3 PE=1 SV=1",
+          "native_substring": "TEGMDHVER",
+          "peptide": "TAGMDLVER"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP005759-PA | transcript=AGAP005759-RA | gene=AGAP005759 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_2L:20299074-20304207(-) | protein_length=446 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "TQLAGEEER",
+          "peptide": "TLLAGAEER"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "sp|P22213|SLY1_YEAST Protein SLY1 OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=SLY1 PE=1 SV=1",
+          "native_substring": "TNLSDLDPN",
+          "peptide": "TNLHDLDPR"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP005431-PA | transcript=AGAP005431-RA | gene=AGAP005431 | organism=Anopheles_gambiae_PEST | gene_product=thioredoxin domain-containing protein | transcript_product=thioredoxin domain-containing protein | location=AgamP4_2L:15426682-15428159(+) | protein_length=428 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "VLAVVEENK",
+          "peptide": "VLALVEEPK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "CUFF.16294.1_1+",
+          "native_substring": "SGSSSTSER",
+          "peptide": "WGHSSTSER"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "AGAP006655-PA | transcript=AGAP006655-RA | gene=AGAP006655 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_2L:35743713-35762847(+) | protein_length=1087 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "YTDEPER",
+          "peptide": "YTDETER"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "CUFF.2444.9_3+",
+          "native_substring": "YTLGSFLK",
+          "peptide": "YTLGSFSK"
+        }
+      ]
+    },
+    "pep": {
+      "mean": 0.046226186274509806,
+      "median": 0.034483,
+      "n": 102,
+      "q10_q90": [
+        0.014739100000000003,
+        0.103093
+      ]
+    },
+    "peptide_length": {
+      "counts": {
+        "7": 1,
+        "8": 5,
+        "9": 6,
+        "10": 6,
+        "11": 5,
+        "12": 8,
+        "13": 7,
+        "14": 4,
+        "15": 9,
+        "17": 5,
+        "18": 5,
+        "19": 2,
+        "20": 7,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 2,
+        "27": 2,
+        "28": 1,
+        "30": 1
+      },
+      "mean": 14.974683544303797
+    },
+    "proteins": {
+      "distinct": 99,
+      "top": [
+        [
+          "ENT_SOYBEAN_tr_K7MUE3_K7MUE3_SOYBN",
+          9
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6IQ22_A0A3B6IQ22_WHEAT",
+          5
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6RES7_A0A3B6RES7_WHEAT",
+          4
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804P701_A0A804P701_MAIZE",
+          3
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804MVJ2_A0A804MVJ2_MAIZE",
+          2
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7F368_A0A3Q7F368_SOLLC",
+          2
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7J3X2_A0A3Q7J3X2_SOLLC",
+          2
+        ],
+        [
+          "ENT_POTATO_tr_M1ADH9_M1ADH9_SOLTU",
+          2
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6QLK2_A0A3B6QLK2_WHEAT",
+          2
+        ],
+        [
+          "ENT_SOYBEAN_tr_A0A0R0FCQ7_A0A0R0FCQ7_SOYBN",
+          2
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7IYA3_A0A3Q7IYA3_SOLLC",
+          2
+        ],
+        [
+          "ENT_SOYBEAN_tr_I1LJN3_I1LJN3_SOYBN",
+          1
+        ],
+        [
+          "ENT_RICE_tr_Q94HA7_Q94HA7_ORYSJ",
+          1
+        ],
+        [
+          "ENT_APPLE_tr_A0A498J756_A0A498J756_MALDO",
+          1
+        ],
+        [
+          "ENT_SOYBEAN_tr_I1L6J4_I1L6J4_SOYBN",
+          1
+        ],
+        [
+          "ENT_SOYBEAN_tr_A0A0R0FC80_A0A0R0FC80_SOYBN",
+          1
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804MKH6_A0A804MKH6_MAIZE",
+          1
+        ],
+        [
+          "ENT_SOYBEAN_tr_I1N081_I1N081_SOYBN",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6SQN5_A0A3B6SQN5_WHEAT",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6TWI5_A0A3B6TWI5_WHEAT",
+          1
+        ],
+        [
+          "ENT_GRAPE_tr_D7TEG6_D7TEG6_VITVI",
+          1
+        ],
+        [
+          "ENT_POTATO_tr_M0ZTB1_M0ZTB1_SOLTU",
+          1
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7GPQ0_A0A3Q7GPQ0_SOLLC",
+          1
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7IT85_A0A3Q7IT85_SOLLC",
+          1
+        ],
+        [
+          "ENT_RICE_sp_P27937_AMY3B_ORYSJ",
+          1
+        ]
+      ]
+    },
+    "rows": 102,
+    "score": {
+      "mean": 3.9252784215686276,
+      "median": 3.8704515,
+      "n": 102,
+      "q10_q90": [
+        3.3517483,
+        4.6276502
+      ]
+    },
+    "top_psms": [
+      {
+        "families": [],
+        "pep": 0.000286,
+        "peptide": "EKLAPDLGDDLDGDDFEK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1L6J4_I1L6J4_SOYBN",
+          "ENT_SOYBEAN_tr_A0A0R0FC80_A0A0R0FC80_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_32768_2_1",
+        "score": 5.216865
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "EADDATTALNLA",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1LJN3_I1LJN3_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_9764_2_1",
+        "score": 4.997397
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "QPVVAPLVQDGGYYK",
+        "proteins": [
+          "ENT_RICE_tr_Q94HA7_Q94HA7_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_38813_2_1",
+        "score": 4.858365
+      },
+      {
+        "families": [],
+        "pep": 0.000339,
+        "peptide": "QVNDYYQNDLDDPTKPDQVVTPDDGK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6QLK2_A0A3B6QLK2_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_34342_4_1",
+        "score": 4.852912
+      },
+      {
+        "families": [],
+        "pep": 0.000249,
+        "peptide": "CSGATYAGLLGLLDLVVATQMVWLPMGR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A9R1FRJ0_A0A9R1FRJ0_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_74633_3_1",
+        "score": 4.844399
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "VLALVEEPK",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804P701_A0A804P701_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_44033_2_1",
+        "score": 4.753984
+      },
+      {
+        "families": [],
+        "pep": 0.014599,
+        "peptide": "QVNDYYQNDLDDPTKPDQVVTPDDGK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6QLK2_A0A3B6QLK2_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_42668_4_1",
+        "score": 4.720329
+      },
+      {
+        "families": [],
+        "pep": 0.021807,
+        "peptide": "GCCMGVCEVELR",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7IYA3_A0A3Q7IYA3_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_23031_3_1",
+        "score": 4.668196
+      },
+      {
+        "families": [],
+        "pep": 0.003584,
+        "peptide": "GGGVGDVGGAGAGGGVGGVR",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804PS01_A0A804PS01_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet_7967_3_1",
+        "score": 4.650212
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "VLALVEEPK",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804P701_A0A804P701_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_43984_2_1",
+        "score": 4.634858
+      },
+      {
+        "families": [],
+        "pep": 0.021807,
+        "peptide": "GCCMGVCEVELR",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7IYA3_A0A3Q7IYA3_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_22898_3_1",
+        "score": 4.628285
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "CLAALVTMYTVVHPR",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804MVJ2_A0A804MVJ2_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_44814_3_1",
+        "score": 4.621937
+      },
+      {
+        "families": [],
+        "pep": 0.001756,
+        "peptide": "FEELPFALNHDWPGLLHSEFEPQTTDK",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804MKH6_A0A804MKH6_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_13650_4_1",
+        "score": 4.612802
+      },
+      {
+        "families": [],
+        "pep": 0.021807,
+        "peptide": "ESGELLLNLK",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7J704_A0A3Q7J704_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_44857_2_1",
+        "score": 4.578542
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "HSAGDVGSNEDESER",
+        "proteins": [
+          "ENT_APPLE_tr_A0A498J756_A0A498J756_MALDO"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_19418_3_1",
+        "score": 4.563504
+      },
+      {
+        "families": [],
+        "pep": 0.005102,
+        "peptide": "LHDDSWAHLGLATLDHWAQR",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7GTR1_A0A3Q7GTR1_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_45368_3_1",
+        "score": 4.503588
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "KEELELLEELVR",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1MGW6_I1MGW6_SOYBN",
+          "ENT_SOYBEAN_tr_A0A2K7IXG0_A0A2K7IXG0_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_31980_3_1",
+        "score": 4.489238
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "DLDLGGSELVLELDR",
+        "proteins": [
+          "ENT_POTATO_tr_M1B0D0_M1B0D0_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_45589_3_1",
+        "score": 4.440936
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "DLADQVVQDLVKSHAEEAMK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0KFB8_A0A0R0KFB8_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_41384_3_1",
+        "score": 4.370401
+      },
+      {
+        "families": [],
+        "pep": 0.005102,
+        "peptide": "SSHDPNAEEMK",
+        "proteins": [
+          "ENT_GRAPE_tr_F6HBZ0_F6HBZ0_VITVI"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_21842_3_1",
+        "score": 4.354227
+      },
+      {
+        "families": [],
+        "pep": 0.030303,
+        "peptide": "AEFVTEVK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0GFU7_A0A0R0GFU7_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet_9376_2_5",
+        "score": 4.299542
+      },
+      {
+        "families": [],
+        "pep": 0.004158,
+        "peptide": "YTDETER",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1N081_I1N081_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_7012_2_1",
+        "score": 4.291264
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "KSWALDLLDSSHGQFEHLPR",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1KPN8_I1KPN8_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_14207_4_1",
+        "score": 4.27919
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "EVEMLQMLKK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7MUE3_K7MUE3_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_44976_2_1",
+        "score": 4.254101
+      },
+      {
+        "families": [],
+        "pep": 0.016,
+        "peptide": "ARACASLVAVFTLENPQLGK",
+        "proteins": [
+          "ENT_POTATO_tr_M1D5E1_M1D5E1_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_26608_4_1",
+        "score": 4.253874
+      },
+      {
+        "families": [],
+        "pep": 0.016,
+        "peptide": "SCCNNSTTVADEGSTVNDVPSNER",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7KHD4_K7KHD4_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_33899_3_1",
+        "score": 4.195326
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "ECCGEECE",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1L9S7_I1L9S7_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_7302_2_2",
+        "score": 4.183472
+      },
+      {
+        "families": [],
+        "pep": 0.030303,
+        "peptide": "ADNHVALYDQPSNQAER",
+        "proteins": [
+          "ENT_TOMATO_sp_P04284_PR06_SOLLC",
+          "ENT_TOMATO_sp_Q04108_PR04_SOLLC",
+          "ENT_TOMATO_tr_A0A3Q7HXW1_A0A3Q7HXW1_SOLLC",
+          "ENT_TOMATO_tr_A0A494GA45_A0A494GA45_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_21579_2_1",
+        "score": 4.14899
+      },
+      {
+        "families": [],
+        "pep": 0.037037,
+        "peptide": "EMVQPFASDAQLK",
+        "proteins": [
+          "ENT_RICE_tr_Q67UT1_Q67UT1_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_33618_2_1",
+        "score": 4.146427
+      },
+      {
+        "families": [],
+        "pep": 0.004158,
+        "peptide": "ELVACQDEFPLDCCEDK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6SQN5_A0A3B6SQN5_WHEAT",
+          "ENT_WHEAT_tr_A0A3B6TWI5_A0A3B6TWI5_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_21430_3_1",
+        "score": 4.137146
+      },
+      {
+        "families": [],
+        "pep": 0.021739,
+        "peptide": "EVEMLQMLKK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7MUE3_K7MUE3_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_35363_2_1",
+        "score": 4.136556
+      },
+      {
+        "families": [],
+        "pep": 0.023256,
+        "peptide": "CLAALVTMYTVVHPR",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804MVJ2_A0A804MVJ2_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_48192_3_1",
+        "score": 4.125586
+      },
+      {
+        "families": [],
+        "pep": 0.023256,
+        "peptide": "GFLFFCELGALYLR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6IQ22_A0A3B6IQ22_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_39621_2_1",
+        "score": 4.113615
+      },
+      {
+        "families": [],
+        "pep": 0.037037,
+        "peptide": "LDGVMMSYCAHVHER",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6LH73_A0A3B6LH73_WHEAT",
+          "ENT_WHEAT_tr_A0A3B6MLQ1_A0A3B6MLQ1_WHEAT",
+          "ENT_WHEAT_tr_A0A3B6KC39_A0A3B6KC39_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_50772_4_1",
+        "score": 4.106865
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "QNCSGTYMER",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804Q250_A0A804Q250_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_38592_2_1",
+        "score": 4.095554
+      },
+      {
+        "families": [],
+        "pep": 0.023256,
+        "peptide": "NHLAEAEDQQQMEDLFRLSK",
+        "proteins": [
+          "ENT_GRAPE_tr_F6I2K3_F6I2K3_VITVI"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_14292_4_1",
+        "score": 4.063187
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "KEEDLTELVQK",
+        "proteins": [
+          "ENT_POTATO_tr_M1AFT0_M1AFT0_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_21035_2_1",
+        "score": 4.060959
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "KMFDHFANANPFK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7M9X4_K7M9X4_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_7702_3_1",
+        "score": 4.040311
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "QPGLDTLSPKQHK",
+        "proteins": [
+          "ENT_GRAPE_tr_F6HBF4_F6HBF4_VITVI"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_22361_2_1",
+        "score": 4.037745
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "TSDPWVVQVYEK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6RES7_A0A3B6RES7_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_17043_2_1",
+        "score": 4.033515
+      },
+      {
+        "families": [],
+        "pep": 0.007407,
+        "peptide": "DKECQELFQLADDFPLSK",
+        "proteins": [
+          "ENT_GRAPE_tr_D7TEG6_D7TEG6_VITVI"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_51383_2_1",
+        "score": 4.009009
+      },
+      {
+        "families": [],
+        "pep": 0.023256,
+        "peptide": "GCGGGCGCSGCNCSGGCSMK",
+        "proteins": [
+          "ENT_RICE_sp_Q2QNC3_MT4C_ORYSJ",
+          "ENT_RICE_sp_Q2QNE8_MT4B_ORYSJ",
+          "ENT_RICE_tr_Q2QNE5_Q2QNE5_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_23227_3_1",
+        "score": 3.987257
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "LMEELAKSNK",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7F368_A0A3Q7F368_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_34551_2_1",
+        "score": 3.985029
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "EVEMLQMLKK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7MUE3_K7MUE3_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_44650_2_1",
+        "score": 3.947817
+      },
+      {
+        "families": [],
+        "pep": 0.033981,
+        "peptide": "QNLMQGTVYGK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0FCQ7_A0A0R0FCQ7_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_43767_2_1",
+        "score": 3.928339
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "RQWYPVEQCAHQR",
+        "proteins": [
+          "ENT_RICE_tr_A0A0P0WEG4_A0A0P0WEG4_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_51848_4_1",
+        "score": 3.927798
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "LMEELAKSNK",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7F368_A0A3Q7F368_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_34418_2_1",
+        "score": 3.912126
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "WGHSSTSER",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A494G8K4_A0A494G8K4_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_38518_2_1",
+        "score": 3.898032
+      },
+      {
+        "families": [],
+        "pep": 0.033981,
+        "peptide": "EVEMLQMLKK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7MUE3_K7MUE3_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_35950_2_1",
+        "score": 3.887498
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "YNNNNNNGQSQQLLQETK",
+        "proteins": [
+          "ENT_POTATO_tr_M0ZTB1_M0ZTB1_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_37193_4_1",
+        "score": 3.884664
+      }
+    ]
+  },
+  "entrapment_targets": {
+    "charge_counts": {
+      "1": 0,
+      "2": 47,
+      "3": 41,
+      "4": 14,
+      "5": 0,
+      "6": 0
+    },
+    "distinct_peptides": 80,
+    "family_row_counts": {
+      "ATP synthase": 0,
+      "actin": 0,
+      "chaperon": 0,
+      "elongation factor": 0,
+      "heat shock": 0,
+      "histone": 0,
+      "keratin": 0,
+      "myosin": 0,
+      "ribosomal": 0,
+      "tubulin": 0,
+      "ubiquitin": 0
+    },
+    "features": {
+      "CalcMass": {
+        "mean": 1622.747492264706,
+        "median": 1587.798051,
+        "n": 102,
+        "q10_q90": [
+          1007.3224034,
+          2465.8907471
+        ]
+      },
+      "ExpMass": {
+        "mean": 1622.9834792156867,
+        "median": 1587.795658,
+        "n": 102,
+        "q10_q90": [
+          1007.4170216,
+          2466.8152629
+        ]
+      },
+      "IonFrac": {
+        "mean": 0.35144901960784314,
+        "median": 0.30905,
+        "n": 102,
+        "q10_q90": [
+          0.1328,
+          0.6854200000000001
+        ]
+      },
+      "PepLen": {
+        "mean": 14.333333333333334,
+        "median": 13.0,
+        "n": 102,
+        "q10_q90": [
+          9.0,
+          20.0
+        ]
+      },
+      "Sp": {
+        "mean": 289.29571928431375,
+        "median": 237.2461245,
+        "n": 102,
+        "q10_q90": [
+          56.08879180000001,
+          566.2447629000001
+        ]
+      },
+      "Xcorr": {
+        "mean": 1.6124022450980389,
+        "median": 1.6562495,
+        "n": 102,
+        "q10_q90": [
+          1.0352687,
+          2.0899621
+        ]
+      },
+      "absdM": {
+        "mean": 0.00014948039215686274,
+        "median": 5e-06,
+        "n": 102,
+        "q10_q90": [
+          1e-06,
+          0.0006039000000000001
+        ]
+      },
+      "dM": {
+        "mean": 0.00014524509803921567,
+        "median": 2e-06,
+        "n": 102,
+        "q10_q90": [
+          -7e-06,
+          0.0006039000000000001
+        ]
+      },
+      "deltCn": {
+        "mean": 0.16867854901960783,
+        "median": 0.138122,
+        "n": 102,
+        "q10_q90": [
+          0.0405389,
+          0.30361140000000003
+        ]
+      },
+      "deltLCn": {
+        "mean": 0.2680653921568627,
+        "median": 0.220861,
+        "n": 102,
+        "q10_q90": [
+          0.156053,
+          0.38105820000000007
+        ]
+      },
+      "enzC": {
+        "mean": 1.0,
+        "median": 1.0,
+        "n": 102,
+        "q10_q90": [
+          1.0,
+          1.0
+        ]
+      },
+      "enzInt": {
+        "mean": 0.3431372549019608,
+        "median": 0.0,
+        "n": 102,
+        "q10_q90": [
+          0.0,
+          1.0
+        ]
+      },
+      "enzN": {
+        "mean": 0.9215686274509803,
+        "median": 1.0,
+        "n": 102,
+        "q10_q90": [
+          1.0,
+          1.0
+        ]
+      },
+      "lnExpect": {
+        "mean": -0.32132243137254907,
+        "median": -0.24248150000000002,
+        "n": 102,
+        "q10_q90": [
+          -2.5416196999999996,
+          1.6388377000000007
+        ]
+      },
+      "lnNumSP": {
+        "mean": 11.57182019607843,
+        "median": 12.0280275,
+        "n": 102,
+        "q10_q90": [
+          10.626961300000001,
+          12.3966577
+        ]
+      },
+      "lnrSp": {
+        "mean": 1.451546460784314,
+        "median": 1.386294,
+        "n": 102,
+        "q10_q90": [
+          0.0,
+          3.201440600000001
+        ]
+      }
+    },
+    "native_substring_distance_le_2": {
+      "distance_0_1_2": [
+        1,
+        3,
+        5
+      ],
+      "distinct_hits": 9,
+      "matches": [
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP003471-PA | transcript=AGAP003471-RA | gene=AGAP003471 | organism=Anopheles_gambiae_PEST | gene_product=protein osiris 20 | transcript_product=protein osiris 20 | location=AgamP4_2R:38065791-38066897(+) | protein_length=320 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "AGLATEAAR",
+          "peptide": "AGLATQLAR"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "ACOM026884-PA | transcript=ACOM026884-RA | gene=ACOM026884 | organism=Anopheles_coluzzii_Mali-NIH | gene_product=methylosome protein [Source:Projected from Anopheles gambiae (AGAP009782) VB Community Annotation] | transcript_product=methylosome protein [Source:Projected from Anopheles gambiae (AGAP009782) VB Community Annotation] | location=EQ090211:1858619-1859892(-) | protein_length=377 | sequence_SO=supercontig | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "AYSVPLSYR",
+          "peptide": "AGLVPLSYR"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP005984-PA | transcript=AGAP005984-RA | gene=AGAP005984 | organism=Anopheles_gambiae_PEST | gene_product=fatty acyl-CoA reductase 2 | transcript_product=fatty acyl-CoA reductase 2 | location=AgamP4_2L:24521057-24525656(+) | protein_length=538 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "AKTNGELK",
+          "peptide": "AGTFGELK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "AGAP008522-PA | transcript=AGAP008522-RA | gene=AGAP008522 | organism=Anopheles_gambiae_PEST | gene_product=transcription initiation factor TFIIH subunit 3 | transcript_product=transcription initiation factor TFIIH subunit 3 | location=AgamP4_3R:11767882-11769094(+) | protein_length=288 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "APAPLAAKPK",
+          "peptide": "APAPLPAKPK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 0,
+          "native_header": "sp|P12685|TRK1_YEAST High-affinity potassium transport protein OS=Saccharomyces cerevisiae (strain ATCC 204508 / S288c) OX=559292 GN=TRK1 PE=1 SV=1",
+          "native_substring": "DMDDDDD",
+          "peptide": "DMDDDDD"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "AGAP006046-PA | transcript=AGAP006046-RA | gene=AGAP006046 | organism=Anopheles_gambiae_PEST | gene_product=mediator of RNA polymerase II transcription subunit 23 | transcript_product=mediator of RNA polymerase II transcription subunit 23 | location=AgamP4_2L:25627159-25632033(+) | protein_length=1450 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "NACLLPA",
+          "peptide": "NACLLPK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP002985-PA | transcript=AGAP002985-RA | gene=AGAP002985 | organism=Anopheles_gambiae_PEST | gene_product=Structural maintenance of chromosomes protein 6 [Source:UniProtKB/TrEMBL;Acc:F7IWF2] | transcript_product=Structural maintenance of chromosomes protein 6 [Source:UniProtKB/TrEMBL;Acc:F7IWF2] | location=AgamP4_2R:30559009-30562654(+) | protein_length=1082 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "QLEQDLQER",
+          "peptide": "QLEQDMLER"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 2,
+          "native_header": "AGAP029665-PA | transcript=AGAP029665-RA | gene=AGAP029665 | organism=Anopheles_gambiae_PEST | gene_product=unspecified product | transcript_product=unspecified product | location=AgamP4_3L:16283358-16285253(-) | protein_length=631 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "QMSSNSVPE",
+          "peptide": "QMSLNSVPK"
+        },
+        {
+          "actin_or_tubulin_header": false,
+          "distance": 1,
+          "native_header": "AGAP005006-PA | transcript=AGAP005006-RA | gene=AGAP005006 | organism=Anopheles_gambiae_PEST | gene_product=U2-associated protein SR140 | transcript_product=U2-associated protein SR140 | location=AgamP4_2L:7807839-7811820(+) | protein_length=1102 | sequence_SO=chromosome | SO=protein_coding_gene | is_pseudo=false",
+          "native_substring": "VVLPTER",
+          "peptide": "VLLPTER"
+        }
+      ]
+    },
+    "pep": {
+      "mean": 0.04815020588235295,
+      "median": 0.03576,
+      "n": 102,
+      "q10_q90": [
+        0.005102,
+        0.103093
+      ]
+    },
+    "peptide_length": {
+      "counts": {
+        "7": 3,
+        "8": 1,
+        "9": 7,
+        "10": 3,
+        "11": 4,
+        "12": 10,
+        "13": 9,
+        "14": 4,
+        "15": 9,
+        "16": 6,
+        "17": 4,
+        "18": 3,
+        "19": 4,
+        "20": 3,
+        "23": 2,
+        "24": 2,
+        "25": 2,
+        "26": 1,
+        "29": 1,
+        "30": 1,
+        "37": 1
+      },
+      "mean": 15.175
+    },
+    "proteins": {
+      "distinct": 102,
+      "top": [
+        [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU",
+          9
+        ],
+        [
+          "ENT_MAIZE_tr_A0A1D6P4J6_A0A1D6P4J6_MAIZE",
+          5
+        ],
+        [
+          "ENT_RICE_tr_A0A0P0XQ84_A0A0P0XQ84_ORYSJ",
+          3
+        ],
+        [
+          "ENT_RICE_tr_A0A0P0Y4V7_A0A0P0Y4V7_ORYSJ",
+          3
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6CGK3_A0A3B6CGK3_WHEAT",
+          2
+        ],
+        [
+          "ENT_ARABIDOPSIS_tr_Q9LHM2_Q9LHM2_ARATH",
+          2
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B5Z3E8_A0A3B5Z3E8_WHEAT",
+          2
+        ],
+        [
+          "ENT_RICE_tr_Q6YZC3_Q6YZC3_ORYSJ",
+          2
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804NMK6_A0A804NMK6_MAIZE",
+          2
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7IK63_A0A3Q7IK63_SOLLC",
+          2
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7JEF9_A0A3Q7JEF9_SOLLC",
+          2
+        ],
+        [
+          "ENT_SOYBEAN_tr_I1K9A2_I1K9A2_SOYBN",
+          2
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B5Y4N3_A0A3B5Y4N3_WHEAT",
+          1
+        ],
+        [
+          "ENT_RICE_tr_Q5ZBU1_Q5ZBU1_ORYSJ",
+          1
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804QXU2_A0A804QXU2_MAIZE",
+          1
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7G0P3_A0A3Q7G0P3_SOLLC",
+          1
+        ],
+        [
+          "ENT_MAIZE_tr_A0A1D6NJG0_A0A1D6NJG0_MAIZE",
+          1
+        ],
+        [
+          "ENT_ARABIDOPSIS_tr_F4IDZ8_F4IDZ8_ARATH",
+          1
+        ],
+        [
+          "ENT_ARABIDOPSIS_sp_Q9LS26_BSK2_ARATH",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6LRK7_A0A3B6LRK7_WHEAT",
+          1
+        ],
+        [
+          "ENT_MAIZE_tr_A0A804Q888_A0A804Q888_MAIZE",
+          1
+        ],
+        [
+          "ENT_TOMATO_tr_A0A3Q7HH58_A0A3Q7HH58_SOLLC",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A9R1DQF1_A0A9R1DQF1_WHEAT",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6QM67_A0A3B6QM67_WHEAT",
+          1
+        ],
+        [
+          "ENT_WHEAT_tr_A0A3B6DMZ5_A0A3B6DMZ5_WHEAT",
+          1
+        ]
+      ]
+    },
+    "rows": 102,
+    "score": {
+      "mean": 3.9021501960784315,
+      "median": 3.780043,
+      "n": 102,
+      "q10_q90": [
+        3.3019684,
+        4.6462771
+      ]
+    },
+    "top_psms": [
+      {
+        "families": [],
+        "pep": 0.001366,
+        "peptide": "DPTLSDETLAVHAGEKMGK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B5Y4N3_A0A3B5Y4N3_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_39934_2_1",
+        "score": 5.568509
+      },
+      {
+        "families": [],
+        "pep": 0.000249,
+        "peptide": "QHLLEFNKFLDSDTR",
+        "proteins": [
+          "ENT_TOMATO_tr_K4C0H6_K4C0H6_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_18697_3_1",
+        "score": 5.175428
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "HSWTCLDLYVFATPYR",
+        "proteins": [
+          "ENT_RICE_tr_Q5ZBU1_Q5ZBU1_ORYSJ",
+          "ENT_MAIZE_tr_A0A804QXU2_A0A804QXU2_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_30762_4_1",
+        "score": 4.986586
+      },
+      {
+        "families": [],
+        "pep": 0.000249,
+        "peptide": "EDWYLVSKTLSER",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A1D6P4J6_A0A1D6P4J6_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_62122_2_1",
+        "score": 4.892487
+      },
+      {
+        "families": [],
+        "pep": 0.000249,
+        "peptide": "AGNGGGDEFDDDEPDSK",
+        "proteins": [
+          "ENT_RICE_sp_Q6IEQ7_WRK24_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_19395_3_1",
+        "score": 4.870741
+      },
+      {
+        "families": [],
+        "pep": 0.000249,
+        "peptide": "CGSNCTCDPCNC",
+        "proteins": [
+          "ENT_TOMATO_sp_Q43513_MT2Y_SOLLC",
+          "ENT_TOMATO_sp_Q40157_MT2A_SOLLC",
+          "ENT_TOMATO_sp_Q43512_MT2X_SOLLC",
+          "ENT_POTATO_tr_M1CZ44_M1CZ44_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_39023_3_3",
+        "score": 4.851971
+      },
+      {
+        "families": [],
+        "pep": 0.032258,
+        "peptide": "DLDGTQETLHLVLR",
+        "proteins": [
+          "ENT_SOYBEAN_tr_K7LU48_K7LU48_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet_14724_3_1",
+        "score": 4.822952
+      },
+      {
+        "families": [],
+        "pep": 0.013699,
+        "peptide": "CCHCCGCCCCCLK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0J554_A0A0R0J554_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_58977_3_1",
+        "score": 4.81327
+      },
+      {
+        "families": [],
+        "pep": 0.014599,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_16391_2_1",
+        "score": 4.773306
+      },
+      {
+        "families": [],
+        "pep": 0.039216,
+        "peptide": "LFFQDLNLLDHLR",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7G0P3_A0A3Q7G0P3_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_18245_4_2",
+        "score": 4.707569
+      },
+      {
+        "families": [],
+        "pep": 0.021807,
+        "peptide": "EDWYLVSKTLSER",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A1D6P4J6_A0A1D6P4J6_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_60255_2_1",
+        "score": 4.649309
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "ASGYQALLQFSDAETATSAK",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A1D6NJG0_A0A1D6NJG0_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_34807_3_1",
+        "score": 4.61899
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "FRPADEEVTDYLMR",
+        "proteins": [
+          "ENT_ARABIDOPSIS_tr_F4IDZ8_F4IDZ8_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_20565_3_1",
+        "score": 4.59346
+      },
+      {
+        "families": [],
+        "pep": 0.005102,
+        "peptide": "QTWNECVHR",
+        "proteins": [
+          "ENT_ARABIDOPSIS_tr_Q9LHM2_Q9LHM2_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_8701_3_1",
+        "score": 4.544777
+      },
+      {
+        "families": [],
+        "pep": 0.021807,
+        "peptide": "QSLLQELGQK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0KYC7_A0A0R0KYC7_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_5505_2_1",
+        "score": 4.544716
+      },
+      {
+        "families": [],
+        "pep": 0.030303,
+        "peptide": "CFKNGNYGENNTADDFK",
+        "proteins": [
+          "ENT_ARABIDOPSIS_sp_Q8W475_SWI3A_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet_8394_4_1",
+        "score": 4.520593
+      },
+      {
+        "families": [],
+        "pep": 0.001756,
+        "peptide": "KESCYGVEDGCDEPK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6CGK3_A0A3B6CGK3_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_10845_2_1",
+        "score": 4.47991
+      },
+      {
+        "families": [],
+        "pep": 0.005102,
+        "peptide": "QGCMLEAALEAAAK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6HY72_A0A3B6HY72_WHEAT",
+          "ENT_WHEAT_tr_A0A3B6ILK4_A0A3B6ILK4_WHEAT",
+          "ENT_WHEAT_tr_A0A3B6JD20_A0A3B6JD20_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_23087_2_1",
+        "score": 4.464446
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "ESVNGDQVDQELQNFK",
+        "proteins": [
+          "ENT_ARABIDOPSIS_sp_Q9LS26_BSK2_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_10115_4_1",
+        "score": 4.457348
+      },
+      {
+        "families": [],
+        "pep": 0.001756,
+        "peptide": "MCFDDCCCCGCYDAFCDR",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804Q888_A0A804Q888_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_17793_3_1",
+        "score": 4.438789
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "LNVLHDVGASK",
+        "proteins": [
+          "ENT_POTATO_tr_M0ZXN1_M0ZXN1_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_42325_2_1",
+        "score": 4.431754
+      },
+      {
+        "families": [],
+        "pep": 0.056338,
+        "peptide": "LTTLDAELTLAR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6LRK7_A0A3B6LRK7_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet_44572_2_1",
+        "score": 4.41645
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "EALAAELLEDHR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6TT47_A0A3B6TT47_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_12441_3_1",
+        "score": 4.368566
+      },
+      {
+        "families": [],
+        "pep": 0.022727,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_16264_2_1",
+        "score": 4.367631
+      },
+      {
+        "families": [],
+        "pep": 0.004158,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_14948_2_1",
+        "score": 4.326332
+      },
+      {
+        "families": [],
+        "pep": 0.004158,
+        "peptide": "KPNLDAEEVSSR",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7HH58_A0A3Q7HH58_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_37413_2_1",
+        "score": 4.313803
+      },
+      {
+        "families": [],
+        "pep": 0.016,
+        "peptide": "APHAEVAHPSPHHFYPLHVALGAAGEESR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6ELU9_A0A3B6ELU9_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_44574_4_1",
+        "score": 4.269545
+      },
+      {
+        "families": [],
+        "pep": 0.004158,
+        "peptide": "EDWYLVSKTLSER",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A1D6P4J6_A0A1D6P4J6_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_50986_2_1",
+        "score": 4.228816
+      },
+      {
+        "families": [],
+        "pep": 0.021739,
+        "peptide": "LLEGSDDLNLK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_A0A0R0J4Q0_A0A0R0J4Q0_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_43623_2_1",
+        "score": 4.182491
+      },
+      {
+        "families": [],
+        "pep": 0.030303,
+        "peptide": "DDYFMVGLGVLN",
+        "proteins": [
+          "ENT_POTATO_tr_M1D0W8_M1D0W8_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_36821_2_1",
+        "score": 4.173958
+      },
+      {
+        "families": [],
+        "pep": 0.037037,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_16028_2_1",
+        "score": 4.134936
+      },
+      {
+        "families": [],
+        "pep": 0.037037,
+        "peptide": "ELVMPLCDK",
+        "proteins": [
+          "ENT_SOYBEAN_tr_I1K9A2_I1K9A2_SOYBN"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_37643_2_2",
+        "score": 4.120437
+      },
+      {
+        "families": [],
+        "pep": 0.007407,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_15053_2_1",
+        "score": 4.117917
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_15899_2_1",
+        "score": 4.078709
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "QAPQGQQVDAYLK",
+        "proteins": [
+          "ENT_MAIZE_tr_K7W477_K7W477_MAIZE",
+          "ENT_MAIZE_tr_A0A804NCW6_A0A804NCW6_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_7025_3_1",
+        "score": 4.051038
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "FFWLAVRTRLSHTQADNVVTWER",
+        "proteins": [
+          "ENT_POTATO_tr_M1DYN2_M1DYN2_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_67253_4_1",
+        "score": 4.019071
+      },
+      {
+        "families": [],
+        "pep": 0.052419,
+        "peptide": "QLEQDMLER",
+        "proteins": [
+          "ENT_GRAPE_tr_D7TYG4_D7TYG4_VITVI"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_4661_2_2",
+        "score": 3.986668
+      },
+      {
+        "families": [],
+        "pep": 0.023256,
+        "peptide": "NACLLPK",
+        "proteins": [
+          "ENT_RICE_tr_A0A0P0XQ84_A0A0P0XQ84_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_11846_2_1",
+        "score": 3.973528
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "QTWNECVHR",
+        "proteins": [
+          "ENT_ARABIDOPSIS_tr_Q9LHM2_Q9LHM2_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_11559_3_1",
+        "score": 3.959064
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "QMSLNSVPK",
+        "proteins": [
+          "ENT_TOMATO_tr_A0A3Q7J0U6_A0A3Q7J0U6_SOLLC"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_6700_2_1",
+        "score": 3.951142
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "SSGYSNYPSALLVSNTNSR",
+        "proteins": [
+          "ENT_MAIZE_tr_A0A804MI47_A0A804MI47_MAIZE"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_11941_3_1",
+        "score": 3.931263
+      },
+      {
+        "families": [],
+        "pep": 0.0625,
+        "peptide": "DPTTAWTGPQNGQWLLTLGSKLGK",
+        "proteins": [
+          "ENT_TOMATO_sp_P29000_INVA_SOLLC",
+          "ENT_TOMATO_tr_A0A3Q7FNF0_A0A3Q7FNF0_SOLLC",
+          "ENT_POTATO_tr_E1AXT4_E1AXT4_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_32864_4_1",
+        "score": 3.907219
+      },
+      {
+        "families": [],
+        "pep": 0.033981,
+        "peptide": "LTDDESADLAK",
+        "proteins": [
+          "ENT_POTATO_tr_M1BMY7_M1BMY7_SOLTU"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_12043_2_1",
+        "score": 3.895148
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "MATVHQSDGAAAANGK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A9R1DQF1_A0A9R1DQF1_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_10348_2_1",
+        "score": 3.877066
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "MVYVNTMGDAGLYDADNRLHTCLGRLNKPK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6QM67_A0A3B6QM67_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_5403_3_1",
+        "score": 3.873304
+      },
+      {
+        "families": [],
+        "pep": 0.033981,
+        "peptide": "NACLLPK",
+        "proteins": [
+          "ENT_RICE_tr_A0A0P0XQ84_A0A0P0XQ84_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet_11935_2_1",
+        "score": 3.865735
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "QQQLCHPDLVFTK",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B6DMZ5_A0A3B6DMZ5_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_34197_3_1",
+        "score": 3.865704
+      },
+      {
+        "families": [],
+        "pep": 0.070175,
+        "peptide": "QGDHKETAR",
+        "proteins": [
+          "ENT_RICE_tr_A0A0P0WCI0_A0A0P0WCI0_ORYSJ"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet_5393_2_1",
+        "score": 3.859724
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "VGVSTYDALVEACLR",
+        "proteins": [
+          "ENT_ARABIDOPSIS_sp_Q9FK33_PP427_ARATH"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_7940_3_1",
+        "score": 3.850656
+      },
+      {
+        "families": [],
+        "pep": 0.017995,
+        "peptide": "AGLATQLAR",
+        "proteins": [
+          "ENT_WHEAT_tr_A0A3B5Z3E8_A0A3B5Z3E8_WHEAT"
+        ],
+        "psmid": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/homology_depleted/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet_7652_2_1",
+        "score": 3.844258
+      }
+    ]
+  },
+  "region": "q<0.01, seed 1, canonical maxiter 10, pure entrapment only",
+  "status": "exploratory; no second filter or confirmatory threshold is constructed"
+}

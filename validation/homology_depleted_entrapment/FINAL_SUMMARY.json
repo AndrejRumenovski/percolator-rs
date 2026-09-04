@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "experiment": "pre-search homology-depleted entrapment",
+  "hypothesis_classification": "SUPPORTED",
+  "primary_failure_classification": {
+    "code": "A",
+    "statement": "near-homology is the dominant cause of the q<0.01 null-imbalance/FDP failure in this dataset"
+  },
+  "broader_calibration_classification": {
+    "code": "B",
+    "statement": "near-homology is one important contributor among several to pooled PEP miscalibration"
+  },
+  "causal_answer": "Biologically structured false targets in proteins capable of producing highly native-homologous peptides are a causal reason reversed decoys fail to represent the high-scoring false-target distribution after Percolator rescoring in this dataset.",
+  "primary_endpoint_q_lt": 0.01,
+  "primary_endpoints": {
+    "original": {
+      "accepted_targets": 19545,
+      "entrapment_targets": 258,
+      "entrapment_decoys": 133,
+      "entrapment_target_over_decoy": 1.9398496240601504,
+      "adjusted_fdp": 0.016873227024368238,
+      "direct_known_false_fraction": 0.013200306983883347
+    },
+    "homology_depleted": {
+      "accepted_targets": 20089,
+      "entrapment_targets": 102,
+      "entrapment_decoys": 102,
+      "entrapment_target_over_decoy": 1.0,
+      "adjusted_fdp": 0.008801292922393232,
+      "direct_known_false_fraction": 0.005077405545323311
+    },
+    "size_control_130363": {
+      "entrapment_targets": 205,
+      "entrapment_decoys": 111,
+      "entrapment_target_over_decoy": 1.8468468468468469
+    },
+    "size_control_155921": {
+      "entrapment_targets": 162,
+      "entrapment_decoys": 105,
+      "entrapment_target_over_decoy": 1.542857142857143
+    },
+    "size_control_196613": {
+      "entrapment_targets": 199,
+      "entrapment_decoys": 95,
+      "entrapment_target_over_decoy": 2.094736842105263
+    }
+  },
+  "primary_comparison": {
+    "mean_size_control_ratio": 1.8281469439364175,
+    "fraction_original_ratio_excess_removed_total": 1.0,
+    "fraction_original_ratio_excess_removed_beyond_mean_size_control": 0.8811483483483482,
+    "log_homology_minus_mean_log_control": -0.5955145653416288,
+    "run_cluster_bootstrap_95": [
+      -0.9550607200386797,
+      -0.21475019124244368
+    ]
+  },
+  "raw_xcorr_at_entrapment_decoy_depth_133": {
+    "original": 1.0075187969924813,
+    "homology_depleted": 0.9699248120300752,
+    "size_control_130363": 0.849624060150376,
+    "size_control_155921": 1.1203007518796992,
+    "size_control_196613": 1.0676691729323309
+  },
+  "pep_calibration": {
+    "pooled_observed_minus_predicted": {
+      "original": 0.018531244864603887,
+      "homology_depleted": 0.014644634860589251,
+      "mean_size_control": 0.01777764624694272
+    },
+    "homology_minus_original_run_cluster_bootstrap_95": [
+      -0.014283811678975179,
+      0.0005719743489666328
+    ],
+    "homology_minus_mean_control_run_cluster_bootstrap_95": [
+      -0.017239765487936022,
+      0.002425209353726433
+    ],
+    "interpretation": "High-confidence PEP calibration improves strongly; pooled improvement is modest and uncertain."
+  },
+  "fdp_calibration": {
+    "homology_minus_original_at_q_lt_0_01": -0.008071934101975006,
+    "homology_minus_original_run_cluster_bootstrap_95": [
+      -0.011354978305674217,
+      -0.00513964995359038
+    ],
+    "homology_minus_mean_control_run_cluster_bootstrap_95": [
+      -0.011739052893679963,
+      -0.002270756777783621
+    ],
+    "interpretation": "FDP calibration improves clearly across the useful q-value range."
+  },
+  "training_dose": {
+    "original_ratio_maxiter_0_to_10": [
+      1.2926829268292683,
+      1.9398496240601504
+    ],
+    "homology_ratio_maxiter_0_to_10": [
+      0.6268656716417911,
+      1.0
+    ],
+    "interpretation": "Homology depletion removes training-induced amplification of null imbalance but not the training-associated rise in pooled PEP error."
+  },
+  "bin_level_relationship": {
+    "original_log_ratio_pearson": 0.9918100115770727,
+    "homology_depleted_log_ratio_pearson": 0.601967782447866,
+    "homology_depleted_median_fold_residual": 1.088477309100412,
+    "interpretation": "The approximate one-to-one factorization persists; correlation attenuates under intervention-induced range restriction."
+  },
+  "production_methodology_modified": false,
+  "production_change_justified": false,
+  "remaining_unexplained": [
+    "positive pooled PEP error after depletion",
+    "sparse q<0.001 behavior",
+    "whole-protein treatment cannot isolate witness peptides from correlated biological composition",
+    "dataset-level and organism-level generality"
+  ],
+  "next_experiment": "Repeat the frozen paired design prospectively on independent biological datasets with equal-opportunity close- and distant-phylogeny entrapment panels at predeclared homology strata."
+}

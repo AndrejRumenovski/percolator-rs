@@ -1,0 +1,51 @@
+{
+  "drop": [
+    "enzN",
+    "enzC"
+  ],
+  "inputs": [
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+      "destination_sha256": "0446f36760c9407c7e8bdb000ab84f64dfa4d60bdff6858e10a91dcd3d4e47b2",
+      "rows": 151579,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-09Dec2015-QEHF1-Anopheles-5-atrium-P-12hpm-3rd-01/comet.pin",
+      "source_sha256": "857aefe53b668d75f3a3a3618f1b7681090d2977377b5e0cb085bca1e2fc626c"
+    },
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+      "destination_sha256": "919ce09040bb27bfac0e1c2d4ae8e513b558055056e5e01be1834386bd68f597",
+      "rows": 179889,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-22Oct2014-Anopheles-8-MAGs-S-01/comet.pin",
+      "source_sha256": "fbffd03a0fbd789b3578c6ce1ee1b584b1acc4c70e1da12b3598dac4e468534a"
+    },
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+      "destination_sha256": "3fed46182e1847b80537e47efbcfc1b6dbb21b9b0d47e2873ea801b937ea61ff",
+      "rows": 46804,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-22-atrium-S-24H-2nd-01/comet.pin",
+      "source_sha256": "c6527cb471c0282e3275276d1410bd6284a69586782facf74772d819a41a18b0"
+    },
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+      "destination_sha256": "cb07531fda5b76d5205bcd4355af27754928073e14353643a1ba091e7c6d0b4f",
+      "rows": 31727,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01/comet.pin",
+      "source_sha256": "43a37da0fe795165247e594db778d480a35a49c57c350199f810013176cabd80"
+    },
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+      "destination_sha256": "0214a54923b25ad0780d104a1efc1f7ffb6a927c5b3b4a9010e3d928e85fc9ec",
+      "rows": 160570,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02/comet.pin",
+      "source_sha256": "e09218f5b84c860cfb46a8e0ce3eea99002724051e55b657ca005f70e505d161"
+    },
+    {
+      "destination": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/ablation_pins/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+      "destination_sha256": "6f3e8d436d8b365b3bb574cfd7e0d374db9d69822fed41bb96ccfc8dc49334e6",
+      "rows": 266798,
+      "source": "/run/media/andrej-rumenovski/New Volume/Code/percolator-rs/validation/homology_depleted_entrapment/searches/original/comet-9March2015-29-MAGs-pellet-2ndRep-14N-male-02/comet.pin",
+      "source_sha256": "08e66cb76ae084b332de538315961e0b6ec8a5a762815d3b69233c5c59261f61"
+    }
+  ],
+  "operation": "drop PIN feature columns"
+}
