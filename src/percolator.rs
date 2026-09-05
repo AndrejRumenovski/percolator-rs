@@ -241,13 +241,11 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], rows: &[usize], p: &P
     best_w[dim - 1] = 0.0;
     let mut best_count = -1i64;
     let mut scores = vec![0.0f64; n];
-    let mut ranks = vec![0u32; n];
     #[cfg(feature = "profiling")]
     crate::profile::allocation_site(
         "percolator::initial_direction buffers",
-        4,
-        ((dim + n) * std::mem::size_of::<f64>()
-            + n * (std::mem::size_of::<usize>() + std::mem::size_of::<u32>())) as u64,
+        3,
+        ((dim + n) * std::mem::size_of::<f64>() + std::mem::size_of_val(rows)) as u64,
     );
     #[cfg(feature = "profiling")]
     let mut scoring_time = std::time::Duration::ZERO;
@@ -261,8 +259,9 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], rows: &[usize], p: &P
         {
             scoring_time += scoring_start.elapsed();
         }
-        let count =
-            stats::target_count_at_fdr_into(&scores, labels, tdc, test_fdr, &mut order) as i64;
+        let (forward_count, reverse_count) =
+            stats::target_counts_at_fdr_into(&scores, labels, tdc, test_fdr, &mut order);
+        let count = forward_count as i64;
         if count > best_count {
             best_count = count;
             for v in best_w.iter_mut() {
@@ -271,31 +270,7 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], rows: &[usize], p: &P
             best_w[j] = 1.0;
         }
 
-        let count = if n <= u32::MAX as usize && !scores.iter().any(|score| score.is_nan()) {
-            let mut rank = 0u32;
-            for position in 0..order.len() {
-                if position > 0
-                    && scores[order[position]].partial_cmp(&scores[order[position - 1]])
-                        != Some(std::cmp::Ordering::Equal)
-                {
-                    rank += 1;
-                }
-                ranks[order[position]] = rank;
-            }
-            stats::target_count_at_reversed_ranks_into(&ranks, labels, tdc, test_fdr, &mut order)
-                as i64
-        } else {
-            #[cfg(feature = "profiling")]
-            let scoring_start = std::time::Instant::now();
-            for (k, &row) in rows.iter().enumerate() {
-                scores[k] = -x[row * dim + j];
-            }
-            #[cfg(feature = "profiling")]
-            {
-                scoring_time += scoring_start.elapsed();
-            }
-            stats::target_count_at_fdr_into(&scores, labels, tdc, test_fdr, &mut order) as i64
-        };
+        let count = reverse_count as i64;
         if count > best_count {
             best_count = count;
             for v in best_w.iter_mut() {
@@ -329,6 +304,33 @@ fn train_fold(
     model_seed: u64,
     feature_mask: Option<&[bool]>,
 ) -> FoldModel {
+    train_fold_with_reuse::<true>(
+        x,
+        dim,
+        labels,
+        train_rows,
+        w0,
+        p,
+        rng,
+        hp,
+        model_seed,
+        feature_mask,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn train_fold_with_reuse<const REUSE: bool>(
+    x: &[f64],
+    dim: usize,
+    labels: &[i8],
+    train_rows: &[usize],
+    w0: &[f64],
+    p: &Params,
+    rng: &mut Rng,
+    hp: Hp,
+    model_seed: u64,
+    feature_mask: Option<&[bool]>,
+) -> FoldModel {
     #[cfg(feature = "profiling")]
     let _fold_training = crate::profile::Scope::with_elements(
         "cross_validation",
@@ -348,6 +350,8 @@ fn train_fold(
     let mut accepted = Vec::new();
     let mut svm_workspace = SvmWorkspace::default();
     let mut packed_x = Vec::new();
+    let mut scores_current = false;
+    let mut previous_weights = Vec::new();
     #[cfg(feature = "profiling")]
     {
         crate::profile::record(
@@ -378,15 +382,27 @@ fn train_fold(
         );
         #[cfg(feature = "profiling")]
         let _iteration = crate::profile::Scope::new("semi_supervised_iteration", "iteration_total");
-        model.score_rows(x, dim, train_rows, &mut scores);
-        stats::target_mask_at_fdr_into(
-            &scores,
-            &sub_labels,
-            tdc,
-            p.test_fdr,
-            &mut qvalue_workspace,
-            &mut accepted,
-        );
+        if !REUSE || !scores_current {
+            model.score_rows(x, dim, train_rows, &mut scores);
+            stats::target_mask_at_fdr_into(
+                &scores,
+                &sub_labels,
+                tdc,
+                p.test_fdr,
+                &mut qvalue_workspace,
+                &mut accepted,
+            );
+        } else {
+            #[cfg(feature = "profiling")]
+            crate::profile::record(
+                "qvalue",
+                "unchanged_score_mask_reuse",
+                std::time::Duration::ZERO,
+                Some(scores.len() as u64),
+                None,
+            );
+        }
+        scores_current = true;
 
         // positives: targets under test_fdr ; negatives: all decoys
         #[cfg(feature = "profiling")]
@@ -468,6 +484,9 @@ fn train_fold(
         }
         match &mut model {
             FoldModel::Svm(weights) => {
+                if REUSE {
+                    previous_weights.clone_from(weights);
+                }
                 packed_x.clear();
                 packed_x.reserve(rows.len() * dim);
                 for &row in &rows {
@@ -490,16 +509,25 @@ fn train_fold(
                     hp.tolerance,
                     &mut svm_workspace,
                 );
+                // Fixed matrix/rows and identical weight bits imply identical
+                // score bits. Keep all later selection, RNG and training work.
+                scores_current = previous_weights
+                    .iter()
+                    .zip(weights.iter())
+                    .all(|(before, after)| before.to_bits() == after.to_bits());
             }
-            FoldModel::Mlp(network) => network.train(
-                x,
-                &rows,
-                &y,
-                &c,
-                p.mlp_epochs,
-                p.mlp_learning_rate,
-                p.mlp_l2,
-            ),
+            FoldModel::Mlp(network) => {
+                scores_current = false;
+                network.train(
+                    x,
+                    &rows,
+                    &y,
+                    &c,
+                    p.mlp_epochs,
+                    p.mlp_learning_rate,
+                    p.mlp_l2,
+                );
+            }
         }
     }
     model
@@ -1673,6 +1701,103 @@ mod tests {
             source: vec![0; n_psm],
             source_names: vec!["selection-fixture.pin".to_string()],
             ensemble: false,
+        }
+    }
+
+    #[test]
+    fn raw_feature_order_survives_fold_normalization_and_rounded_ties() {
+        let mut ds = selection_fixture();
+        for row in 0..ds.n_psm {
+            ds.features[row * ds.n_feat] = match row {
+                0 => 0.25,
+                1 => 0.25f64.next_up(),
+                _ => 1e16,
+            };
+            ds.features[row * ds.n_feat + 1] = if row % 2 == 0 { -0.0 } else { 0.0 };
+            ds.features[row * ds.n_feat + 2] = (row as f64 - 60.0) * f64::from_bits(1);
+        }
+        for fold in 0..3 {
+            let rows: Vec<_> = (0..ds.n_psm).filter(|i| i % 3 != fold).collect();
+            let (x, dim) = build_matrix_fit(&ds, &rows, &Params::default());
+            for feature in 0..ds.n_feat {
+                let mut order: Vec<_> = (0..ds.n_psm).collect();
+                order.sort_unstable_by(|&a, &b| ds.row(b)[feature].total_cmp(&ds.row(a)[feature]));
+                order.retain(|i| i % 3 != fold);
+                assert!(order
+                    .windows(2)
+                    .all(|pair| x[pair[0] * dim + feature] >= x[pair[1] * dim + feature]));
+            }
+            if fold == 2 {
+                assert_ne!(ds.row(0)[0], ds.row(1)[0]);
+                assert_eq!(
+                    x[0], x[dim],
+                    "rounding must merge the distinct raw values in this attack"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn unchanged_score_reuse_matches_recomputation_and_rng_draws() {
+        let ds = selection_fixture();
+        let rows: Vec<_> = (0..ds.n_psm).filter(|i| i % 5 != 0).collect();
+        for model in [Model::Svm, Model::Mlp] {
+            for (max_newton, tolerance, subset, threshold) in [
+                (0, 1e-5, 0, 0.5),
+                (30, 1e30, 20, 0.5),
+                (30, 1e-5, 0, 0.5),
+                (30, 1e-5, 20, 0.5),
+                (30, 1e-5, 0, 0.0),
+            ] {
+                let p = Params {
+                    model,
+                    max_newton,
+                    test_fdr: threshold,
+                    ..Params::default()
+                };
+                let (x, dim) = build_matrix_fit(&ds, &rows, &p);
+                let mut w0 = initial_direction(&x, dim, &ds.labels, &rows, &p);
+                w0[dim - 1] = -0.0;
+                let hp = Hp {
+                    alpha: 1.0,
+                    beta: 4.0,
+                    maxiter: 10,
+                    subset,
+                    tolerance,
+                };
+                let mut reused_rng = Rng(71);
+                let mut fresh_rng = Rng(71);
+                let reused = train_fold_with_reuse::<true>(
+                    &x,
+                    dim,
+                    &ds.labels,
+                    &rows,
+                    &w0,
+                    &p,
+                    &mut reused_rng,
+                    hp,
+                    93,
+                    None,
+                );
+                let fresh = train_fold_with_reuse::<false>(
+                    &x,
+                    dim,
+                    &ds.labels,
+                    &rows,
+                    &w0,
+                    &p,
+                    &mut fresh_rng,
+                    hp,
+                    93,
+                    None,
+                );
+                assert_eq!(reused_rng.0, fresh_rng.0);
+                let mut a = vec![0.0; rows.len()];
+                let mut b = a.clone();
+                reused.score_rows(&x, dim, &rows, &mut a);
+                fresh.score_rows(&x, dim, &rows, &mut b);
+                assert!(a.iter().zip(&b).all(|(a, b)| a.to_bits() == b.to_bits()));
+            }
         }
     }
 

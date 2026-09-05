@@ -85,6 +85,7 @@
 //! calibration, which is **not** a validation of these values as posterior
 //! probabilities.
 
+#[cfg(test)]
 use std::cmp::Ordering;
 
 /// Configuration of the target-decoy competition estimator.
@@ -186,6 +187,7 @@ pub struct QValueWorkspace {
 /// treated as equal to everything, which would break the strict weak ordering the
 /// sort requires and let a NaN acquire an arbitrary rank.
 #[inline]
+#[cfg(test)]
 fn score_cmp_desc(a: f64, b: f64) -> Ordering {
     match (a.is_nan(), b.is_nan()) {
         (true, true) => Ordering::Equal,
@@ -198,11 +200,14 @@ fn score_cmp_desc(a: f64, b: f64) -> Ordering {
 #[inline]
 fn sort_score_order(order: &mut [usize], scores: &[f64]) {
     debug_assert!(order.iter().all(|&index| index < scores.len()));
+    debug_assert!(scores.iter().all(|score| score.is_finite()));
     order.sort_unstable_by(|&a, &b| {
         // `order` is always populated from 0..scores.len() immediately before
         // this call. Avoid two redundant bounds checks per sort comparison.
         let (a, b) = unsafe { (*scores.get_unchecked(a), *scores.get_unchecked(b)) };
-        score_cmp_desc(a, b)
+        // All callers reject non-finite scores before sorting. This is exactly
+        // the finite arm of score_cmp_desc, including its signed-zero order.
+        b.total_cmp(&a)
     });
 }
 
@@ -471,6 +476,33 @@ pub fn target_count_at_fdr_into(
     threshold: f64,
     order: &mut Vec<usize>,
 ) -> usize {
+    target_counts_impl::<false>(scores, labels, tdc, threshold, order).0
+}
+
+/// Count both feature orientations in one tie-group walk after one score sort.
+pub(crate) fn target_counts_at_fdr_into(
+    scores: &[f64],
+    labels: &[i8],
+    tdc: Tdc,
+    threshold: f64,
+    order: &mut Vec<usize>,
+) -> (usize, usize) {
+    // Subtracting integer counts is exact within this range, including +1.
+    if scores.len() as u128 >= (1u128 << 53) {
+        let forward = target_count_at_fdr_into(scores, labels, tdc, threshold, order);
+        let reverse = target_count_at_reversed_order(scores, labels, tdc, threshold, order);
+        return (forward, reverse);
+    }
+    target_counts_impl::<true>(scores, labels, tdc, threshold, order)
+}
+
+fn target_counts_impl<const BOTH: bool>(
+    scores: &[f64],
+    labels: &[i8],
+    tdc: Tdc,
+    threshold: f64,
+    order: &mut Vec<usize>,
+) -> (usize, usize) {
     let n = scores.len();
     #[cfg(feature = "profiling")]
     let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", n);
@@ -514,6 +546,15 @@ pub fn target_count_at_fdr_into(
 
     #[cfg(feature = "profiling")]
     let tie_scan_start = std::time::Instant::now();
+    let total_targets = if BOTH {
+        labels[..n].iter().filter(|&&label| label > 0).count()
+    } else {
+        0
+    };
+    let total_decoys = (n - total_targets) as f64 + tdc.initial_decoys();
+    let mut previous_targets = 0.0;
+    let mut previous_decoys = tdc.initial_decoys();
+    let mut reverse_accepted = None;
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
     let mut accepted_targets = 0usize;
@@ -524,8 +565,19 @@ pub fn target_count_at_fdr_into(
         } else {
             decoys += 1.0;
         }
-        if ends_score_group(order, scores, rank) && tdc.raw_fdp(decoys, targets) < threshold {
-            accepted_targets = targets as usize;
+        if ends_score_group(order, scores, rank) {
+            if tdc.raw_fdp(decoys, targets) < threshold {
+                accepted_targets = targets as usize;
+            }
+            if BOTH && reverse_accepted.is_none() {
+                let reverse_targets = total_targets as f64 - previous_targets;
+                let reverse_decoys = total_decoys - previous_decoys + tdc.initial_decoys();
+                if tdc.raw_fdp(reverse_decoys, reverse_targets) < threshold {
+                    reverse_accepted = Some(reverse_targets as usize);
+                }
+            }
+            previous_targets = targets;
+            previous_decoys = decoys;
         }
     }
     #[cfg(feature = "profiling")]
@@ -536,7 +588,7 @@ pub fn target_count_at_fdr_into(
         Some(n as u64),
         None,
     );
-    accepted_targets
+    (accepted_targets, reverse_accepted.unwrap_or(0))
 }
 
 /// As [`target_count_at_fdr_into`] but over dense integer ranks that already
@@ -610,6 +662,40 @@ pub fn target_count_at_reversed_ranks_into(
         None,
     );
     accepted_targets
+}
+
+/// Count the opposite orientation using an existing descending finite-score
+/// order. Reversal preserves numeric tie groups (including signed zero); only
+/// whole-group counts enter FDP, so within-group order cannot affect the result.
+pub(crate) fn target_count_at_reversed_order(
+    scores: &[f64],
+    labels: &[i8],
+    tdc: Tdc,
+    threshold: f64,
+    order: &[usize],
+) -> usize {
+    #[cfg(feature = "profiling")]
+    let _qvalues = crate::profile::Scope::with_elements("qvalue", "qvalues_total", order.len());
+    #[cfg(feature = "profiling")]
+    let _scan =
+        crate::profile::Scope::with_elements("qvalue", "qvalue_tie_group_scan", order.len());
+    let mut targets = 0.0;
+    let mut decoys = tdc.initial_decoys();
+    let mut accepted = 0;
+    for rank in (0..order.len()).rev() {
+        let i = order[rank];
+        if labels[i] > 0 {
+            targets += 1.0;
+        } else {
+            decoys += 1.0;
+        }
+        if (rank == 0 || scores[order[rank - 1]] != scores[i])
+            && tdc.raw_fdp(decoys, targets) < threshold
+        {
+            accepted = targets as usize;
+        }
+    }
+    accepted
 }
 
 #[cfg(test)]
@@ -847,6 +933,83 @@ fn peps_from_competition_into(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn training_mask_matches_threshold_edges_and_decoy_tails() {
+        let values = [4.0, 3.0, 3.0, 2.0, 1.0, 0.0, -0.0, -1.0, -2.0];
+        let mut workspace = QValueWorkspace::default();
+        let mut accepted = vec![7; 40];
+        for n in (0..=values.len()).rev() {
+            let scores = &values[..n];
+            for bits in 0..1usize << n {
+                let labels: Vec<_> = (0..n)
+                    .map(|i| if bits & (1 << i) == 0 { 0 } else { 2 })
+                    .collect();
+                for p in [0.0, 0.25, 0.5, 0.9, 1.0f64.next_down(), 1.0, f64::NAN] {
+                    let tdc = Tdc::training(p);
+                    let q = qvalues(scores, &labels, tdc);
+                    for threshold in [0.0, 0.01, 1.0, 1.01, f64::NAN, f64::INFINITY]
+                        .into_iter()
+                        .chain(q.iter().copied())
+                        .chain(q.iter().map(|q| q.next_up()))
+                    {
+                        target_mask_at_fdr_into(
+                            scores,
+                            &labels,
+                            tdc,
+                            threshold,
+                            &mut workspace,
+                            &mut accepted,
+                        );
+                        let expected: Vec<_> = q
+                            .iter()
+                            .zip(&labels)
+                            .map(|(q, l)| u8::from(*l > 0 && *q < threshold))
+                            .collect();
+                        assert_eq!(
+                            accepted, expected,
+                            "n={n}, bits={bits}, p={p}, threshold={threshold}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn count_mask_workspace_cannot_change_reported_pep_tie_permutation() {
+        let scores: Vec<_> = (0..1024)
+            .map(|i| match i % 7 {
+                0 => -0.0,
+                1 => 0.0,
+                _ => (i % 11) as f64,
+            })
+            .collect();
+        let labels: Vec<_> = (0..1024).map(|i| if i % 3 == 0 { -1 } else { 1 }).collect();
+        let expected = qvalues_and_peps(&scores, &labels, reported());
+        let mut workspace = QValueWorkspace::default();
+        let mut mask = Vec::new();
+        target_mask_at_fdr_into(
+            &scores,
+            &labels,
+            Tdc::training(0.5),
+            0.5,
+            &mut workspace,
+            &mut mask,
+        );
+        let mut q = Vec::new();
+        let mut pep = Vec::new();
+        qvalues_into(&scores, &labels, reported(), &mut workspace, &mut q);
+        peps_from_competition_into(&scores, &labels, reported(), &mut workspace, &mut pep);
+        assert!(q
+            .iter()
+            .zip(&expected.0)
+            .all(|(a, b)| a.to_bits() == b.to_bits()));
+        assert!(pep
+            .iter()
+            .zip(&expected.1)
+            .all(|(a, b)| a.to_bits() == b.to_bits()));
+    }
 
     fn reported() -> Tdc {
         Tdc::reported(0.5)
@@ -1135,6 +1298,56 @@ mod tests {
     }
 
     #[test]
+    fn finite_sort_preserves_the_exact_legacy_permutation() {
+        let mut state = 0x243f_6a88_85a3_08d3u64;
+        for n in (0..260).chain([1024, 4096]) {
+            for tied in [false, true] {
+                let mut scores = Vec::new();
+                for i in 0..n {
+                    state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+                    scores.push(match i % 11 {
+                        0 => -0.0,
+                        1 => 0.0,
+                        2 => f64::MAX,
+                        3 => -f64::MAX,
+                        4 => f64::from_bits(1),
+                        5 => -f64::from_bits(1),
+                        _ if tied => (state % 7) as f64,
+                        _ => f64::from_bits(state & 0xffef_ffff_ffff_ffff),
+                    });
+                }
+                let mut legacy: Vec<_> = (0..n).collect();
+                legacy.sort_unstable_by(|&a, &b| score_cmp_desc(scores[a], scores[b]));
+                assert_eq!(descending(&scores), legacy, "n={n}, tied={tied}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_qvalue_entry_point_rejects_non_finite_scores() {
+        for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let scores = [1.0, bad];
+            assert!(std::panic::catch_unwind(|| qvalues(&scores, &[1, -1], reported())).is_err());
+            assert!(std::panic::catch_unwind(|| target_count_at_fdr(
+                &scores,
+                &[1, -1],
+                reported(),
+                0.01
+            ))
+            .is_err());
+            assert!(std::panic::catch_unwind(|| target_mask_at_fdr_into(
+                &scores,
+                &[1, -1],
+                reported(),
+                0.01,
+                &mut QValueWorkspace::default(),
+                &mut Vec::new()
+            ))
+            .is_err());
+        }
+    }
+
+    #[test]
     fn target_count_overwrites_reused_order() {
         let mut order = vec![usize::MAX; 20];
         let cases = [
@@ -1175,6 +1388,19 @@ mod tests {
             let negated: Vec<f64> = scores.iter().map(|value| -value).collect();
             for threshold in [0.01, 0.1, 0.5, 1.0] {
                 assert_eq!(
+                    target_counts_at_fdr_into(
+                        &scores,
+                        &labels,
+                        reported(),
+                        threshold,
+                        &mut Vec::new()
+                    ),
+                    (
+                        target_count_at_fdr(&scores, &labels, reported(), threshold),
+                        target_count_at_fdr(&negated, &labels, reported(), threshold)
+                    )
+                );
+                assert_eq!(
                     target_count_at_reversed_ranks_into(
                         &ranks,
                         &labels,
@@ -1185,6 +1411,71 @@ mod tests {
                     target_count_at_fdr(&negated, &labels, reported(), threshold),
                     "len={len}, threshold={threshold}"
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn reversed_order_preserves_extremes_zero_ties_and_strict_thresholds() {
+        let values = [
+            f64::MAX,
+            1.0,
+            f64::MIN_POSITIVE,
+            f64::from_bits(1),
+            0.0,
+            -0.0,
+            -f64::from_bits(1),
+            -1.0,
+            -f64::MAX,
+        ];
+        for n in 0..=values.len() {
+            let scores = &values[..n];
+            let negated: Vec<_> = scores.iter().map(|x| -x).collect();
+            let order = descending(scores);
+            for bits in 0..1usize << n {
+                let labels: Vec<_> = (0..n)
+                    .map(|i| if bits & (1 << i) == 0 { -1 } else { 1 })
+                    .collect();
+                for tdc in [
+                    Tdc::training(0.5),
+                    Tdc::reported(0.5),
+                    Tdc::training(0.25),
+                    Tdc::reported(0.9),
+                ] {
+                    let q = qvalues(&negated, &labels, tdc);
+                    let forward_q = qvalues(scores, &labels, tdc);
+                    let thresholds = [0.0, 0.01, 0.5, 1.0, 1.01, f64::NAN, f64::INFINITY];
+                    for threshold in thresholds
+                        .into_iter()
+                        .chain(q.iter().copied())
+                        .chain(q.iter().map(|x| x.next_up()))
+                    {
+                        let expected = q
+                            .iter()
+                            .zip(&labels)
+                            .filter(|(q, l)| **l > 0 && **q < threshold)
+                            .count();
+                        assert_eq!(
+                            target_count_at_reversed_order(scores, &labels, tdc, threshold, &order),
+                            expected
+                        );
+                        let forward = forward_q
+                            .iter()
+                            .zip(&labels)
+                            .filter(|(q, l)| **l > 0 && **q < threshold)
+                            .count();
+                        assert_eq!(
+                            target_counts_at_fdr_into(
+                                scores,
+                                &labels,
+                                tdc,
+                                threshold,
+                                &mut Vec::new()
+                            ),
+                            (forward, expected)
+                        );
+                    }
+                }
             }
         }
     }
