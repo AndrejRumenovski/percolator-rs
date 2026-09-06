@@ -1,0 +1,200 @@
+{
+  "demonstration_date": "2026-09-06",
+  "api_base": "https://www.ebi.ac.uk/pride/ws/archive/v3",
+  "project": "PXD032157",
+  "title": "A male-specific steroid hormone controls female reproductive biology in the malaria mosquito",
+  "retrieved_unix_seconds": 1788709602,
+  "indexed_files": 651,
+  "inventory_files": 653,
+  "selected_remote_file": {
+    "id": "5b69d5b7ed9e3b18f5b32405c70ee1aef9d03bab68605ab64466739982e80d4d",
+    "filename": "28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.pin",
+    "category": "OTHER",
+    "format": null,
+    "size_bytes": 8254268,
+    "checksum_table_size": 8254268,
+    "references": [
+      "prd_ascp@fasp.ebi.ac.uk:pride/data/archive/2022/04/PXD032157/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.pin",
+      "ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2022/04/PXD032157/28May2015-QE-HF-Anopheles-23-atrium-P-24H-2nd-01-comet.pin"
+    ],
+    "checksums": [
+      {
+        "algorithm": "sha1",
+        "value": "256a45345dee1766fc63092fc956b83934e9d91c",
+        "reported_value": "256a45345dee1766fc63092fc956b83934e9d91c",
+        "authority": "https://www.ebi.ac.uk/pride/ws/archive/v3/files/5b69d5b7ed9e3b18f5b32405c70ee1aef9d03bab68605ab64466739982e80d4d#checksum"
+      },
+      {
+        "algorithm": "md5",
+        "value": "467be2d99f77ba5d4a94ef6cd0df1d7d",
+        "reported_value": "467be2d99f77ba5d4a94ef6cd0df1d7d",
+        "authority": "https://www.ebi.ac.uk/pride/ws/archive/v3/files/checksum/PXD032157"
+      }
+    ],
+    "untyped_checksum": null,
+    "analysis_accessions": null,
+    "run_metadata": [],
+    "inventory_source": "archive_v3_files"
+  },
+  "local_source_sha256": "c45cfe99282b5a2dbab5ad5e153302d2f8b6540a68eae646417ae6ecc111fe6b",
+  "source_verification": [
+    {
+      "algorithm": "sha1",
+      "expected": "256a45345dee1766fc63092fc956b83934e9d91c",
+      "actual": "256a45345dee1766fc63092fc956b83934e9d91c",
+      "verified": true,
+      "authority": "https://www.ebi.ac.uk/pride/ws/archive/v3/files/5b69d5b7ed9e3b18f5b32405c70ee1aef9d03bab68605ab64466739982e80d4d#checksum"
+    },
+    {
+      "algorithm": "md5",
+      "expected": "467be2d99f77ba5d4a94ef6cd0df1d7d",
+      "actual": "467be2d99f77ba5d4a94ef6cd0df1d7d",
+      "verified": true,
+      "authority": "https://www.ebi.ac.uk/pride/ws/archive/v3/files/checksum/PXD032157"
+    }
+  ],
+  "source_state_after_ephemeral": "evicted",
+  "pin_content_validated": true,
+  "input_psms": 31660,
+  "features": 21,
+  "experiment": {
+    "id": "PXD032157-1788709775094704560",
+    "input_ids": [
+      "5b69d5b7ed9e3b18f5b32405c70ee1aef9d03bab68605ab64466739982e80d4d"
+    ],
+    "state": "verified",
+    "error": null,
+    "started_unix_seconds": 1788709775,
+    "completed_unix_seconds": 1788709777,
+    "percolator_rs_version": "0.1.0",
+    "percolator_rs_commit": "99703b1260a8b54068fda6a1e287945f115fa68f",
+    "executable_sha256": "f0cc7f65951e6b64540dc4cdf7a54bf61ffc0ddf6343448eecb100f47b01cfb6",
+    "parameters": [
+      "--profile",
+      "fast",
+      "--seed",
+      "1"
+    ],
+    "ephemeral": true,
+    "pin_retention": "keep_if_pinned",
+    "result_hashes": {
+      "results/PXD032157-1788709775094704560/decoy.peptides.tsv": "68fca9be4517d2a3a2724d90a88138969e76ee4c6bfbc7281fdb42640252e4c1",
+      "results/PXD032157-1788709775094704560/decoy.psms.tsv": "88c96b606c81c3e82d0db4ec8881590a496ca5d67e0daaa9b6edd88a2ddac877",
+      "results/PXD032157-1788709775094704560/target.peptides.tsv": "be7bd29e5e6e2dfa5e1ca1f43b67bd7b77d560aea32860fc0c9a8bb66b06f5a3",
+      "results/PXD032157-1788709775094704560/target.psms.tsv": "9f2f209332ced24332cea546b038b1ed82aeac6e51e0889d6ef9eb04a7c3ae78"
+    },
+    "lineage": [
+      {
+        "id": "PXD032157-1788709775094704560:input-pin",
+        "inputs": [
+          "5b69d5b7ed9e3b18f5b32405c70ee1aef9d03bab68605ab64466739982e80d4d"
+        ],
+        "output_sha256": "c45cfe99282b5a2dbab5ad5e153302d2f8b6540a68eae646417ae6ecc111fe6b",
+        "kind": "downloaded_pin",
+        "tool": "PRIDE HTTPS download",
+        "tool_version": null,
+        "parameters": [],
+        "protein_database": null,
+        "database_sha256": null,
+        "decoy_generation": null
+      },
+      {
+        "id": "results/PXD032157-1788709775094704560/decoy.peptides.tsv",
+        "inputs": [
+          "PXD032157-1788709775094704560:input-pin"
+        ],
+        "output_sha256": "68fca9be4517d2a3a2724d90a88138969e76ee4c6bfbc7281fdb42640252e4c1",
+        "kind": "percolator_result",
+        "tool": "percolator-rs",
+        "tool_version": "0.1.0",
+        "parameters": [
+          "--profile",
+          "fast",
+          "--seed",
+          "1"
+        ],
+        "protein_database": null,
+        "database_sha256": null,
+        "decoy_generation": null
+      },
+      {
+        "id": "results/PXD032157-1788709775094704560/decoy.psms.tsv",
+        "inputs": [
+          "PXD032157-1788709775094704560:input-pin"
+        ],
+        "output_sha256": "88c96b606c81c3e82d0db4ec8881590a496ca5d67e0daaa9b6edd88a2ddac877",
+        "kind": "percolator_result",
+        "tool": "percolator-rs",
+        "tool_version": "0.1.0",
+        "parameters": [
+          "--profile",
+          "fast",
+          "--seed",
+          "1"
+        ],
+        "protein_database": null,
+        "database_sha256": null,
+        "decoy_generation": null
+      },
+      {
+        "id": "results/PXD032157-1788709775094704560/target.peptides.tsv",
+        "inputs": [
+          "PXD032157-1788709775094704560:input-pin"
+        ],
+        "output_sha256": "be7bd29e5e6e2dfa5e1ca1f43b67bd7b77d560aea32860fc0c9a8bb66b06f5a3",
+        "kind": "percolator_result",
+        "tool": "percolator-rs",
+        "tool_version": "0.1.0",
+        "parameters": [
+          "--profile",
+          "fast",
+          "--seed",
+          "1"
+        ],
+        "protein_database": null,
+        "database_sha256": null,
+        "decoy_generation": null
+      },
+      {
+        "id": "results/PXD032157-1788709775094704560/target.psms.tsv",
+        "inputs": [
+          "PXD032157-1788709775094704560:input-pin"
+        ],
+        "output_sha256": "9f2f209332ced24332cea546b038b1ed82aeac6e51e0889d6ef9eb04a7c3ae78",
+        "kind": "percolator_result",
+        "tool": "percolator-rs",
+        "tool_version": "0.1.0",
+        "parameters": [
+          "--profile",
+          "fast",
+          "--seed",
+          "1"
+        ],
+        "protein_database": null,
+        "database_sha256": null,
+        "decoy_generation": null
+      }
+    ]
+  },
+  "pinned_prune": {
+    "before_bytes": 8254268,
+    "objects": [],
+    "freed_bytes": 0,
+    "remaining_bytes": 8254268,
+    "pinned_remaining_bytes": 8254268,
+    "provenance_results_retained": true,
+    "dry_run": false
+  },
+  "all_evictable_cleanup": {
+    "before_bytes": 0,
+    "objects": [],
+    "freed_bytes": 0,
+    "remaining_bytes": 0,
+    "pinned_remaining_bytes": 0,
+    "provenance_results_retained": true,
+    "dry_run": false
+  },
+  "large_data_bytes_after": 0,
+  "retained_result_bytes": 1559909,
+  "results_rehashed_after_cleanup": true
+}

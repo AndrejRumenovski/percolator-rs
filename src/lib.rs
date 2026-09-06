@@ -11,6 +11,7 @@ pub mod percolator;
 pub mod pin;
 pub mod pipeline;
 mod preprocessing;
+pub mod pride;
 #[cfg(feature = "profiling")]
 pub mod profile;
 pub mod protein;

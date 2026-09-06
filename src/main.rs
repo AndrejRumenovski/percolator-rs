@@ -1,6 +1,7 @@
 //! percolator-rs command-line orchestration.
 
 mod cli;
+mod pride_cli;
 
 use cli::{ensemble_input, parse_args, ProteinInference};
 use percolator_rs::percolator::Model;
@@ -13,6 +14,13 @@ use percolator_rs::{output, percolator, pin, pipeline, rt};
 static PROFILING_ALLOCATOR: profile::CountingAllocator = profile::CountingAllocator;
 
 fn main() {
+    if std::env::args().nth(1).as_deref() == Some("pride") {
+        if let Err(error) = pride_cli::run() {
+            eprintln!("PRIDE: {error}");
+            std::process::exit(2);
+        }
+        return;
+    }
     #[cfg(feature = "profiling")]
     let cli_setup_start = std::time::Instant::now();
     let mut args = parse_args();

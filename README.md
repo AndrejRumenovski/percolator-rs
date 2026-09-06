@@ -449,3 +449,9 @@ and the C++ reference binary.
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+## PRIDE Archive working cache
+
+`percolator-rs pride` discovers public PRIDE projects, inspects storage costs, downloads and verifies selected files, and runs the existing analysis on validated PINs. The default large-data cache ceiling is 50 GB; ephemeral processing and `pride cache prune --all-evictable` reclaim recoverable data while preserving manifests, provenance and results.
+
+See [PRIDE usage and storage guarantees](docs/PRIDE.md) and the [real-project demonstration](docs/PRIDE-demonstration.md). Start with `percolator-rs pride --help`.
