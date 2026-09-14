@@ -34,9 +34,6 @@ jobs:
       - name: Regression gate (fixture — yield ±1%, time & memory budgets)
         run: bash tests/regression.sh
 
-      - name: Neural-model regression gate (deterministic serial/parallel output)
-        run: bash tests/model_regression.sh
-
       - name: Nested-selection regression gate (isolated deterministic outer folds)
         run: bash tests/selection_regression.sh
 

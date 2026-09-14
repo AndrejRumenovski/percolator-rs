@@ -39,11 +39,33 @@ fn explicit_options_override_profiles_in_either_order() {
 }
 
 #[test]
-fn documented_model_aliases_select_the_same_model() {
+fn legacy_svm_model_aliases_remain_compatible() {
     for alias in ["svm", "linear"] {
         let output = run(&["--model", alias, "--maxiter", "1", fixture()]);
         assert!(output.status.success(), "{}", stderr(&output));
         assert!(stderr(&output).contains("profile: canonical (model=svm, maxiter=1"));
+    }
+}
+
+#[test]
+fn removed_neural_options_fail_clearly() {
+    for (arguments, expected) in [
+        (
+            vec!["--model", "mlp", fixture()],
+            "unknown --rescore-model 'mlp' (only svm is available)",
+        ),
+        (
+            vec!["--model", "neural", fixture()],
+            "unknown --rescore-model 'neural' (only svm is available)",
+        ),
+        (
+            vec!["--mlp-hidden", "8", fixture()],
+            "--mlp-hidden is no longer supported; neural rescoring has been removed",
+        ),
+    ] {
+        let output = run(&arguments);
+        assert_eq!(output.status.code(), Some(2));
+        assert_eq!(stderr(&output).trim(), expected);
     }
 }
 
@@ -60,7 +82,7 @@ fn invalid_scientific_option_values_keep_their_diagnostics() {
         ),
         (
             vec!["--model", "guess", fixture()],
-            "unknown --rescore-model 'guess' (use svm|mlp)",
+            "unknown --rescore-model 'guess' (only svm is available)",
         ),
     ];
     for (arguments, expected) in cases {

@@ -31,7 +31,6 @@ SHELL_GATES = (
     "tests/regression.sh",
     "tests/ensemble_regression.sh",
     "tests/selection_regression.sh",
-    "tests/model_regression.sh",
     "tests/protein_regression.sh",
     "tests/feature_report.sh",
 )

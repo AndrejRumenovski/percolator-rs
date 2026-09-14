@@ -12,10 +12,13 @@ This ledger records the complete rerun performed on 2026-08-24 from Git commit
 3.09.0. Bulk inputs and generated outputs remain outside Git under
 `$HOME/percolator_rs_out`.
 
-All portable gates passed: 19 Rust unit tests, 10 integration tests, exact SVM, MLP,
+All portable gates passed at the time: 19 Rust unit tests, 10 integration tests, exact SVM, MLP,
 nested-selection, feature-report, ensemble, and picked-protein shell regressions, plus four PrEST
 report tests and the Sage-normalizer order-independence test. The self-hosted 65-file gate also
 passed exactly at 107,046 PSMs and 37,469 peptides.
+
+The experimental MLP implementation and its runnable benchmark/regression drivers have since been
+removed. The MLP measurements below remain only as historical evidence for that decision.
 
 ## Fresh study results
 
@@ -53,7 +56,6 @@ Run portable and self-hosted gates:
 ```bash
 cargo test --release
 bash tests/regression.sh
-bash tests/model_regression.sh
 bash tests/selection_regression.sh
 bash tests/feature_report.sh
 bash tests/ensemble_regression.sh
@@ -71,10 +73,8 @@ REPEATS=3 bash bench/protein_inference.sh
 bash bench/null_calibration.sh 3 42
 bash bench/advanced_features.sh
 bash bench/entrapment/run.sh
-bash bench/model_entrapment.sh
 bash bench/selection_entrapment.sh
 REPEATS=3 bash bench/protein_calibration/run.sh
-bash bench/model_comparison.sh
 bash bench/selection_comparison.sh
 bash bench/run_rs.sh canonical 4
 bash bench/run_rs.sh balanced 4

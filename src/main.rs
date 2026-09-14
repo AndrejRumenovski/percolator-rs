@@ -4,7 +4,6 @@ mod cli;
 mod pride_cli;
 
 use cli::{ensemble_input, parse_args, ProteinInference};
-use percolator_rs::percolator::Model;
 #[cfg(feature = "profiling")]
 use percolator_rs::profile;
 use percolator_rs::{output, percolator, pin, pipeline, rt};
@@ -73,9 +72,8 @@ fn main() {
         profile::metadata("input_files", &args.pins);
     }
     eprintln!(
-        "profile: {} (model={}, maxiter={}, subset-max-train={}){}{}{}",
+        "profile: {} (model=svm, maxiter={}, subset-max-train={}){}{}{}",
         args.profile,
-        args.params.model.label(),
         args.params.maxiter,
         if args.params.subset_max_train == 0 {
             "none".to_string()
@@ -203,29 +201,13 @@ fn main() {
     let out = pipeline::rescore(&ds, &args.params);
     if out.nested_folds.is_empty() {
         eprintln!(
-            "{} class weights: Cpos={:.3} Cneg={:.3}{}{}",
-            if args.params.model == Model::Svm {
-                "SVM"
-            } else {
-                "MLP"
-            },
+            "SVM class weights: Cpos={:.3} Cneg={:.3}{}",
             out.c_alpha,
             out.c_beta,
             if out.c_selected {
                 " (selected by cross-validation)"
             } else {
                 " (fixed)"
-            },
-            if args.params.model == Model::Mlp {
-                format!(
-                    "; hidden={}, epochs/iteration={}, learning-rate={}, l2={}",
-                    args.params.mlp_hidden,
-                    args.params.mlp_epochs,
-                    args.params.mlp_learning_rate,
-                    args.params.mlp_l2
-                )
-            } else {
-                String::new()
             }
         );
     } else {

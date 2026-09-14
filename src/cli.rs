@@ -1,6 +1,6 @@
 //! Command-line parsing and validation.
 
-use percolator_rs::percolator::{self, Model, Params};
+use percolator_rs::percolator::{self, Params};
 use percolator_rs::protein_bayes;
 
 pub(crate) struct Args {
@@ -121,21 +121,16 @@ pub(crate) fn parse_args() -> Args {
             "--protein-max-iter" => a.protein_bayes.max_iter = take().parse().unwrap_or(0),
             "--rescore-model" | "--model" => {
                 let value = take();
-                a.params.model = match value.as_str() {
-                    "svm" | "linear" => Model::Svm,
-                    "mlp" | "neural" => Model::Mlp,
-                    _ => {
-                        eprintln!("unknown --rescore-model '{value}' (use svm|mlp)");
-                        std::process::exit(2);
-                    }
-                };
+                if !matches!(value.as_str(), "svm" | "linear") {
+                    eprintln!("unknown --rescore-model '{value}' (only svm is available)");
+                    std::process::exit(2);
+                }
             }
-            "--mlp-hidden" => a.params.mlp_hidden = take().parse().unwrap_or(0),
-            "--mlp-epochs" => a.params.mlp_epochs = take().parse().unwrap_or(0),
-            "--mlp-learning-rate" => {
-                a.params.mlp_learning_rate = take().parse().unwrap_or(f64::NAN)
+            "--mlp-hidden" | "--mlp-epochs" | "--mlp-learning-rate" | "--mlp-l2" => {
+                let _ = take();
+                eprintln!("{s} is no longer supported; neural rescoring has been removed");
+                std::process::exit(2);
             }
-            "--mlp-l2" => a.params.mlp_l2 = take().parse().unwrap_or(f64::NAN),
             "--auto-model" | "--nested-select" => a.params.nested_selection = true,
             "--no-auto-model" => a.params.nested_selection = false,
             "--svm-tolerance" => a.params.svm_tolerance = take().parse().unwrap_or(f64::NAN),
@@ -215,16 +210,8 @@ pub(crate) fn parse_args() -> Args {
     if let Some(s) = select_c_opt {
         select_c = s;
     }
-    if a.params.nested_selection && a.params.model != Model::Svm {
-        eprintln!("--auto-model currently supports only --rescore-model svm");
-        std::process::exit(2);
-    }
     if a.ensemble && a.join {
         eprintln!("--ensemble and --join are mutually exclusive");
-        std::process::exit(2);
-    }
-    if a.feature_report.is_some() && a.params.model != Model::Svm {
-        eprintln!("--feature-report currently supports only --rescore-model svm");
         std::process::exit(2);
     }
     if a.params.nested_selection && select_c {
@@ -247,22 +234,6 @@ pub(crate) fn parse_args() -> Args {
     } else {
         a.params.c_alpha = Some(percolator::C_POS_DEFAULT);
         a.params.c_beta = Some(percolator::C_NEG_DEFAULT);
-    }
-    if a.params.mlp_hidden == 0 || a.params.mlp_hidden > 256 {
-        eprintln!("invalid --mlp-hidden (use 1..256)");
-        std::process::exit(2);
-    }
-    if a.params.mlp_epochs == 0 || a.params.mlp_epochs > 1000 {
-        eprintln!("invalid --mlp-epochs (use 1..1000)");
-        std::process::exit(2);
-    }
-    if !a.params.mlp_learning_rate.is_finite() || a.params.mlp_learning_rate <= 0.0 {
-        eprintln!("invalid --mlp-learning-rate (must be finite and >0)");
-        std::process::exit(2);
-    }
-    if !a.params.mlp_l2.is_finite() || a.params.mlp_l2 < 0.0 {
-        eprintln!("invalid --mlp-l2 (must be finite and >=0)");
-        std::process::exit(2);
     }
     if !a.params.svm_tolerance.is_finite() || a.params.svm_tolerance <= 0.0 {
         eprintln!("invalid --svm-tolerance (must be finite and >0)");

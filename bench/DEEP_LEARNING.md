@@ -1,5 +1,8 @@
 # Small-MLP rescoring benchmark
 
+> Historical record: the experimental MLP implementation and its CLI options have been removed.
+> The measurements below are retained as evidence for that removal.
+
 > **These measurements predate the 2026-08-25 statistical repair** and describe commit `d83a7ba`,
 > whose q-value and PEP estimators, cross-validation isolation and PIN feature selection were all
 > subsequently found defective and replaced. They are kept as the record of what was measured then.
@@ -59,32 +62,11 @@ Defaults were frozen using only the committed 12,000-PSM development fixture. Th
 included in the evaluation totals above. Seeds 1-5 all improved its PSM count relative to the SVM,
 which made it a useful optimizer-stability check but did not predict generalization.
 
-## Usage
+## Removed interface
 
-```bash
-cargo build --release
-target/release/percolator-rs --canonical --seed 1 \
-  --rescore-model mlp --results-psms target.psms.tsv input.pin
-```
-
-The SVM remains the default. Neural parameters can be overridden with `--mlp-hidden`,
-`--mlp-epochs`, `--mlp-learning-rate`, and `--mlp-l2`. `--select-c`, `--cpos`, and `--cneg` apply
-to either learner.
-
-Reproduce the 65-file or alternate-directory yield comparison with:
-
-```bash
-bash bench/model_comparison.sh
-MODEL_BENCH_INPUT=/path/to/pins MODEL_BENCH_OUT=/path/to/output \
-  bash bench/model_comparison.sh
-```
-
-After generating the entrapment searches with `bench/entrapment/run.sh`, reproduce the calibration
-comparison with:
-
-```bash
-bash bench/model_entrapment.sh
-```
+The former `--rescore-model mlp` mode, neural hyperparameter flags, and dedicated comparison
+drivers are no longer present. The checked-in result table is retained for provenance, but this
+historical experiment is not runnable from the current source tree.
 
 ## Decision on sequence embeddings
 

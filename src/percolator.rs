@@ -1,7 +1,6 @@
 //! Semi-supervised Percolator training: 3-fold nested cross-validation around an
 //! iterative fold-local learner that separates confident targets from decoys.
 
-use crate::mlp;
 use crate::pin::Dataset;
 use crate::preprocessing::{
     build_matrix_fit, fit_normalization, fold_rt_columns, rt_columns, transform_matrix,
@@ -36,33 +35,11 @@ pub struct Params {
     /// Leakage-free per-outer-fold selection of SVM scale, class weights,
     /// feature count, and solver tolerance.
     pub nested_selection: bool,
-    /// Fold-local learner. Both models use the same normalization, folds,
-    /// semi-supervised labels, out-of-fold scoring, q-values, and PEPs.
-    pub model: Model,
-    pub mlp_hidden: usize,
-    pub mlp_epochs: usize,
-    pub mlp_learning_rate: f64,
-    pub mlp_l2: f64,
     /// Retention-time alignment inputs when `--rt-features` is on.
     ///
     /// The alignment is label-dependent, so it is refitted inside every outer
     /// training partition rather than once over the whole dataset.
     pub rt: Option<crate::rt::Alignment>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Model {
-    Svm,
-    Mlp,
-}
-
-impl Model {
-    pub fn label(self) -> &'static str {
-        match self {
-            Model::Svm => "svm",
-            Model::Mlp => "mlp",
-        }
-    }
 }
 
 impl Default for Params {
@@ -81,11 +58,6 @@ impl Default for Params {
             c_select_subset: 20_000,
             num_threads: 1,
             nested_selection: false,
-            model: Model::Svm,
-            mlp_hidden: 8,
-            mlp_epochs: 10,
-            mlp_learning_rate: 0.02,
-            mlp_l2: 0.0,
             rt: None,
         }
     }
@@ -142,9 +114,8 @@ fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) 
     }
 }
 
-enum FoldModel {
-    Svm(Vec<f64>),
-    Mlp(mlp::Network),
+struct FoldModel {
+    weights: Vec<f64>,
 }
 
 impl FoldModel {
@@ -152,14 +123,7 @@ impl FoldModel {
         #[cfg(feature = "profiling")]
         let _scoring =
             crate::profile::Scope::with_elements("scoring", "model_score_rows", rows.len());
-        match self {
-            FoldModel::Svm(weights) => score_all(x, dim, weights, rows, out),
-            FoldModel::Mlp(network) => {
-                for (k, &row) in rows.iter().enumerate() {
-                    out[k] = network.score(&x[row * dim..(row + 1) * dim]);
-                }
-            }
-        }
+        score_all(x, dim, &self.weights, rows, out);
     }
 }
 
@@ -290,7 +254,7 @@ fn initial_direction(x: &[f64], dim: usize, labels: &[i8], rows: &[usize], p: &P
     best_w
 }
 
-/// Train the selected semi-supervised learner on `train_rows`, initialized from `w0`.
+/// Train the semi-supervised SVM on `train_rows`, initialized from `w0`.
 #[allow(clippy::too_many_arguments)]
 fn train_fold(
     x: &[f64],
@@ -301,21 +265,9 @@ fn train_fold(
     p: &Params,
     rng: &mut Rng,
     hp: Hp,
-    model_seed: u64,
     feature_mask: Option<&[bool]>,
 ) -> FoldModel {
-    train_fold_with_reuse::<true>(
-        x,
-        dim,
-        labels,
-        train_rows,
-        w0,
-        p,
-        rng,
-        hp,
-        model_seed,
-        feature_mask,
-    )
+    train_fold_with_reuse::<true>(x, dim, labels, train_rows, w0, p, rng, hp, feature_mask)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -328,7 +280,6 @@ fn train_fold_with_reuse<const REUSE: bool>(
     p: &Params,
     rng: &mut Rng,
     hp: Hp,
-    model_seed: u64,
     feature_mask: Option<&[bool]>,
 ) -> FoldModel {
     #[cfg(feature = "profiling")]
@@ -339,9 +290,8 @@ fn train_fold_with_reuse<const REUSE: bool>(
     );
     #[cfg(feature = "profiling")]
     let setup_start = std::time::Instant::now();
-    let mut model = match p.model {
-        Model::Svm => FoldModel::Svm(w0.to_vec()),
-        Model::Mlp => FoldModel::Mlp(mlp::Network::new(dim, p.mlp_hidden, w0, model_seed)),
+    let mut model = FoldModel {
+        weights: w0.to_vec(),
     };
     let mut scores = vec![0.0f64; train_rows.len()];
     let sub_labels: Vec<i8> = train_rows.iter().map(|&r| labels[r]).collect();
@@ -482,53 +432,38 @@ fn train_fold_with_reuse<const REUSE: bool>(
                         * std::mem::size_of::<f64>()) as u64,
             );
         }
-        match &mut model {
-            FoldModel::Svm(weights) => {
-                if REUSE {
-                    previous_weights.clone_from(weights);
-                }
-                packed_x.clear();
-                packed_x.reserve(rows.len() * dim);
-                for &row in &rows {
-                    packed_x.extend_from_slice(&x[row * dim..(row + 1) * dim]);
-                }
-                let prob = Problem {
-                    x: &packed_x,
-                    dim,
-                    rows: &rows,
-                    y: &y,
-                    c: &c,
-                    packed_rows: true,
-                    feature_mask,
-                };
-                train(
-                    &prob,
-                    weights,
-                    &initial_scores,
-                    p.max_newton,
-                    hp.tolerance,
-                    &mut svm_workspace,
-                );
-                // Fixed matrix/rows and identical weight bits imply identical
-                // score bits. Keep all later selection, RNG and training work.
-                scores_current = previous_weights
-                    .iter()
-                    .zip(weights.iter())
-                    .all(|(before, after)| before.to_bits() == after.to_bits());
-            }
-            FoldModel::Mlp(network) => {
-                scores_current = false;
-                network.train(
-                    x,
-                    &rows,
-                    &y,
-                    &c,
-                    p.mlp_epochs,
-                    p.mlp_learning_rate,
-                    p.mlp_l2,
-                );
-            }
+        let weights = &mut model.weights;
+        if REUSE {
+            previous_weights.clone_from(weights);
         }
+        packed_x.clear();
+        packed_x.reserve(rows.len() * dim);
+        for &row in &rows {
+            packed_x.extend_from_slice(&x[row * dim..(row + 1) * dim]);
+        }
+        let prob = Problem {
+            x: &packed_x,
+            dim,
+            rows: &rows,
+            y: &y,
+            c: &c,
+            packed_rows: true,
+            feature_mask,
+        };
+        train(
+            &prob,
+            weights,
+            &initial_scores,
+            p.max_newton,
+            hp.tolerance,
+            &mut svm_workspace,
+        );
+        // Fixed matrix/rows and identical weight bits imply identical
+        // score bits. Keep all later selection, RNG and training work.
+        scores_current = previous_weights
+            .iter()
+            .zip(weights.iter())
+            .all(|(before, after)| before.to_bits() == after.to_bits());
     }
     model
 }
@@ -631,7 +566,6 @@ impl FoldSetup {
             p,
             &mut rng,
             hp,
-            self.seed ^ 0xD1B5_4A32_D192_ED03,
             None,
         );
         #[cfg(feature = "profiling")]
@@ -785,7 +719,6 @@ fn select_c_for_fold(
                 p,
                 &mut rng,
                 hp,
-                fold_seed ^ 0x94D0_49BB_1331_11EB,
                 None,
             );
             validation_scores.extend(standardized_heldout_scores(
@@ -1083,7 +1016,6 @@ fn evaluate_nested_candidate(
             p,
             &mut rng,
             hp,
-            fold_seed ^ 0x94D0_49BB_1331_11EB,
             Some(&mask),
         );
         let scores = standardized_heldout_scores(
@@ -1238,7 +1170,6 @@ fn nested_cv_scores(ds: &Dataset, outer_fold: &[u8], p: &Params) -> (Vec<f64>, V
             p,
             &mut rng,
             hp,
-            fold_seed ^ 0xD1B5_4A32_D192_ED03,
             Some(&mask),
         );
         let scores =
@@ -1289,11 +1220,6 @@ pub fn run(ds: &Dataset, p: &Params) -> Output {
     }
 
     if p.nested_selection {
-        assert_eq!(
-            p.model,
-            Model::Svm,
-            "nested selection currently supports only SVM"
-        );
         let nested = || nested_cv_scores(ds, &fold, p);
         let (final_score, nested_folds) = match rayon::ThreadPoolBuilder::new()
             .num_threads(p.num_threads)
@@ -1464,13 +1390,9 @@ fn explain_fixed_models(
                 p,
                 &mut rng,
                 hp,
-                setup.seed ^ 0xD1B5_4A32_D192_ED03,
                 None,
             );
-            let weights = match model {
-                FoldModel::Svm(weights) => weights,
-                FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
-            };
+            let weights = model.weights;
             let dim = setup.dim;
             ExplanationFold {
                 weights,
@@ -1527,15 +1449,11 @@ fn explain_nested_models(ds: &Dataset, p: &Params, fold: &[u8]) -> Vec<Explanati
                 p,
                 &mut rng,
                 hp,
-                fold_seed ^ 0xD1B5_4A32_D192_ED03,
                 Some(&active_features),
             );
             let (score_mean, score_std) =
                 training_null_calibration(&model, &x, dim, &ds.labels, &train_rows);
-            let weights = match model {
-                FoldModel::Svm(weights) => weights,
-                FoldModel::Mlp(_) => unreachable!("feature reports require SVM"),
-            };
+            let weights = model.weights;
             ExplanationFold {
                 weights,
                 normalization,
@@ -1593,11 +1511,6 @@ fn target_q01(scores: &[f64], labels: &[i8], p: &Params) -> usize {
 /// post hoc: it never changes rescoring or model selection, and permutation
 /// importance holds the trained models fixed rather than retraining them.
 pub fn feature_report(ds: &Dataset, p: &Params, output: &Output) -> FeatureReport {
-    assert_eq!(
-        p.model,
-        Model::Svm,
-        "feature reports currently support only SVM"
-    );
     let fold = outer_fold_assignments(ds, p.seed);
     let models = if p.nested_selection {
         explain_nested_models(ds, p, &fold)
@@ -1741,63 +1654,58 @@ mod tests {
     fn unchanged_score_reuse_matches_recomputation_and_rng_draws() {
         let ds = selection_fixture();
         let rows: Vec<_> = (0..ds.n_psm).filter(|i| i % 5 != 0).collect();
-        for model in [Model::Svm, Model::Mlp] {
-            for (max_newton, tolerance, subset, threshold) in [
-                (0, 1e-5, 0, 0.5),
-                (30, 1e30, 20, 0.5),
-                (30, 1e-5, 0, 0.5),
-                (30, 1e-5, 20, 0.5),
-                (30, 1e-5, 0, 0.0),
-            ] {
-                let p = Params {
-                    model,
-                    max_newton,
-                    test_fdr: threshold,
-                    ..Params::default()
-                };
-                let (x, dim) = build_matrix_fit(&ds, &rows, &p);
-                let mut w0 = initial_direction(&x, dim, &ds.labels, &rows, &p);
-                w0[dim - 1] = -0.0;
-                let hp = Hp {
-                    alpha: 1.0,
-                    beta: 4.0,
-                    maxiter: 10,
-                    subset,
-                    tolerance,
-                };
-                let mut reused_rng = Rng(71);
-                let mut fresh_rng = Rng(71);
-                let reused = train_fold_with_reuse::<true>(
-                    &x,
-                    dim,
-                    &ds.labels,
-                    &rows,
-                    &w0,
-                    &p,
-                    &mut reused_rng,
-                    hp,
-                    93,
-                    None,
-                );
-                let fresh = train_fold_with_reuse::<false>(
-                    &x,
-                    dim,
-                    &ds.labels,
-                    &rows,
-                    &w0,
-                    &p,
-                    &mut fresh_rng,
-                    hp,
-                    93,
-                    None,
-                );
-                assert_eq!(reused_rng.0, fresh_rng.0);
-                let mut a = vec![0.0; rows.len()];
-                let mut b = a.clone();
-                reused.score_rows(&x, dim, &rows, &mut a);
-                fresh.score_rows(&x, dim, &rows, &mut b);
-                assert!(a.iter().zip(&b).all(|(a, b)| a.to_bits() == b.to_bits()));
-            }
+        for (max_newton, tolerance, subset, threshold) in [
+            (0, 1e-5, 0, 0.5),
+            (30, 1e30, 20, 0.5),
+            (30, 1e-5, 0, 0.5),
+            (30, 1e-5, 20, 0.5),
+            (30, 1e-5, 0, 0.0),
+        ] {
+            let p = Params {
+                max_newton,
+                test_fdr: threshold,
+                ..Params::default()
+            };
+            let (x, dim) = build_matrix_fit(&ds, &rows, &p);
+            let mut w0 = initial_direction(&x, dim, &ds.labels, &rows, &p);
+            w0[dim - 1] = -0.0;
+            let hp = Hp {
+                alpha: 1.0,
+                beta: 4.0,
+                maxiter: 10,
+                subset,
+                tolerance,
+            };
+            let mut reused_rng = Rng(71);
+            let mut fresh_rng = Rng(71);
+            let reused = train_fold_with_reuse::<true>(
+                &x,
+                dim,
+                &ds.labels,
+                &rows,
+                &w0,
+                &p,
+                &mut reused_rng,
+                hp,
+                None,
+            );
+            let fresh = train_fold_with_reuse::<false>(
+                &x,
+                dim,
+                &ds.labels,
+                &rows,
+                &w0,
+                &p,
+                &mut fresh_rng,
+                hp,
+                None,
+            );
+            assert_eq!(reused_rng.0, fresh_rng.0);
+            let mut a = vec![0.0; rows.len()];
+            let mut b = a.clone();
+            reused.score_rows(&x, dim, &rows, &mut a);
+            fresh.score_rows(&x, dim, &rows, &mut b);
+            assert!(a.iter().zip(&b).all(|(a, b)| a.to_bits() == b.to_bits()));
         }
     }
 
@@ -1931,7 +1839,7 @@ mod tests {
         };
         let weights = |ds: &Dataset, setup: &FoldSetup| -> Vec<f64> {
             let mut rng = Rng(setup.seed);
-            match train_fold(
+            train_fold(
                 &setup.x,
                 setup.dim,
                 &ds.labels,
@@ -1940,12 +1848,9 @@ mod tests {
                 &params,
                 &mut rng,
                 hp,
-                setup.seed ^ 0xD1B5_4A32_D192_ED03,
                 None,
-            ) {
-                FoldModel::Svm(w) => w,
-                FoldModel::Mlp(_) => unreachable!(),
-            }
+            )
+            .weights
         };
         assert_eq!(
             weights(&corrupted, &perturbed),
@@ -2036,7 +1941,6 @@ mod tests {
                 &params,
                 &mut rng,
                 hp,
-                setup.seed ^ 0xD1B5_4A32_D192_ED03,
                 None,
             );
             let mut raw = vec![0.0; setup.test_rows.len()];

@@ -49,7 +49,7 @@ The repeatable acceptance command for the current checkout is:
 python3 refactor/verify_baseline.py
 ```
 
-It builds the release binary, runs the release test suite and six portable
+It builds the release binary, runs the release test suite and five portable
 shell gates, compares all fixed/selected/ensemble TSVs by size and SHA-256, and
 reruns the frozen adversarial driver plus its standalone probes. Temporary
 outputs are kept outside the worktree and removed after the check.

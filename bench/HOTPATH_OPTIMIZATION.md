@@ -147,16 +147,16 @@ and after training, the next deterministic scoring call must return the same
 score bits. Therefore its score order, q-value decisions, and positive mask are
 unchanged. Retaining scores and mask is exact. This does not use tolerance-based
 equality. Training, positive selection, subsampling, RNG draws, and iteration
-count must still run exactly as before. A changed weight invalidates reuse;
-MLP training is conservatively always invalidated. If no training occurs, the
-model and retained results remain valid without a weight comparison.
+count must still run exactly as before. A changed weight invalidates reuse. If
+no training occurs, the model and retained results remain valid without a
+weight comparison.
 
 **Accepted.** N=4 pairs: 15.033 → 14.963, 15.068 → 14.927,
 15.096 → 14.948 s (median improvement 0.79%, all three pairs improve).
 Largest-file five-repeat medians are flat at 1.517 s. Frozen bytes and all
 corpus hashes match. Tests compare forced recomputation against reuse, including
 final score bits and RNG state, with subsampling, ordinary/zero updates,
-immediate convergence, empty positives, signed-zero initialization, and MLP.
+immediate convergence, empty positives, and signed-zero initialization.
 
 ## 4. Finite numeric comparator — equivalence argument
 
@@ -242,7 +242,7 @@ The extra scratch storage and changed sort layout are not retained.
 ## Final validation and reproduction
 
 `python3 refactor/verify_baseline.py` passes the complete release all-targets
-suite, all six portable shell gates, frozen-output comparisons, the structural
+suite, all five portable shell gates, frozen-output comparisons, the structural
 adversarial driver, and the independent arithmetic and protein probes.
 `cargo fmt --all -- --check`, all-target/all-feature Clippy with warnings denied,
 and all-feature rustdoc with warnings denied also pass. The only lint repair was

@@ -64,10 +64,6 @@ pub fn validate_analysis_args(args: &[String]) -> Result<()> {
         "--null-target-win-prob",
         "--model",
         "--rescore-model",
-        "--mlp-hidden",
-        "--mlp-epochs",
-        "--mlp-learning-rate",
-        "--mlp-l2",
         "--svm-tolerance",
     ];
     let mut i = 0;
@@ -88,11 +84,9 @@ pub fn validate_analysis_args(args: &[String]) -> Result<()> {
             let v = &args[i + 1];
             let valid = match args[i].as_str() {
                 "--profile" => matches!(v.as_str(), "fast" | "balanced" | "canonical"),
-                "--model" | "--rescore-model" => matches!(v.as_str(), "svm" | "linear" | "mlp"),
+                "--model" | "--rescore-model" => matches!(v.as_str(), "svm" | "linear"),
                 "--seed" | "--subset-max-train" => v.parse::<u64>().is_ok(),
-                "--maxiter" | "--num-threads" | "--mlp-hidden" | "--mlp-epochs" => {
-                    v.parse::<usize>().is_ok_and(|x| x > 0)
-                }
+                "--maxiter" | "--num-threads" => v.parse::<usize>().is_ok_and(|x| x > 0),
                 _ => v.parse::<f64>().is_ok_and(|x| x.is_finite()),
             };
             if !valid {

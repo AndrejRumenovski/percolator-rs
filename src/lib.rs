@@ -4,7 +4,6 @@ pub mod benchmark_comparison;
 pub mod benchmark_manifest;
 pub mod benchmark_result;
 pub mod competition;
-pub mod mlp;
 pub mod output;
 pub mod peptide;
 pub mod percolator;

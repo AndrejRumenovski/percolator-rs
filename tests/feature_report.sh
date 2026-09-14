@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Checks the linear-SVM explanation report is complete, deterministic, and
-# rejects a nonlinear model whose feature weights would be misleading.
+# Checks the linear-SVM explanation report is complete and deterministic.
 set -u
 if [ ! -f Cargo.toml ] || [ ! -d tests ]; then
   cd "$(dirname "$0")/.." || exit 2
@@ -11,7 +10,6 @@ BIN=target/release/percolator-rs
 FIX=tests/fixtures/sample.pin
 FIRST=/tmp/percolator_feature_report_first.tsv
 SECOND=/tmp/percolator_feature_report_second.tsv
-ERR=/tmp/percolator_feature_report_mlp.err
 
 "$BIN" --canonical --seed 1 --feature-report "$FIRST" "$FIX" >/dev/null
 "$BIN" --canonical --seed 1 --feature-report "$SECOND" "$FIX" >/dev/null
@@ -26,18 +24,8 @@ if [ "$count" != 21 ] || [ "$baseline" != 117 ]; then
   echo "FAIL: expected 21 feature rows and q<0.01 baseline 117; got $count and ${baseline:-missing}"
   exit 1
 fi
-if "$BIN" --rescore-model mlp --feature-report "$FIRST" "$FIX" >/dev/null 2>"$ERR"; then
-  echo "FAIL: nonlinear MLP feature report unexpectedly succeeded"
-  exit 1
-fi
-if ! grep -q 'feature-report currently supports only' "$ERR"; then
-  echo "FAIL: missing clear MLP feature-report error"
-  exit 1
-fi
-
 echo "== percolator-rs feature-report regression gate =="
 echo "  PASS  feature rows             $count"
 echo "  PASS  baseline PSM q<0.01      $baseline"
 echo "  PASS  deterministic report     byte-identical"
-echo "  PASS  MLP rejection            clear unsupported-model error"
 echo "ALL CHECKS PASSED"

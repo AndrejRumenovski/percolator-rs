@@ -143,7 +143,6 @@ ignored, so check the startup configuration line and requested output files care
 | Option | Default | Meaning |
 |---|---:|---|
 | `--seed N` | `1` | Fold and deterministic tie seed |
-| `--rescore-model svm\|mlp`, `--model ...` | `svm` | Fold-local learner; `linear` and `neural` are aliases |
 | `--maxiter N` | profile value | Semi-supervised iterations |
 | `--subset-max-train N`, `-N N` | `0` | Maximum training rows per fold; `0` uses all rows |
 | `--num-threads N` | `1` | `1` runs folds serially; values above `1` enable fold/grid parallelism |
@@ -179,24 +178,11 @@ The equivalent long form is `--profile fast|balanced|canonical`.
 | `--auto-model`, `--nested-select` | off | Nested selection of SVM scale, class weights, feature count, and tolerance |
 | `--no-auto-model` | on | Disable automatic model selection |
 
-`--auto-model` supports only SVM and cannot be combined with `--select-c` or explicit
-`--cpos`/`--cneg`. The feature report is also SVM-only. It records mean out-of-fold raw
+`--auto-model` cannot be combined with `--select-c` or explicit `--cpos`/`--cneg`. The feature
+report records mean out-of-fold raw
 coefficients, standardized effects, fold variability, label correlation, selection frequency, and
 held-out permutation importance with fitted models held fixed. See
 [`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md) for the selection study.
-
-### Experimental MLP options
-
-| Option | Default | Constraint |
-|---|---:|---|
-| `--mlp-hidden N` | `8` | `1..256` hidden units |
-| `--mlp-epochs N` | `10` | `1..1000` epochs per semi-supervised iteration |
-| `--mlp-learning-rate F` | `0.02` | Finite and positive |
-| `--mlp-l2 F` | `0` | Finite and non-negative |
-
-The MLP is a deterministic one-hidden-layer experimental learner using the same outer folds and
-reported-list statistics as the SVM. It did not improve aggregate yield in the recorded evaluation;
-the SVM remains the default. See [`bench/DEEP_LEARNING.md`](bench/DEEP_LEARNING.md).
 
 ### Multiple inputs and biological features
 
@@ -264,7 +250,7 @@ latest causal experiment is the
   fitted inside the relevant training partition.
 - Protein grouping by identical, class-separated peptide evidence passed adversarial graph and
   insertion-order tests in isolation.
-- The current behavior-preserving architecture refactor passes 138 release tests, six portable
+- The current behavior-preserving architecture refactor passes the release test suite, five portable
   regression scripts, frozen adversarial probes, and byte-for-byte output comparison against its
   recorded baseline.
 
@@ -379,7 +365,7 @@ main.rs + cli.rs
        -> peptide.rs
        -> percolator.rs
             -> preprocessing.rs
-            -> svm.rs / mlp.rs / simd.rs / stats.rs / rt.rs
+            -> svm.rs / simd.rs / stats.rs / rt.rs
        -> protein.rs / protein_bayes.rs
   -> output.rs
 ```
@@ -409,12 +395,11 @@ cargo test --release --all-targets --locked
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features --locked
 ```
 
-Six portable shell gates cover canonical regression, the MLP, nested selection, feature reports,
-ensembles, and protein inference:
+Five portable shell gates cover canonical regression, nested selection, feature reports, ensembles,
+and protein inference:
 
 ```bash
 bash tests/regression.sh
-bash tests/model_regression.sh
 bash tests/selection_regression.sh
 bash tests/feature_report.sh
 bash tests/ensemble_regression.sh
@@ -429,7 +414,7 @@ with the frozen baseline, and reruns the recorded adversarial probes:
 python3 refactor/verify_baseline.py
 ```
 
-GitHub Actions runs the release build/tests, all six shell gates, and benchmark-tool unit tests.
+GitHub Actions runs the release build/tests, all five shell gates, and benchmark-tool unit tests.
 The full 2.3 GB performance gate is manual because it requires a self-hosted runner with PXD032157
 and the C++ reference binary.
 

@@ -15,7 +15,7 @@ main.rs + cli.rs
        -> peptide.rs       identity, representatives, q/PEP, mapping union
        -> percolator.rs    CV topology, selection, learner orchestration
             -> preprocessing.rs  fold-local normalization and RT matrices
-            -> svm.rs / mlp.rs / simd.rs / stats.rs / rt.rs
+            -> svm.rs / simd.rs / stats.rs / rt.rs
        -> protein.rs / protein_bayes.rs
   -> output.rs
        byte-compatible PSM/peptide/protein/feature serialization
@@ -31,18 +31,17 @@ Fold construction, fold setup, legacy C selection, and nested selection remain
 together in `percolator.rs`. They share partition-specific state and ordering;
 splitting them further would make the held-out/training data flow less visible.
 Likewise, compact `i8` labels were not replaced with wrapper types inside hot
-loops, and the statistics, SVM/MLP mathematics, PIN layout/parser, and Bayesian
+loops, and the statistics, SVM mathematics, PIN layout/parser, and Bayesian
 message schedule were not rewritten.
 
 ## Acceptance evidence
 
-- `cargo test --release --all-targets --locked`: 138 tests pass (126 frozen
-  tests plus 12 new CLI, peptide, and pipeline characterizations).
+- `cargo test --release --all-targets --locked` passes.
 - `cargo fmt --all -- --check` passes.
 - `cargo clippy --all-targets --all-features --locked -- -D warnings` passes.
 - `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features --locked`
   passes.
-- All six portable regression scripts pass.
+- All five portable regression scripts pass.
 - Fixed serial, fixed parallel, selected-C, and ensemble TSV files match the
   frozen sizes and SHA-256 hashes exactly, including protein output where
   supported.

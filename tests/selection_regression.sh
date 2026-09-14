@@ -34,11 +34,6 @@ if "$BIN" --auto-model --select-c "$FIX" >/dev/null 2>&1; then
   echo "FAIL: --auto-model accepted conflicting --select-c"
   exit 1
 fi
-if "$BIN" --auto-model --rescore-model mlp "$FIX" >/dev/null 2>&1; then
-  echo "FAIL: --auto-model accepted unsupported MLP learner"
-  exit 1
-fi
-
 folds=$(sed -n '/^  fold /p' "$TMP_SELECTION_REGRESSION/serial.log" | wc -l)
 psm=$(sed -n 's/.*target PSMs q<0.01: \([0-9]*\).*/\1/p' "$TMP_SELECTION_REGRESSION/serial.log")
 # q<0.05 at peptide level: see tests/expected.env.
