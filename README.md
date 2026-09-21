@@ -3,41 +3,74 @@
 [![CI](https://github.com/AndrejRumenovski/percolator-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/AndrejRumenovski/percolator-rs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A from-scratch Rust implementation of the
-[Percolator](https://github.com/percolator/percolator) semi-supervised peptide-spectrum match (PSM)
-rescoring workflow. The project focuses on deterministic execution, fold-isolated training,
-adversarial validation, and high-throughput processing of Percolator input (`.pin`) files.
+**Semi-supervised peptide identification in Rust, with reproducible validation and performance analysis.**
 
-> [!WARNING]
-> **Research status (2026-09-04):** this is experimental research software. The current build is
-> not scientifically defensible as an unqualified source of calibrated PSM, PEP, or protein-level
-> confidence. Its direct target-decoy q-value arithmetic is well tested, but calibration depends on
-> assumptions that fail in available signal-present experiments, and several known implementation
-> defects remain. Read [Scientific status](#scientific-status) before interpreting q-values or PEPs.
+`percolator-rs` is an independent Rust implementation of the
+[Percolator](https://github.com/percolator/percolator) peptide-spectrum match (PSM) rescoring workflow.
+It reads candidate peptide identifications and numeric search-engine features from Percolator input
+(`.pin`) files, learns a linear support vector machine (SVM), and produces ranked PSM and peptide
+tables with target-decoy q-values and posterior error probability (PEP) estimates. Optional modules
+support protein inference, multiple search engines, and data acquisition from the PRIDE Archive.
+
+The project combines algorithm implementation, systems engineering, and empirical evaluation.
+Its central questions are whether the workflow can be implemented efficiently and reproducibly,
+whether training remains isolated from held-out data, and under which experimental conditions its
+reported confidence estimates agree with observed errors. The methodological foundation is
+[Käll et al. (2007)](https://www.nature.com/articles/nmeth1113).
+
+## Project objectives
+
+- **Implement the rescoring workflow:** semi-supervised linear-SVM training, three-fold
+  cross-validation, precursor competition, and peptide-level reporting.
+- **Make computations reproducible:** seeded fold assignment and tie handling, explicit input and
+  output contracts, and regression comparisons against recorded outputs.
+- **Evaluate statistical behavior:** independent q-value oracles, tests for information leakage,
+  entrapment experiments, and protein-truth benchmarks.
+- **Measure computational cost:** memory-mapped input, vectorized numerical kernels, and recorded
+  runtime and memory measurements on public proteomics data.
+- **Preserve experimental provenance:** dataset manifests, checksums, parameter records, and
+  reproducible analysis tools.
+
+The repository includes the implementation, evaluation scripts, benchmark reports, and documented
+limitations. [Scientific status](#scientific-status) distinguishes computational correctness from
+empirical calibration; [Performance](#performance) describes a recorded benchmark and its conditions.
+
+**Contents:** [Quick start](#quick-start) · [Input and output](#input-and-output-contract) ·
+[Method](#how-the-canonical-workflow-works) · [Command-line reference](#command-line-reference) ·
+[Scientific status](#scientific-status) · [Performance](#performance) ·
+[Architecture](#architecture) · [Testing](#testing-and-development) ·
+[PRIDE Archive](#pride-archive-integration) · [Documentation](#documentation-map) ·
+[References](#references)
 
 ## Quick start
 
-The project requires a stable Rust toolchain. Release builds target `x86-64-v3` by default (roughly
-Haswell-era Intel or Zen-era AMD and newer):
+Run the following commands from the repository root with a stable Rust toolchain installed.
+The default build configuration targets `x86-64-v3` (AVX2/FMA-capable x86-64 processors, including
+Intel Haswell and AMD Zen or newer):
 
 ```bash
 cargo build --release --locked
 ```
 
-Run the canonical linear-SVM workflow on one concatenated target-decoy PIN:
+Run the canonical linear-SVM workflow on the included fixture:
 
 ```bash
+mkdir -p target/readme-example
 ./target/release/percolator-rs \
   --seed 1 \
-  --results-psms target.psms.tsv \
-  --decoy-results-psms decoy.psms.tsv \
-  --results-peptides target.peptides.tsv \
-  --decoy-results-peptides decoy.peptides.tsv \
-  input.pin
+  --results-psms target/readme-example/target.psms.tsv \
+  --decoy-results-psms target/readme-example/decoy.psms.tsv \
+  --results-peptides target/readme-example/target.peptides.tsv \
+  --decoy-results-peptides target/readme-example/decoy.peptides.tsv \
+  tests/fixtures/sample.pin
 ```
 
-Output files are optional and are written only when their corresponding flags are supplied. Progress,
-configuration, timing, and q<0.01 yield summaries are printed to standard error.
+This example writes four tab-delimited result files under `target/readme-example/`. The fixture
+provides a small installation and workflow check. To analyze another dataset, replace
+`tests/fixtures/sample.pin` with a compatible concatenated target-decoy PIN and choose output paths.
+
+Output files are optional and are written only when their corresponding flags are supplied.
+Configuration, progress, timing, and identification counts at `q < 0.01` are printed to standard error.
 
 To tune the binary for the build host instead of the portable project baseline:
 
@@ -95,6 +128,10 @@ not `q <= 0.01`.
 
 ## How the canonical workflow works
 
+Targets represent candidate matches to the biological sequence database; decoys provide negative
+examples for training and target-decoy competition (TDC). The canonical profile uses all available
+training rows and ten semi-supervised iterations.
+
 1. **Parse the PIN.** Input is memory-mapped, metadata is separated from numeric features, and
    malformed or non-finite required values are rejected.
 2. **Build three outer folds.** Candidates from the same `(source, ScanNr)` group remain together.
@@ -107,12 +144,13 @@ not `q <= 0.01`.
    standardized against their training-decoy distribution before being pooled.
 6. **Compete candidates.** By default, only the highest rescored candidate for each precursor is
    reported. Exact score ties use a deterministic seed-dependent draw over the emitted tied rows.
-7. **Recompute reported-list statistics.** The TDC+ estimate uses
+7. **Recompute reported-list statistics.** The TDC+ false discovery rate (FDR) estimate uses
    `(D + 1) * p / (1 - p) / max(T, 1)`, evaluates exact-score tie groups together, and applies a
-   reverse cumulative minimum. `p` is `--null-target-win-prob`, defaulting to `0.5`.
+   reverse cumulative minimum to obtain q-values. `T` and `D` are cumulative target and decoy
+   counts; `p` is `--null-target-win-prob`, defaulting to `0.5`.
 8. **Estimate PEPs.** PEPs are derived from increments of the cumulative false-discovery estimate and
-   monotonized with PAVA. They are deterministic target-list scores, not validated posterior
-   probabilities.
+   made monotonic with the pool-adjacent-violators algorithm (PAVA). Their empirical calibration is
+   evaluated separately in [Scientific status](#scientific-status).
 9. **Collapse higher levels.** Peptide reporting keeps the best PSM per `(label, modified core
    peptide)`. Optional protein inference then groups proteins by identical observed peptide evidence
    and applies either picked target-decoy competition or a Fido-style Bayesian model.
@@ -122,9 +160,10 @@ and build. Serial and fold-parallel output is byte-identical in the regression s
 
 ## Command-line reference
 
-The executable currently has a small hand-written parser rather than generated `--help`; invoking it
-without an input prints a short usage and input-contract summary. Unknown option names are currently
-ignored, so check the startup configuration line and requested output files carefully.
+The rescoring executable uses a hand-written argument parser; invoking it without an input prints
+a short usage and input-contract summary. Unknown option names are currently ignored, so verify
+the startup configuration and requested output files. The separate `pride` subcommand provides
+`--help`.
 
 ### Output options
 
@@ -162,7 +201,7 @@ profile regardless of argument order.
 |---|---:|---:|---|---|
 | `--fast` | 20,000 | 5 | off | Quick QA and development |
 | `--balanced` | 40,000 | 10 | off | Reduced-cost exploratory runs |
-| `--canonical` | all | 10 | off | Default full-sensitivity workflow |
+| `--canonical` | all | 10 | off | Default workflow using all training rows |
 
 The equivalent long form is `--profile fast|balanced|canonical`.
 
@@ -179,9 +218,9 @@ The equivalent long form is `--profile fast|balanced|canonical`.
 | `--no-auto-model` | on | Disable automatic model selection |
 
 `--auto-model` cannot be combined with `--select-c` or explicit `--cpos`/`--cneg`. The feature
-report records mean out-of-fold raw
-coefficients, standardized effects, fold variability, label correlation, selection frequency, and
-held-out permutation importance with fitted models held fixed. See
+report records mean out-of-fold raw coefficients, standardized effects, fold variability,
+label correlation, selection frequency, and held-out permutation importance with fitted models
+held fixed. See
 [`bench/AUTOMATIC_SELECTION.md`](bench/AUTOMATIC_SELECTION.md) for the selection study.
 
 ### Multiple inputs and biological features
@@ -215,8 +254,8 @@ Protein inference runs only when a protein output path is requested.
 | `--protein-max-iter N` | `200` | Bayesian message-passing iteration limit |
 
 Bayesian inference is exact for tree-structured connected components and uses deterministic damped
-loopy belief propagation for cyclic components. Both protein methods are experimental and currently
-fail available protein-truth calibration requirements.
+loopy belief propagation for cyclic components. Both protein methods remain experimental;
+their protein-truth calibration results are summarized in [Scientific status](#scientific-status).
 
 ### Profiling build
 
@@ -232,14 +271,19 @@ are rejected by a normal build. Reproduction tooling and interpretation guidance
 
 ## Scientific status
 
-The full validation record is intentionally cumulative: failed implementations and negative results
-remain in the repository rather than being rewritten after repairs. Start with
-[`validation/README.md`](validation/README.md). The most recent general audit is
-[`validation/FINAL_REPAIR_SCIENTIFIC_AUDIT.md`](validation/FINAL_REPAIR_SCIENTIFIC_AUDIT.md), and the
-latest causal experiment is the
-[`homology-depleted entrapment report`](validation/homology_depleted_entrapment/FINAL_REPORT.md).
+Evaluation covers numerical correctness, training isolation, reproducibility, and empirical
+calibration. These are distinct claims: agreement with a q-value formula establishes correct
+arithmetic, while calibrated confidence also depends on the candidate-generation process and
+target-decoy assumptions.
 
-### What has strong evidence
+The cumulative [validation record](validation/README.md) retains both successful tests and negative
+results. The [general scientific audit](validation/FINAL_REPAIR_SCIENTIFIC_AUDIT.md) documents
+implementation-level findings, and the
+[homology-depleted entrapment report](validation/homology_depleted_entrapment/FINAL_REPORT.md)
+examines a biological source of calibration error. Results below refer to the revisions and
+experimental designs recorded in those reports.
+
+### Verified computational properties
 
 - Direct reported-list TDC+ q-value arithmetic matched an independent oracle in 40,928 exhaustive
   cases, plus 327,424 optimized count/mask comparisons. Exact ties, strict thresholds, the `+1`
@@ -250,14 +294,14 @@ latest causal experiment is the
   fitted inside the relevant training partition.
 - Protein grouping by identical, class-separated peptide evidence passed adversarial graph and
   insertion-order tests in isolation.
-- The current behavior-preserving architecture refactor passes the release test suite, five portable
-  regression scripts, frozen adversarial probes, and byte-for-byte output comparison against its
-  recorded baseline.
+- The recorded architecture refactor passed the release test suite, five portable regression
+  scripts, frozen adversarial probes, and byte-for-byte output comparison against its recorded
+  baseline.
 
-### Known implementation defects
+### Implementation limitations
 
-These are present in the current behavior baseline and are not repaired by the architectural
-refactor:
+The scientific audit identified the following limitations in the recorded behavior baseline.
+The architecture refactor preserved that baseline:
 
 1. Exact PSM ties are sampled over emitted rows. Duplicating one scientific candidate therefore
    changes its label's win probability; a minimized null fixture changed from 0 to 101 false q<0.01
@@ -275,13 +319,17 @@ refactor:
 
 The compact CLI also ignores unknown options, as noted in the command reference.
 
-### Calibration evidence
+### Empirical calibration
+
+False discovery proportion (FDP) is the observed fraction of accepted identifications that are false
+under an experiment's truth definition. The studies below compare observed or adjusted FDP with
+the reported q-value threshold and assess PEPs against known-false identifications.
 
 The predefined complete-null experiment observed no rejections in 30 runs at thresholds from 0.001
 through 0.10. That is a conservative result, but 30 dependent runs cannot establish calibration at
 small nominal FDRs and do not exercise the duplicate-candidate counterexample.
 
-In the original signal-present entrapment study, the current method's mean adjusted FDP at reported
+In the original signal-present entrapment study, the evaluated method's mean adjusted FDP at reported
 `q < 0.01` was **1.8104%**, with above-nominal FDP at all six tested thresholds. Pooled PSM PEPs were
 optimistic in every populated bin, with weighted signed and absolute calibration error of
 `+0.018685`; 217 known-false PSMs had PEP below 0.001.
@@ -295,16 +343,18 @@ strongly supported: global PEP error remained positive (`+0.01464`), some uncert
 included no improvement, and only one dataset family was tested. The experiment therefore does not
 justify a production filter or statistical correction.
 
-Protein confidence is weaker. On held-out PrEST A and B truth sets, picked-protein `q <= 0.01` had
-raw known-absent FDP of **45.92%** and **48.08%**; predefined count-adjusted FDP was **53.32%** and
-**55.78%**. Default Bayesian probabilities were also severely miscalibrated. Do not use either
-protein mode as calibrated evidence.
+On held-out PrEST A and B truth sets, picked-protein `q <= 0.01` had raw known-absent FDP of
+**45.92%** and **48.08%**; predefined count-adjusted FDP was **53.32%** and
+**55.78%**. Default Bayesian probabilities also showed substantial calibration error. These results
+leave calibrated PSM PEPs and protein-level confidence as open research problems for this
+implementation.
 
 ### Historical C++ compatibility evidence
 
-No C++ output is treated as a correctness oracle. In a historical comparison against C++ Percolator
-3.09, mean PSM-count differences at `q < 0.01` were small on single-candidate Tide and Sage PINs and
-less concordant on multi-candidate MSFragger and yeast inputs:
+Comparison with C++ Percolator assesses compatibility independently of the truth-based calibration
+studies. In a recorded comparison against version 3.09, mean PSM-count differences at `q < 0.01`
+were small on single-candidate Tide and Sage PINs, with lower discovery agreement on multi-candidate
+MSFragger and yeast inputs:
 
 | Dataset | Rust − C++ PSMs | Discovery Jaccard | Score Spearman |
 |---|---:|---:|---:|
@@ -321,9 +371,11 @@ evidence, not calibration or superiority evidence. Commands, seeds, and caveats 
 
 ## Performance
 
-The current authoritative profile used 65 Comet PINs from PXD032157: 8,639,746 PSMs in 2.295 GB.
+The recorded **2026-09-03 baseline** used 65 Comet PINs from PXD032157: 8,639,746 PSMs in 2.295 GB.
 Measurements were made on an AMD Ryzen 5 5600G (6 cores / 12 threads), Ubuntu 26.04, Rust 1.97.0,
-and the project's `x86-64-v3` release target.
+and the project's `x86-64-v3` release target. The linked
+[runtime report](bench/RUNTIME_PROFILE.md) records the measured revision and binary hashes;
+these timings describe that baseline rather than every subsequent build.
 
 | Workload | Runs | Median wall time |
 |---|---:|---:|
@@ -343,11 +395,10 @@ provide more than three-way fold concurrency for the canonical model. Parallel f
 three design matrices at once; prefer the default one-thread mode when processing many files with
 external process-level concurrency.
 
-Fresh profiling attributes 40.51% of sequential process time to q-value/count/mask work and 29.24%
-inclusively to initial-direction selection. The next justified optimization target is exact-order
-reuse and q-value sorting/scanning; solver bookkeeping and output formatting are no longer material
-hotspots. See [`bench/RUNTIME_PROFILE.md`](bench/RUNTIME_PROFILE.md) for hashes, acquisition tools,
-stage tables, overhead measurements, and the optimization decision.
+That profile attributed 40.51% of sequential process time to q-value/count/mask work and 29.24%
+inclusively to initial-direction selection, motivating investigation of score-order reuse and
+q-value sorting/scanning. See [`bench/RUNTIME_PROFILE.md`](bench/RUNTIME_PROFILE.md) for acquisition
+tools, stage tables, and instrumentation overhead measurements.
 
 Historical Rust-versus-C++ throughput and memory measurements are preserved in
 [`bench/RESULTS.md`](bench/RESULTS.md) and [`bench/REPRODUCTION.md`](bench/REPRODUCTION.md). They use
@@ -418,6 +469,21 @@ GitHub Actions runs the release build/tests, all five shell gates, and benchmark
 The full 2.3 GB performance gate is manual because it requires a self-hosted runner with PXD032157
 and the C++ reference binary.
 
+## PRIDE Archive integration
+
+`percolator-rs pride` discovers public PRIDE projects, inspects storage requirements, downloads and
+verifies selected files, and runs the rescoring pipeline on validated PINs. The default large-data
+cache ceiling is 50 GB. Ephemeral processing and `pride cache prune --all-evictable` reclaim
+downloaded data while retaining manifests, provenance, and results.
+
+```bash
+./target/release/percolator-rs pride --help
+```
+
+See [PRIDE usage and storage behavior](docs/PRIDE.md) and the
+[real-project demonstration](docs/PRIDE-demonstration.md) for a complete acquisition, analysis,
+and cleanup example.
+
 ## Documentation map
 
 - [`validation/README.md`](validation/README.md) — ordered scientific audit and repair history.
@@ -426,17 +492,24 @@ and the C++ reference binary.
 - [`validation/homology_depleted_entrapment/FINAL_REPORT.md`](validation/homology_depleted_entrapment/FINAL_REPORT.md)
   — latest preregistered causal validation.
 - [`bench/REPRODUCTION.md`](bench/REPRODUCTION.md) — benchmark commands and result provenance.
-- [`bench/RUNTIME_PROFILE.md`](bench/RUNTIME_PROFILE.md) — latest authoritative runtime profile.
+- [`bench/RUNTIME_PROFILE.md`](bench/RUNTIME_PROFILE.md) — 2026-09-03 runtime baseline and profiling method.
 - [`bench/ADVANCED_FEATURES.md`](bench/ADVANCED_FEATURES.md) — join, RT, threading, and protein feature
   evaluations.
 - [`refactor/README.md`](refactor/README.md) — behavior-preserving architecture record and verifier.
+- [`docs/PRIDE.md`](docs/PRIDE.md) — public dataset acquisition, provenance, and cache management.
+
+## References
+
+Käll, L., Canterbury, J. D., Weston, J., Noble, W. S., and MacCoss, M. J. (2007).
+Semi-supervised learning for peptide identification from shotgun proteomics datasets.
+*Nature Methods*, **4**, 923–925. [doi:10.1038/nmeth1113](https://www.nature.com/articles/nmeth1113).
+
+The [upstream Percolator project](https://github.com/percolator/percolator) provides the reference
+implementation of the original method. `percolator-rs` is an independent implementation with its
+own statistical reporting choices and evaluation record. When describing experiments using this
+repository, record the Git revision, input identities, random seed, build configuration, and
+complete command line alongside the results.
 
 ## License
 
 Licensed under the [MIT License](LICENSE).
-
-## PRIDE Archive working cache
-
-`percolator-rs pride` discovers public PRIDE projects, inspects storage costs, downloads and verifies selected files, and runs the existing analysis on validated PINs. The default large-data cache ceiling is 50 GB; ephemeral processing and `pride cache prune --all-evictable` reclaim recoverable data while preserving manifests, provenance and results.
-
-See [PRIDE usage and storage guarantees](docs/PRIDE.md) and the [real-project demonstration](docs/PRIDE-demonstration.md). Start with `percolator-rs pride --help`.
