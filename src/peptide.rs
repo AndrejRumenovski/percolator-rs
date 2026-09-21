@@ -93,14 +93,14 @@ pub fn score(
 }
 
 /// Build one protein-inference entry per reported peptide while retaining the
-/// complete peptide-to-protein association observed across repeated PSM rows.
+/// complete peptide-to-protein association observed across all input PSM rows.
 ///
 /// Peptide score and PEP still come from the existing best-PSM selection. The
 /// protein mapping is a property of the peptide identity, however, and must not
 /// depend on which equal-scoring occurrence happened to be encountered first.
 pub fn protein_entries(
     ds: &pin::Dataset,
-    reported_indices: &[usize],
+    _reported_indices: &[usize],
     peptides: &Scores,
 ) -> Vec<(f64, f64, String)> {
     use std::collections::{BTreeMap, BTreeSet};
@@ -111,17 +111,23 @@ pub fn protein_entries(
     #[cfg(feature = "profiling")]
     let mapping_union_start = std::time::Instant::now();
     let mut proteins_by_peptide: BTreeMap<(i8, &str), BTreeSet<&str>> = BTreeMap::new();
-    for &index in reported_indices {
+    for &index in &peptides.indices {
+        proteins_by_peptide
+            .entry((ds.labels[index], core(&ds.peptide[index])))
+            .or_default();
+    }
+    for index in 0..ds.n_psm {
         let key = (ds.labels[index], core(&ds.peptide[index]));
-        let proteins = proteins_by_peptide.entry(key).or_default();
-        proteins.extend(protein::split_proteins(&ds.proteins[index]));
+        if let Some(proteins) = proteins_by_peptide.get_mut(&key) {
+            proteins.extend(protein::split_proteins(&ds.proteins[index]));
+        }
     }
     #[cfg(feature = "profiling")]
     crate::profile::record(
         "peptide",
         "peptide_mapping_union",
         mapping_union_start.elapsed(),
-        Some(reported_indices.len() as u64),
+        Some(ds.n_psm as u64),
         None,
     );
 

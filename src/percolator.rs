@@ -114,6 +114,82 @@ fn score_all(x: &[f64], dim: usize, w: &[f64], rows: &[usize], out: &mut [f64]) 
     }
 }
 
+// Start with every row pending; bits beyond the final row stay clear.
+fn reset_pending_scores(pending: &mut [u64], rows: usize) {
+    debug_assert_eq!(pending.len(), rows.div_ceil(64));
+    pending.fill(u64::MAX);
+    let tail = rows % 64;
+    if tail != 0 {
+        *pending.last_mut().expect("nonempty partial word") = (1_u64 << tail) - 1;
+    }
+}
+
+// Clear bits identify scores computed by the final SVM objective at these
+// exact weight bits. Visit only pending rows, in increasing row-index order.
+fn score_uncached_rows(
+    x: &[f64],
+    dim: usize,
+    w: &[f64],
+    rows: &[usize],
+    pending: &[u64],
+    out: &mut [f64],
+) {
+    debug_assert_eq!(pending.len(), rows.len().div_ceil(64));
+    debug_assert_eq!(out.len(), rows.len());
+    #[cfg(feature = "profiling")]
+    let scoring_start = std::time::Instant::now();
+    #[cfg(feature = "profiling")]
+    let mut scored = 0_usize;
+    if dim == 22 {
+        let weights = &w[..22];
+        for (word, &pending_bits) in pending.iter().enumerate() {
+            let mut bits = pending_bits;
+            while bits != 0 {
+                let k = word * 64 + bits.trailing_zeros() as usize;
+                let row = rows[k];
+                out[k] = crate::simd::dot_22(weights, &x[row * 22..(row + 1) * 22]);
+                bits &= bits - 1;
+                #[cfg(feature = "profiling")]
+                {
+                    scored += 1;
+                }
+            }
+        }
+    } else {
+        let weights = &w[..dim];
+        for (word, &pending_bits) in pending.iter().enumerate() {
+            let mut bits = pending_bits;
+            while bits != 0 {
+                let k = word * 64 + bits.trailing_zeros() as usize;
+                let row = rows[k];
+                out[k] = crate::simd::dot(weights, &x[row * dim..(row + 1) * dim]);
+                bits &= bits - 1;
+                #[cfg(feature = "profiling")]
+                {
+                    scored += 1;
+                }
+            }
+        }
+    }
+    #[cfg(feature = "profiling")]
+    {
+        crate::profile::record(
+            "scoring",
+            "model_score_rows",
+            scoring_start.elapsed(),
+            Some(scored as u64),
+            None,
+        );
+        crate::profile::record(
+            "scoring",
+            "raw_score_reuse",
+            std::time::Duration::ZERO,
+            Some((rows.len() - scored) as u64),
+            None,
+        );
+    }
+}
+
 struct FoldModel {
     weights: Vec<f64>,
 }
@@ -302,6 +378,13 @@ fn train_fold_with_reuse<const REUSE: bool>(
     let mut packed_x = Vec::new();
     let mut scores_current = false;
     let mut previous_weights = Vec::new();
+    let partial_cache_enabled = REUSE && feature_mask.is_none() && hp.maxiter > 1;
+    let mut pending_scores = if partial_cache_enabled {
+        vec![0_u64; train_rows.len().div_ceil(64)]
+    } else {
+        Vec::new()
+    };
+    let mut partial_scores_current = false;
     #[cfg(feature = "profiling")]
     {
         crate::profile::record(
@@ -313,10 +396,11 @@ fn train_fold_with_reuse<const REUSE: bool>(
         );
         crate::profile::allocation_site(
             "percolator::train_fold persistent buffers",
-            3,
+            3 + u64::from(!pending_scores.is_empty()),
             (std::mem::size_of_val(w0)
                 + scores.capacity() * std::mem::size_of::<f64>()
-                + sub_labels.capacity() * std::mem::size_of::<i8>()) as u64,
+                + sub_labels.capacity() * std::mem::size_of::<i8>()
+                + pending_scores.capacity() * std::mem::size_of::<u64>()) as u64,
         );
     }
 
@@ -333,7 +417,19 @@ fn train_fold_with_reuse<const REUSE: bool>(
         #[cfg(feature = "profiling")]
         let _iteration = crate::profile::Scope::new("semi_supervised_iteration", "iteration_total");
         if !REUSE || !scores_current {
-            model.score_rows(x, dim, train_rows, &mut scores);
+            if REUSE && partial_scores_current {
+                score_uncached_rows(
+                    x,
+                    dim,
+                    &model.weights,
+                    train_rows,
+                    &pending_scores,
+                    &mut scores,
+                );
+            } else {
+                model.score_rows(x, dim, train_rows, &mut scores);
+            }
+            partial_scores_current = false;
             stats::target_mask_at_fdr_into(
                 &scores,
                 &sub_labels,
@@ -464,6 +560,21 @@ fn train_fold_with_reuse<const REUSE: bool>(
             .iter()
             .zip(weights.iter())
             .all(|(before, after)| before.to_bits() == after.to_bits());
+        partial_scores_current = false;
+        if partial_cache_enabled && !scores_current && iteration + 1 < hp.maxiter {
+            if let Some(raw_scores) = svm_workspace.final_row_scores() {
+                debug_assert_eq!(raw_scores.len(), pos.len() + neg.len());
+                reset_pending_scores(&mut pending_scores, train_rows.len());
+                // Packed SVM rows follow these post-subsampling indices.
+                // Clear a pending bit only for scores at the new weights;
+                // the accepted q-value mask is rebuilt next iteration.
+                for (&k, &score) in pos.iter().chain(&neg).zip(raw_scores) {
+                    scores[k] = score;
+                    pending_scores[k / 64] &= !(1_u64 << (k % 64));
+                }
+                partial_scores_current = true;
+            }
+        }
     }
     model
 }
@@ -1706,6 +1817,191 @@ mod tests {
             reused.score_rows(&x, dim, &rows, &mut a);
             fresh.score_rows(&x, dim, &rows, &mut b);
             assert!(a.iter().zip(&b).all(|(a, b)| a.to_bits() == b.to_bits()));
+        }
+    }
+
+    #[test]
+    fn pending_score_bitmap_reset_covers_exactly_the_rows() {
+        for rows in [0_usize, 1, 2, 63, 64, 65, 127, 128, 129] {
+            let mut pending = vec![0xaaaa_aaaa_aaaa_aaaa; rows.div_ceil(64)];
+            for _ in 0..2 {
+                reset_pending_scores(&mut pending, rows);
+                let mut visited = Vec::new();
+                for (word, &pending_bits) in pending.iter().enumerate() {
+                    let mut bits = pending_bits;
+                    while bits != 0 {
+                        visited.push(word * 64 + bits.trailing_zeros() as usize);
+                        bits &= bits - 1;
+                    }
+                }
+                assert_eq!(visited, (0..rows).collect::<Vec<_>>());
+                pending.fill(0);
+            }
+        }
+    }
+
+    #[test]
+    fn pending_score_bitmap_scores_only_selected_rows_with_exact_bits() {
+        for dim in [1, 5, 22, 23] {
+            let weights: Vec<_> = (0..dim)
+                .map(|j| [1.0, -1.0, 0.5, -0.0, 2.0][j % 5])
+                .collect();
+            for count in [0_usize, 1, 63, 64, 65, 127, 128, 129] {
+                let x: Vec<_> = (0..count * dim)
+                    .map(|index| match index % 7 {
+                        0 => 1e16,
+                        1 => -1e16,
+                        2 => f64::from_bits(1),
+                        3 => -f64::from_bits(1),
+                        4 => -0.0,
+                        _ => (index % 19) as f64 - 9.0,
+                    })
+                    .collect();
+                let rows: Vec<_> = (0..count).rev().collect();
+                let expected: Vec<f64> = rows
+                    .iter()
+                    .map(|&row| {
+                        let mut score = 0.0;
+                        for j in 0..dim {
+                            score += weights[j] * x[row * dim + j];
+                        }
+                        score
+                    })
+                    .collect();
+                for selection in 0..4 {
+                    let selected: Vec<_> = (0..count)
+                        .map(|k| match selection {
+                            0 => true,
+                            1 => false,
+                            2 => k % 3 == 1,
+                            _ => k % 64 == 0 || k % 64 == 63 || k + 1 == count,
+                        })
+                        .collect();
+                    let mut pending = vec![0; count.div_ceil(64)];
+                    reset_pending_scores(&mut pending, count);
+                    let mut mapped_rows = rows.clone();
+                    for (k, &is_pending) in selected.iter().enumerate() {
+                        if !is_pending {
+                            pending[k / 64] &= !(1_u64 << (k % 64));
+                            // A cached row must not even access its matrix row.
+                            mapped_rows[k] = usize::MAX;
+                        }
+                    }
+                    let poison: Vec<_> = (0..count + 2)
+                        .map(|k| f64::from_bits(0x7ff8_0000_0000_0000 | (k as u64 + 1)))
+                        .collect();
+                    let mut actual = poison.clone();
+                    score_uncached_rows(
+                        &x,
+                        dim,
+                        &weights,
+                        &mapped_rows,
+                        &pending,
+                        &mut actual[..count],
+                    );
+                    for k in 0..actual.len() {
+                        let wanted = if k < count && selected[k] {
+                            expected[k]
+                        } else {
+                            poison[k]
+                        };
+                        assert_eq!(
+                            actual[k].to_bits(),
+                            wanted.to_bits(),
+                            "dim={dim}, rows={count}, selection={selection}, slot={k}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn partial_score_reuse_preserves_weights_scores_and_rng_across_training_modes() {
+        let ds = selection_fixture();
+        let rows: Vec<_> = (0..ds.n_psm).filter(|row| row % 5 != 0).rev().collect();
+        let p = Params {
+            test_fdr: 0.5,
+            ..Params::default()
+        };
+        let (base_x, base_dim) = build_matrix_fit(&ds, &rows, &p);
+        for dim in [base_dim, 22] {
+            let mut x = vec![0.0; ds.n_psm * dim];
+            for row in 0..ds.n_psm {
+                for j in 0..dim - 1 {
+                    x[row * dim + j] = if j < base_dim - 1 {
+                        base_x[row * base_dim + j]
+                    } else {
+                        ((row * (j + 3) % 19) as f64 - 9.0) * 1e-3
+                    };
+                }
+                x[row * dim + dim - 1] = 1.0;
+            }
+            let all = vec![true; dim];
+            let alternating: Vec<_> = (0..dim).map(|j| j % 2 == 0).collect();
+            for mask in [None, Some(all.as_slice()), Some(alternating.as_slice())] {
+                let mut w0 = initial_direction(&x, dim, &ds.labels, &rows, &p);
+                if let Some(mask) = mask {
+                    for (weight, &included) in w0.iter_mut().zip(mask) {
+                        if !included {
+                            *weight = 0.0;
+                        }
+                    }
+                }
+                for (alpha, beta, subset) in [(0.25, 1.0, 0), (1.0, 4.0, 20), (4.0, 16.0, 21)] {
+                    let hp = Hp {
+                        alpha,
+                        beta,
+                        maxiter: 5,
+                        subset,
+                        tolerance: 1e-5,
+                    };
+                    let mut reused_rng = Rng(71);
+                    let mut fresh_rng = Rng(71);
+                    let reused = train_fold_with_reuse::<true>(
+                        &x,
+                        dim,
+                        &ds.labels,
+                        &rows,
+                        &w0,
+                        &p,
+                        &mut reused_rng,
+                        hp,
+                        mask,
+                    );
+                    let fresh = train_fold_with_reuse::<false>(
+                        &x,
+                        dim,
+                        &ds.labels,
+                        &rows,
+                        &w0,
+                        &p,
+                        &mut fresh_rng,
+                        hp,
+                        mask,
+                    );
+                    assert_eq!(reused_rng.0, fresh_rng.0, "cache changed subsampling draws");
+                    assert!(
+                        reused
+                            .weights
+                            .iter()
+                            .zip(&fresh.weights)
+                            .all(|(a, b)| a.to_bits() == b.to_bits()),
+                        "partial score reuse changed weight bits"
+                    );
+                    let mut actual = vec![0.0; rows.len()];
+                    let mut expected = actual.clone();
+                    reused.score_rows(&x, dim, &rows, &mut actual);
+                    fresh.score_rows(&x, dim, &rows, &mut expected);
+                    assert!(
+                        actual
+                            .iter()
+                            .zip(&expected)
+                            .all(|(a, b)| a.to_bits() == b.to_bits()),
+                        "partial score reuse changed final scores"
+                    );
+                }
+            }
         }
     }
 

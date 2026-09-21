@@ -18,7 +18,7 @@ METHODS = ("picked", "bayes-fixed", "bayes-selected")
 @dataclass(frozen=True)
 class Group:
     q: float
-    pep: float
+    pep: float | None
     score: float
     proteins: tuple[str, ...]
     error: int
@@ -75,16 +75,25 @@ def load_groups(path: Path, vial: str, truth: dict[str, str]) -> list[Group]:
         required = {"q-value", "posterior_error_prob", "score", "proteinIds"}
         if not reader.fieldnames or not required.issubset(reader.fieldnames):
             raise ValueError(f"missing required protein columns in {path}")
-        for row in reader:
+        for line, row in enumerate(reader, start=2):
             proteins = tuple(value for value in row["proteinIds"].split(",") if value)
             if not proteins:
                 raise ValueError(f"empty protein group in {path}")
             error, composition = classify(proteins, vial, truth)
+            q = float(row["q-value"])
+            pep = None if row["posterior_error_prob"] == "NA" else float(row["posterior_error_prob"])
+            score = float(row["score"])
+            if not math.isfinite(q) or not 0 <= q <= 1:
+                raise ValueError(f"invalid q-value in {path}:{line}")
+            if pep is not None and (not math.isfinite(pep) or not 0 <= pep <= 1):
+                raise ValueError(f"invalid posterior_error_prob in {path}:{line}")
+            if not math.isfinite(score):
+                raise ValueError(f"invalid score in {path}:{line}")
             groups.append(
                 Group(
-                    q=float(row["q-value"]),
-                    pep=float(row["posterior_error_prob"]),
-                    score=float(row["score"]),
+                    q=q,
+                    pep=pep,
+                    score=score,
                     proteins=proteins,
                     error=error,
                     composition=composition,
@@ -178,7 +187,9 @@ def partial_auc(groups: list[Group], max_fpr: float = 0.05) -> float:
 
 
 def probability_metrics(groups: list[Group], bins: int = 10) -> tuple[float, float]:
-    if not groups:
+    # A missing protein posterior is not zero and cannot be replaced by a
+    # peptide PEP. Do not silently report calibration on a selected subset.
+    if not groups or any(group.pep is None for group in groups):
         return math.nan, math.nan
     brier = sum((group.pep - group.error) ** 2 for group in groups) / len(groups)
     buckets: list[list[Group]] = [[] for _ in range(bins)]
@@ -266,9 +277,8 @@ def main() -> None:
                         metrics["raw_fdp"], math.nan, math.nan, math.nan,
                     )
                 )
-        # Picked inference exposes its best-peptide PEP in the shared output
-        # schema; that value is not a protein-group posterior and must not be
-        # evaluated as one. Threshold calibration remains meaningful.
+        # Picked inference reports NA for its protein posterior. Older reports
+        # exposed a best-peptide PEP; neither supports protein probability metrics.
         brier, ece = probability_metrics(groups) if method != "picked" else (math.nan, math.nan)
         calibration_values = [
             abs(metric["adjusted_fdp"] - threshold)

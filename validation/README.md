@@ -1,5 +1,9 @@
 # Scientific validation workspace
 
+Start with [the current readiness review](READINESS_REVIEW.md) for the latest implementation
+repairs, verification results, and unresolved calibration findings. The studies below retain their
+original results and refer to their recorded revisions.
+
 This directory contains adversarial, non-optimization validation of percolator-rs. Every study
 preserves exact commands, software versions, seeds, inputs, output hashes, and machine-readable
 results. Negative results are kept; nothing here is rewritten after a repair.

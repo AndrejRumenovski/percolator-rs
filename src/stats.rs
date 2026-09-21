@@ -202,8 +202,8 @@ fn sort_score_order(order: &mut [usize], scores: &[f64]) {
     debug_assert!(order.iter().all(|&index| index < scores.len()));
     debug_assert!(scores.iter().all(|score| score.is_finite()));
     order.sort_unstable_by(|&a, &b| {
-        // `order` is always populated from 0..scores.len() immediately before
-        // this call. Avoid two redundant bounds checks per sort comparison.
+        // `order` contains only indices populated from 0..scores.len().
+        // Avoid two redundant bounds checks per sort comparison.
         let (a, b) = unsafe { (*scores.get_unchecked(a), *scores.get_unchecked(b)) };
         // All callers reject non-finite scores before sorting. This is exactly
         // the finite arm of score_cmp_desc, including its signed-zero order.
@@ -361,6 +361,63 @@ pub fn qvalues(scores: &[f64], labels: &[i8], tdc: Tdc) -> Vec<f64> {
     q
 }
 
+/// Restrict a training mask to scores that can still meet its strict threshold.
+fn restrict_training_mask_order(
+    order: &mut Vec<usize>,
+    scores: &[f64],
+    labels: &[i8],
+    tdc: Tdc,
+    threshold: f64,
+) {
+    let n = scores.len();
+    let probability = tdc.null_target_win_prob;
+    if tdc.pi0 != 1.0
+        || !tdc.skip_decoys_plus_one
+        || !threshold.is_finite()
+        || threshold <= 0.0
+        || threshold > 1.0
+        || !probability.is_finite()
+        || probability <= 0.0
+        || probability >= 1.0
+        || n as u128 >= (1u128 << 53)
+    {
+        return;
+    }
+
+    order.retain(|&row| labels[row] <= 0);
+    let decoys = order.len();
+    let targets = (n - decoys) as f64;
+    if decoys == 0 || tdc.raw_fdp(decoys as f64, targets) < threshold {
+        order.clear();
+        order.extend(0..n);
+        return;
+    }
+
+    // At or below the Kth decoy score, every complete numeric tie group has
+    // at least K decoys and at most all targets. The unchanged FDP formula is
+    // monotone in these counts, so raw_fdp(K, all_targets) >= threshold proves
+    // that none of those groups can qualify. Counts are exact below 2^53.
+    // Numeric `>` removes the entire cutoff group, including both zero signs.
+    let mut low = 1usize;
+    let mut high = decoys;
+    while low < high {
+        let middle = low + (high - low) / 2;
+        if tdc.raw_fdp(middle as f64, targets) < threshold {
+            low = middle + 1;
+        } else {
+            high = middle;
+        }
+    }
+    let (_, cutoff_row, _) = order.select_nth_unstable_by(low - 1, |&a, &b| {
+        // Retention preserves the valid indices originally copied from 0..n.
+        let (a, b) = unsafe { (*scores.get_unchecked(a), *scores.get_unchecked(b)) };
+        b.total_cmp(&a)
+    });
+    let cutoff = scores[*cutoff_row];
+    order.clear();
+    order.extend((0..n).filter(|&row| scores[row] > cutoff));
+}
+
 /// Mark targets whose monotone q-value is strictly below `threshold` without
 /// materializing q-values that the training loop never otherwise consumes.
 pub fn target_mask_at_fdr_into(
@@ -408,6 +465,8 @@ pub fn target_mask_at_fdr_into(
 
     #[cfg(feature = "profiling")]
     let sort_start = std::time::Instant::now();
+    // Include decoy selection and prefix construction in ordering time.
+    restrict_training_mask_order(&mut workspace.order, scores, labels, tdc, threshold);
     sort_score_order(&mut workspace.order, scores);
     #[cfg(feature = "profiling")]
     crate::profile::record(
@@ -423,7 +482,7 @@ pub fn target_mask_at_fdr_into(
     let mut targets = 0.0f64;
     let mut decoys = tdc.initial_decoys();
     let mut last_accepted_rank = None;
-    for rank in 0..n {
+    for rank in 0..workspace.order.len() {
         let i = workspace.order[rank];
         if labels[i] > 0 {
             targets += 1.0;
@@ -441,7 +500,7 @@ pub fn target_mask_at_fdr_into(
         "qvalue",
         "qvalue_tie_group_scan",
         tie_scan_start.elapsed(),
-        Some(n as u64),
+        Some(workspace.order.len() as u64),
         None,
     );
     #[cfg(feature = "profiling")]
@@ -479,7 +538,7 @@ pub fn target_count_at_fdr_into(
     target_counts_impl::<false>(scores, labels, tdc, threshold, order).0
 }
 
-/// Count both feature orientations in one tie-group walk after one score sort.
+/// Count both feature orientations from one score sort.
 pub(crate) fn target_counts_at_fdr_into(
     scores: &[f64],
     labels: &[i8],
@@ -494,6 +553,79 @@ pub(crate) fn target_counts_at_fdr_into(
         return (forward, reverse);
     }
     target_counts_impl::<true>(scores, labels, tdc, threshold, order)
+}
+
+/// Keep disjoint score tails that can pass the initial-direction threshold.
+/// Returns the high-tail length after sorting, or leaves the full order intact.
+fn restrict_initial_direction_order(
+    order: &mut Vec<usize>,
+    scores: &[f64],
+    labels: &[i8],
+    tdc: Tdc,
+    threshold: f64,
+) -> Option<usize> {
+    let n = scores.len();
+    let probability = tdc.null_target_win_prob;
+    if tdc.pi0 != 1.0
+        || !tdc.skip_decoys_plus_one
+        || !threshold.is_finite()
+        || threshold <= 0.0
+        || threshold > 1.0
+        || !probability.is_finite()
+        || probability <= 0.0
+        || probability >= 1.0
+        || n as u128 >= (1u128 << 53)
+    {
+        return None;
+    }
+
+    order.retain(|&row| labels[row] <= 0);
+    let decoys = order.len();
+    let targets = (n - decoys) as f64;
+    // A cutoff at K <= D/2 keeps the two score tails disjoint. The unchanged
+    // positive-factor FDP is monotone in K, so this also proves a cutoff exists.
+    let max_cutoff = decoys / 2;
+    if max_cutoff == 0 || tdc.raw_fdp(max_cutoff as f64, targets) < threshold {
+        order.clear();
+        order.extend(0..n);
+        return None;
+    }
+    let mut low = 1usize;
+    let mut high = max_cutoff;
+    while low < high {
+        let middle = low + (high - low) / 2;
+        if tdc.raw_fdp(middle as f64, targets) < threshold {
+            low = middle + 1;
+        } else {
+            high = middle;
+        }
+    }
+
+    let compare = |&a: &usize, &b: &usize| {
+        // Retention preserves the valid indices originally copied from 0..n.
+        let (a, b) = unsafe { (*scores.get_unchecked(a), *scores.get_unchecked(b)) };
+        b.total_cmp(&a)
+    };
+    let (_, high_row, _) = order.select_nth_unstable_by(low - 1, compare);
+    let high_score = scores[*high_row];
+    let (_, low_row, _) = order.select_nth_unstable_by(decoys - low, compare);
+    let low_score = scores[*low_row];
+    debug_assert!(high_score >= low_score);
+
+    // In each orientation, every excluded complete score group has at least K
+    // decoys and at most all targets, so it cannot pass the strict threshold.
+    // Numeric comparisons exclude whole cutoff ties, including both zero signs.
+    let mut high_rows = 0;
+    order.clear();
+    order.extend((0..n).filter(|&row| {
+        if scores[row] > high_score {
+            high_rows += 1;
+            true
+        } else {
+            scores[row] < low_score
+        }
+    }));
+    Some(high_rows)
 }
 
 fn target_counts_impl<const BOTH: bool>(
@@ -534,6 +666,12 @@ fn target_counts_impl<const BOTH: bool>(
     }
     #[cfg(feature = "profiling")]
     let sort_start = std::time::Instant::now();
+    // Include decoy selection and both tail constructions in ordering time.
+    let tail_split = if BOTH {
+        restrict_initial_direction_order(order, scores, labels, tdc, threshold)
+    } else {
+        None
+    };
     sort_score_order(order, scores);
     #[cfg(feature = "profiling")]
     crate::profile::record(
@@ -546,6 +684,52 @@ fn target_counts_impl<const BOTH: bool>(
 
     #[cfg(feature = "profiling")]
     let tie_scan_start = std::time::Instant::now();
+    if let Some(split) = tail_split {
+        let (high_tail, low_tail) = order.split_at(split);
+        let mut targets = 0.0f64;
+        let mut decoys = tdc.initial_decoys();
+        let mut forward = 0;
+        for rank in 0..high_tail.len() {
+            let row = high_tail[rank];
+            if labels[row] > 0 {
+                targets += 1.0;
+            } else {
+                decoys += 1.0;
+            }
+            if ends_score_group(high_tail, scores, rank) && tdc.raw_fdp(decoys, targets) < threshold
+            {
+                forward = targets as usize;
+            }
+        }
+
+        // The omitted middle contains decoys needed by a complete scan. Start
+        // afresh in the opposite orientation; never join counts across the gap.
+        targets = 0.0;
+        decoys = tdc.initial_decoys();
+        let mut reverse = 0;
+        for rank in (0..low_tail.len()).rev() {
+            let row = low_tail[rank];
+            if labels[row] > 0 {
+                targets += 1.0;
+            } else {
+                decoys += 1.0;
+            }
+            if (rank == 0 || scores[low_tail[rank - 1]] != scores[row])
+                && tdc.raw_fdp(decoys, targets) < threshold
+            {
+                reverse = targets as usize;
+            }
+        }
+        #[cfg(feature = "profiling")]
+        crate::profile::record(
+            "qvalue",
+            "qvalue_tie_group_scan",
+            tie_scan_start.elapsed(),
+            Some(order.len() as u64),
+            None,
+        );
+        return (forward, reverse);
+    }
     let total_targets = if BOTH {
         labels[..n].iter().filter(|&&label| label > 0).count()
     } else {
@@ -756,11 +940,9 @@ fn pava_non_decreasing(
     }
 }
 
-/// Smallest PEP the estimator will report.  Guards only against floating-point
-/// underflow of a genuinely tiny increment; it is never the value that removes
-/// an otherwise exact zero, because the finite-sample safeguard decoy already
-/// keeps the leading run strictly positive.
-const PEP_FLOOR: f64 = 1e-12;
+/// Smallest positive representable PEP. A fixed decimal floor adds artificial
+/// false-discovery mass when the declared null probability is very small.
+const PEP_FLOOR: f64 = f64::from_bits(1);
 
 /// Posterior error probabilities from the same target-decoy scan that produced
 /// the q-values, aligned to input order.
@@ -865,18 +1047,29 @@ fn peps_from_competition_into(
 
     // Decoys carry no error-rate claim; the column exists so a decoy row can be
     // placed on the same monotone curve as the targets around it.  Each decoy
-    // takes the value of the nearest target at or above it, and the leading
-    // decoys take the first target's value.
+    // takes the value of the nearest target at or above it, including targets
+    // at the same score. Process complete tie groups so decoy display values
+    // cannot depend on the order of target and decoy rows inside a tie.
     let mut current = workspace.target_pep[0];
-    let mut next_target = 0usize;
-    for rank in 0..n {
-        let row = workspace.order[rank];
-        if labels[row] > 0 {
-            current = workspace.target_pep[next_target];
-            next_target += 1;
-        } else {
-            pep[row] = current.clamp(PEP_FLOOR, 1.0);
+    let mut start = 0;
+    while start < n {
+        let mut end = start;
+        loop {
+            let row = workspace.order[end];
+            if labels[row] > 0 {
+                current = pep[row];
+            }
+            if ends_score_group(&workspace.order, scores, end) {
+                break;
+            }
+            end += 1;
         }
+        for &row in &workspace.order[start..=end] {
+            if labels[row] <= 0 {
+                pep[row] = current;
+            }
+        }
+        start = end + 1;
     }
     #[cfg(feature = "profiling")]
     crate::profile::record(
@@ -1856,5 +2049,246 @@ mod tests {
     fn peps_handle_empty_and_single_row_inputs() {
         assert!(peps(&[], &[], reported()).is_empty());
         assert_eq!(peps(&[1.0], &[1], reported()), vec![1.0]);
+    }
+}
+
+#[cfg(test)]
+mod initial_direction_tail_tests {
+    use super::{qvalues, target_counts_at_fdr_into, Tdc};
+
+    fn check_both_against_qvalues(
+        scores: &[f64],
+        labels: &[i8],
+        tdc: Tdc,
+        extra_thresholds: &[f64],
+        order: &mut Vec<usize>,
+    ) {
+        let negated: Vec<_> = scores.iter().map(|score| -score).collect();
+        let forward = qvalues(scores, labels, tdc);
+        let reverse = qvalues(&negated, labels, tdc);
+        let mut boundaries: Vec<_> = forward.iter().chain(&reverse).copied().collect();
+        boundaries.sort_unstable_by(f64::total_cmp);
+        boundaries.dedup_by(|a, b| a.to_bits() == b.to_bits());
+        let mut thresholds = vec![
+            f64::NEG_INFINITY,
+            -1.0,
+            -0.0,
+            0.0,
+            f64::from_bits(1),
+            f64::MIN_POSITIVE,
+            0.01,
+            0.5,
+            1.0,
+            1.0f64.next_up(),
+            f64::INFINITY,
+            f64::NAN,
+        ];
+        thresholds.extend_from_slice(extra_thresholds);
+        // Bound the large random cases while retaining every boundary in the
+        // small constructed cases. Probe both sides of each strict comparison.
+        for &value in boundaries
+            .iter()
+            .step_by(boundaries.len().div_ceil(24).max(1))
+            .chain(boundaries.last())
+        {
+            thresholds.extend([value.next_down(), value, value.next_up()]);
+        }
+        thresholds.sort_unstable_by(f64::total_cmp);
+        thresholds.dedup_by(|a, b| a.to_bits() == b.to_bits());
+        for (index, threshold) in thresholds.into_iter().enumerate() {
+            // Alternate truly invalid stale entries and the prior call's
+            // possibly truncated order while reusing the same allocation.
+            if index % 7 == 0 {
+                order.resize(scores.len() + 37, usize::MAX);
+                order.fill(usize::MAX);
+            }
+            let count = |q: &[f64]| {
+                q.iter()
+                    .zip(labels)
+                    .filter(|(value, label)| **label > 0 && **value < threshold)
+                    .count()
+            };
+            assert_eq!(
+                target_counts_at_fdr_into(scores, labels, tdc, threshold, order),
+                (count(&forward), count(&reverse)),
+                "n={}, tdc={tdc:?}, threshold={threshold:?}",
+                scores.len()
+            );
+        }
+    }
+
+    #[test]
+    fn both_counts_cover_large_finite_bits_and_training_guard_fallbacks() {
+        let training = Tdc::training(0.5);
+        let mut settings = vec![
+            training,
+            Tdc::training(0.25),
+            Tdc::training(0.9),
+            Tdc::training(f64::MIN_POSITIVE),
+            Tdc::training(f64::from_bits(1)),
+            Tdc::training(1.0f64.next_down()),
+            Tdc::reported(0.5),
+            Tdc::reported(0.25),
+        ];
+        for probability in [-1.0, 0.0, 1.0, f64::INFINITY, f64::NAN] {
+            settings.push(Tdc::training(probability));
+        }
+        for pi0 in [-1.0, 0.0, 0.25, f64::INFINITY, f64::NAN] {
+            settings.push(Tdc { pi0, ..training });
+        }
+        let mut state = 0xd1b5_4a32_d192_ed03u64;
+        let mut order = vec![usize::MAX; 1500];
+        // Grow and shrink around sorting implementation size boundaries.
+        for n in [1025, 0, 257, 1, 65, 513] {
+            for pattern in 0..3 {
+                let mut scores = Vec::with_capacity(n);
+                let mut labels = Vec::with_capacity(n);
+                for row in 0..n {
+                    state = state
+                        .wrapping_mul(6_364_136_223_846_793_005)
+                        .wrapping_add(1_442_695_040_888_963_407);
+                    scores.push(match (pattern, row % 17) {
+                        (_, 0) => -0.0,
+                        (_, 1) => 0.0,
+                        (2, _) => {
+                            if row % 2 == 0 {
+                                -0.0
+                            } else {
+                                0.0
+                            }
+                        }
+                        (_, 2) => f64::MAX,
+                        (_, 3) => -f64::MAX,
+                        (_, 4) => f64::from_bits(1),
+                        (_, 5) => -f64::from_bits(1),
+                        (1, _) => ((state >> 32) % 15) as f64 - 7.0,
+                        _ => f64::from_bits(state & 0xffef_ffff_ffff_ffff),
+                    });
+                    labels.push(match row % 19 {
+                        0 => 0,
+                        1 => i8::MIN,
+                        2 => i8::MAX,
+                        _ => (state >> 56) as i8,
+                    });
+                }
+                for &tdc in &settings {
+                    check_both_against_qvalues(&scores, &labels, tdc, &[], &mut order);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn both_counts_preserve_half_decoy_cutoffs_and_overlapping_tails() {
+        let mut order = vec![usize::MAX; 400];
+        for decoys in [31usize, 32, 33] {
+            for pattern in 0..4 {
+                let mut rows = Vec::new();
+                for row in 0..decoys {
+                    let score = row as f64 - (decoys / 2) as f64;
+                    let score = match pattern {
+                        1 if score.abs() <= 1.0 => {
+                            if row % 2 == 0 {
+                                -0.0
+                            } else {
+                                0.0
+                            }
+                        }
+                        2 => {
+                            if row % 2 == 0 {
+                                -0.0
+                            } else {
+                                0.0
+                            }
+                        }
+                        3 => (row / 4) as f64 - 4.0,
+                        _ => score,
+                    };
+                    rows.push((score, [0, -1, i8::MIN, -37][row % 4]));
+                }
+                // Each tail contains targets. Mixed-label central groups make
+                // a cutoff landing on either zero sign drop the whole tie.
+                for row in 0..128 {
+                    let score = match row {
+                        0..=47 => 40.0 + (row % 7) as f64,
+                        48..=111 => -40.0 - (row % 5) as f64,
+                        _ => [-1.0, -0.0, 0.0, 1.0][row % 4],
+                    };
+                    rows.push((score, 1 + (row % 127) as i8));
+                }
+                let mut state = 0x94d0_49bb_1331_11ebu64;
+                for row in (1..rows.len()).rev() {
+                    state = state
+                        .wrapping_mul(6_364_136_223_846_793_005)
+                        .wrapping_add(1);
+                    rows.swap(row, state as usize % (row + 1));
+                }
+                let (scores, labels): (Vec<_>, Vec<_>) = rows.into_iter().unzip();
+                for p in [0.25, 0.5, 0.9] {
+                    let tdc = Tdc::training(p);
+                    let mut thresholds = Vec::new();
+                    // For p=0.5 these are exact dyadic K/128 thresholds:
+                    // K=D/2 is eligible, and its next-up threshold requires
+                    // K>D/2, whose two candidate tails overlap.
+                    for k in [1, decoys / 2 - 1, decoys / 2, decoys / 2 + 1, decoys] {
+                        let value = tdc.raw_fdp(k as f64, 128.0);
+                        thresholds.extend([value.next_down(), value, value.next_up()]);
+                    }
+                    check_both_against_qvalues(&scores, &labels, tdc, &thresholds, &mut order);
+                }
+                // Both no-decoy fallback and no-target early outcomes must
+                // recover after the preceding shortened mixed-label orders.
+                for label in [i8::MAX, 0, i8::MIN] {
+                    check_both_against_qvalues(
+                        &scores,
+                        &vec![label; scores.len()],
+                        Tdc::training(0.5),
+                        &[],
+                        &mut order,
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn both_counts_reject_nonfinite_rows_before_tail_selection_and_recover() {
+        let mut order = vec![usize::MAX; 600];
+        for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            for position in [0, 256, 511] {
+                for label in [i8::MAX, 0, i8::MIN] {
+                    for tdc in [Tdc::training(0.5), Tdc::reported(0.5)] {
+                        let mut scores: Vec<_> = (0..512).map(|row| row as f64 - 256.0).collect();
+                        let mut labels: Vec<_> = (0..512)
+                            .map(|row| if row % 4 == 0 { 0 } else { 2 })
+                            .collect();
+                        scores[position] = bad;
+                        labels[position] = label;
+                        order.resize(600, usize::MAX);
+                        order.fill(usize::MAX);
+                        let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                            target_counts_at_fdr_into(&scores, &labels, tdc, 0.01, &mut order)
+                        }))
+                        .expect_err("non-finite input must be rejected before cutoff selection");
+                        let message = panic
+                            .downcast_ref::<String>()
+                            .map(String::as_str)
+                            .or_else(|| panic.downcast_ref::<&str>().copied())
+                            .unwrap_or("");
+                        assert!(
+                            message.contains("requires finite scores"),
+                            "unexpected panic: {message}"
+                        );
+                        check_both_against_qvalues(
+                            &[3.0, 0.0, -0.0, -1.0, -4.0],
+                            &[2, 0, i8::MIN, 0, i8::MAX],
+                            Tdc::training(0.5),
+                            &[],
+                            &mut order,
+                        );
+                    }
+                }
+            }
+        }
     }
 }

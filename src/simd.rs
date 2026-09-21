@@ -1,14 +1,11 @@
-//! SIMD helpers for the hot inner loops (portable via `wide`, compiles to AVX2/AVX-512
-//! with `target-cpu=native`). `axpy` is exact (elementwise); `dot` reassociates the
-//! summation across 4 lanes, which can differ from a sequential sum by ~1 ULP.
+//! Exact dot products and elementwise SIMD helpers, portable through `wide`.
+//! Dot products retain the scalar left fold; SIMD lanes represent independent
+//! rows or independent element updates, never partial sums of one dot product.
 
 use wide::f64x4;
 
-/// Dot product a·b. Kept as an exact sequential sum: on the short (~22-element)
-/// feature vectors here, 4-lane reassociation gave no measurable speedup while
-/// perturbing borderline q<0.01 yields, so we preserve exact summation order.
-/// (The vectorized win lives in `axpy`, which is exact/elementwise — used to
-/// accumulate the Hessian outer products, the actual SVM hot loop.)
+/// Dot product a·b, accumulated left to right from positive zero.
+/// Keep each multiply and add separate and preserve their order.
 #[inline]
 pub fn dot(a: &[f64], b: &[f64]) -> f64 {
     debug_assert_eq!(a.len(), b.len());
@@ -52,8 +49,37 @@ pub fn dot_22(a: &[f64], b: &[f64]) -> f64 {
     s
 }
 
+/// Score four contiguous 22-column rows, preserving each scalar dot's left fold.
+/// Each SIMD lane holds one complete row; objective reductions stay in the caller.
+/// Non-finite results defer the batch to the caller's existing scalar loop.
+#[inline(always)]
+pub(crate) fn dot_22x4(w: &[f64], rows: &[f64]) -> Option<[f64; 4]> {
+    debug_assert_eq!(w.len(), 22);
+    debug_assert_eq!(rows.len(), 4 * 22);
+    let w = &w[..22];
+    let rows = &rows[..4 * 22];
+    let mut sums = f64x4::splat(0.0);
+    macro_rules! columns {
+        ($($j:literal),* $(,)?) => {
+            $(
+                let values = f64x4::from([
+                    rows[$j], rows[22 + $j], rows[44 + $j], rows[66 + $j],
+                ]);
+                sums += f64x4::splat(w[$j]) * values;
+            )*
+        };
+    }
+    columns!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21);
+    if sums.is_finite().all() {
+        Some(sums.to_array())
+    } else {
+        None
+    }
+}
+
 /// y += alpha * x  (elementwise, exact).
-#[inline]
+// Constant-length Hessian calls must inline so their loop bounds can fold.
+#[inline(always)]
 pub fn axpy(y: &mut [f64], alpha: f64, x: &[f64]) {
     debug_assert_eq!(y.len(), x.len());
     let n = y.len();
@@ -78,6 +104,96 @@ pub fn axpy(y: &mut [f64], alpha: f64, x: &[f64]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn check_four_rows(w: &[f64; 22], rows: &[f64; 88]) {
+        let expected: [f64; 4] =
+            std::array::from_fn(|lane| dot_22(w, &rows[lane * 22..(lane + 1) * 22]));
+        let actual = dot_22x4(w, rows);
+        if expected.iter().all(|score| score.is_finite()) {
+            let actual = actual.expect("finite dots must use the SIMD batch");
+            for (lane, (actual, expected)) in actual.iter().zip(&expected).enumerate() {
+                assert_eq!(
+                    actual.to_bits(),
+                    expected.to_bits(),
+                    "row {lane} changed its scalar dot bits"
+                );
+            }
+        } else {
+            assert!(
+                actual.is_none(),
+                "a non-finite dot must defer the whole batch"
+            );
+        }
+    }
+
+    #[test]
+    fn four_row_dot_matches_scalar_for_arbitrary_finite_bits() {
+        let mut seed = 0x517cc1b727220a95_u64;
+        let mut next_finite = |bounded: bool| {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            let mut bits = seed;
+            if bounded {
+                bits = (bits & 0x800f_ffff_ffff_ffff) | ((992 + ((bits >> 52) & 63)) << 52);
+            }
+            if bits & 0x7ff0_0000_0000_0000 == 0x7ff0_0000_0000_0000 {
+                bits ^= 0x0010_0000_0000_0000;
+            }
+            f64::from_bits(bits)
+        };
+        for case in 0..512 {
+            let w = std::array::from_fn(|_| next_finite(case % 2 == 0));
+            let rows = std::array::from_fn(|_| next_finite(case % 2 == 0));
+            check_four_rows(&w, &rows);
+        }
+    }
+
+    #[test]
+    fn four_row_dot_preserves_cancellation_zero_subnormals_and_special_values() {
+        let values = [
+            0.0,
+            -0.0,
+            f64::from_bits(1),
+            -f64::from_bits(1),
+            f64::from_bits(f64::MIN_POSITIVE.to_bits() - 1),
+            f64::MIN_POSITIVE,
+            -f64::MIN_POSITIVE,
+            f64::from_bits(1.0_f64.to_bits() - 1),
+            1.0,
+            f64::from_bits(1.0_f64.to_bits() + 1),
+            -1.0,
+            1e150,
+            -1e150,
+            f64::MAX,
+            -f64::MAX,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::from_bits(0x7ff8_0000_0000_0042),
+            f64::from_bits(0xfff8_0000_0000_1234),
+        ];
+        for offset in 0..values.len() {
+            let w = std::array::from_fn(|j| values[(j + offset) % values.len()]);
+            let rows = std::array::from_fn(|j| values[(j * 7 + offset) % values.len()]);
+            check_four_rows(&w, &rows);
+        }
+        let w = [1.0; 22];
+        let mut rows = [0.0; 88];
+        rows[..6].copy_from_slice(&[1e16, 1.0, -1e16, 1.0, -0.0, 0.0]);
+        rows[22..28].copy_from_slice(&[1e16, -1e16, 1.0, -1.0, 0.0, -0.0]);
+        rows[44..50].copy_from_slice(&[
+            f64::MIN_POSITIVE,
+            -f64::MIN_POSITIVE,
+            f64::from_bits(1),
+            f64::from_bits(1),
+            -f64::from_bits(1),
+            -0.0,
+        ]);
+        rows[66..].fill(-0.0);
+        check_four_rows(&w, &rows);
+        assert_eq!(dot_22x4(&w, &rows).unwrap()[0].to_bits(), 1.0_f64.to_bits());
+        assert_eq!(dot_22x4(&w, &rows).unwrap()[3].to_bits(), 0.0_f64.to_bits());
+    }
 
     #[test]
     fn fixed_dot_preserves_sequential_result() {

@@ -50,6 +50,7 @@ Intel Haswell and AMD Zen or newer):
 
 ```bash
 cargo build --release --locked
+./target/release/percolator-rs --help
 ```
 
 Run the canonical linear-SVM workflow on the included fixture:
@@ -100,9 +101,10 @@ The first unrecognized column starts the feature block; every column from there 
 finite numeric data. Malformed labels, scans, masses, or features stop the run with a file, line,
 column, and offending-value diagnostic.
 
-The default PSM competition keeps one winner per `(source, ScanNr, ExpMass)` after rescoring. This
-supports PINs that report multiple candidates for a precursor, subject to the duplicate-candidate
-limitation described below. When `ExpMass` is absent, it is treated as zero.
+The default PSM competition keeps one winner per `(source, ScanNr, ExpMass)` after rescoring.
+Repeated occurrences of a tied `(label, modified core peptide)` receive one candidate draw.
+Training still uses the supplied rows, so duplicated observations can affect the fitted model.
+When `ExpMass` is absent, it is treated as zero.
 
 ### TSV output
 
@@ -123,8 +125,10 @@ rows follow their inference method's deterministic ranking. Picked-protein infer
 estimate a protein posterior, so its `posterior_error_prob` field is `NA`; Bayesian protein output
 contains a numeric value.
 
-Threshold counts reported by the program and validation tools use strict comparison (`q < 0.01`),
-not `q <= 0.01`.
+Q-values and PEPs are written with enough precision to recover the computed floating-point values,
+preserving small probabilities and threshold membership. Scores use six decimal places.
+Counts reported by the executable use strict comparison (`q < 0.01`). The historical PrEST
+protein-calibration study uses `q <= 0.01`, as stated in its reports.
 
 ## How the canonical workflow works
 
@@ -143,7 +147,7 @@ training rows and ten semi-supervised iterations.
 5. **Score held-out rows.** Each PSM is scored by a model that did not train on it. Fold scores are
    standardized against their training-decoy distribution before being pooled.
 6. **Compete candidates.** By default, only the highest rescored candidate for each precursor is
-   reported. Exact score ties use a deterministic seed-dependent draw over the emitted tied rows.
+   reported. Exact score ties use a deterministic seed-dependent draw over distinct tied candidates.
 7. **Recompute reported-list statistics.** The TDC+ false discovery rate (FDR) estimate uses
    `(D + 1) * p / (1 - p) / max(T, 1)`, evaluates exact-score tie groups together, and applies a
    reverse cumulative minimum to obtain q-values. `T` and `D` are cumulative target and decoy
@@ -160,10 +164,10 @@ and build. Serial and fold-parallel output is byte-identical in the regression s
 
 ## Command-line reference
 
-The rescoring executable uses a hand-written argument parser; invoking it without an input prints
-a short usage and input-contract summary. Unknown option names are currently ignored, so verify
-the startup configuration and requested output files. The separate `pride` subcommand provides
-`--help`.
+Use `percolator-rs --help` for the complete option list and `percolator-rs --version` for the version.
+Unknown options, missing values, and invalid numeric settings produce explicit errors. Output paths
+must be distinct from input files and other requested outputs. The separate `pride` subcommand
+provides its own `--help`.
 
 ### Output options
 
@@ -189,8 +193,8 @@ the startup configuration and requested output files. The separate `pride` subco
 | `--psm-competition` | on | Keep one rescored precursor winner |
 | `--no-psm-competition` | — | Report all candidates; resulting q-values are not claimed as FDR estimates |
 
-For `k` equivalent decoys per target, the intended null setting is `1 / (1 + k)`. This does not
-repair candidate duplication or other violations of the competition model.
+For `k` equivalent decoys per target, the intended null setting is `1 / (1 + k)`. This parameter
+assumes the candidate-generation process satisfies the corresponding competition model.
 
 ### Execution profiles
 
@@ -298,26 +302,26 @@ experimental designs recorded in those reports.
   scripts, frozen adversarial probes, and byte-for-byte output comparison against its recorded
   baseline.
 
-### Implementation limitations
+### Current implementation checks
 
-The scientific audit identified the following limitations in the recorded behavior baseline.
-The architecture refactor preserved that baseline:
+The [readiness review](validation/READINESS_REVIEW.md) records repairs and verification against
+the audit's minimized counterexamples. Regression tests now cover duplicate-invariant candidate
+tie draws, preservation of protein mappings from losing occurrences of a reported peptide,
+collision-free protein-group pairing, PEP mass at very small null probabilities, and decoy PEP
+display under row permutations. An independent q-value oracle is part of the regular test suite.
 
-1. Exact PSM ties are sampled over emitted rows. Duplicating one scientific candidate therefore
-   changes its label's win probability; a minimized null fixture changed from 0 to 101 false q<0.01
-   discoveries after target-row duplication.
-2. Joined source numbering depends on lexical filenames. Accessing the same bytes through renamed
-   symlinks can change folds, tie decisions, and discoveries.
-3. Protein mappings are unioned only after PSM competition. A losing duplicate occurrence can carry
-   a complementary protein mapping that is discarded before the union.
-4. Picked-protein target/decoy group pairing serializes members with an unescaped `|`, so distinct
-   member sets can collide.
-5. At the accepted edge value `--null-target-win-prob 1e-15`, the fixed `1e-12` per-target PEP floor
-   breaks the claimed relationship between total PEP mass and estimated false count.
-6. Decoy PEP display values can change under row permutations even when winners, scores, q-values,
-   and target PEPs do not. This is presentation-only because no decoy posterior claim is made.
+CLI tests cover invalid arguments, incompatible joined feature layouts, conflicting output paths,
+and write failures. Joined per-file counts use the same competed PSM statistics as the result tables.
 
-The compact CLI also ignores unknown options, as noted in the command reference.
+### Remaining limitations
+
+- Joined source numbering depends on lexical filenames. Accessing identical data through renamed
+  files or symlinks can change folds and tie decisions; preserve source names when reproducing a run.
+- Candidate deduplication applies to exact reporting ties. Repeated input observations can still
+  change training weights and learned scores.
+- Numerical correctness and reproducibility do not establish empirical calibration. PSM PEPs and
+  protein-level confidence remain subject to the experimental limitations below; the available
+  studies do not establish generalization to an untouched biological dataset.
 
 ### Empirical calibration
 
@@ -384,10 +388,15 @@ these timings describe that baseline rather than every subsequent build.
 | All 65 files, sequential | 3 | 49.619487 s |
 | All 65 files, four concurrent processes | 3 | 15.482359 s |
 
-Every full-corpus configuration produced 106,823 target PSMs and 35,886 target peptides at strict
+In that baseline, every full-corpus configuration produced 106,823 target PSMs and 35,886 target peptides at strict
 `q < 0.01`. These are reproducibility baselines for a development dataset, not sensitivity or
 accuracy estimates. The dataset was used during model development, and file-level yields are highly
 skewed.
+
+The [2026-09-21 readiness check](validation/READINESS_REVIEW.md) completed the same 65-file workload
+with four concurrent processes in **15.69 s**, reporting **106,823 target PSMs** and **35,885 target
+peptides** at `q < 0.01`. This is a single local gate run. The one-peptide change was traced to
+the revised ordering of distinct exact-tie candidates; it is documented in the review.
 
 `--num-threads` uses a private Rayon pool for nested/selected-C modes, but the fixed-C path only
 switches between serial and parallel execution of the three folds. Values above one therefore do not
@@ -457,17 +466,20 @@ bash tests/ensemble_regression.sh
 bash tests/protein_regression.sh
 ```
 
-The comprehensive non-benchmark acceptance command builds the release binary, runs all Rust and
-portable regression tests, compares fixed-C, selected-C, ensemble, and protein TSVs byte-for-byte
-with the frozen baseline, and reruns the recorded adversarial probes:
+Run the complete current check suite, including both ordinary and profiling-feature builds,
+documentation checks, the five shell gates, and Python evaluation-tool tests:
 
 ```bash
-python3 refactor/verify_baseline.py
+bash scripts/check.sh
 ```
 
-GitHub Actions runs the release build/tests, all five shell gates, and benchmark-tool unit tests.
-The full 2.3 GB performance gate is manual because it requires a self-hosted runner with PXD032157
-and the C++ reference binary.
+GitHub Actions runs the same script. With the 65 PXD032157 PINs available under `data/PXD032157/`,
+`bash scripts/check.sh --full-benchmark` also runs the Rust performance gate. The separate manual
+CI benchmark job additionally compares with the C++ reference binary.
+
+`refactor/verify_baseline.py` preserves the historical refactor comparison. Its frozen outputs and
+known-failure assertions predate the correctness repairs and probability-output precision changes;
+it is an archival comparison, not the current acceptance gate.
 
 ## PRIDE Archive integration
 
@@ -487,8 +499,10 @@ and cleanup example.
 ## Documentation map
 
 - [`validation/README.md`](validation/README.md) — ordered scientific audit and repair history.
+- [`validation/READINESS_REVIEW.md`](validation/READINESS_REVIEW.md) — current repairs, executed checks,
+  and remaining calibration limitations.
 - [`validation/FINAL_REPAIR_SCIENTIFIC_AUDIT.md`](validation/FINAL_REPAIR_SCIENTIFIC_AUDIT.md) —
-  current general adversarial verdict and minimized failures.
+  historical general adversarial verdict and minimized failures.
 - [`validation/homology_depleted_entrapment/FINAL_REPORT.md`](validation/homology_depleted_entrapment/FINAL_REPORT.md)
   — latest preregistered causal validation.
 - [`bench/REPRODUCTION.md`](bench/REPRODUCTION.md) — benchmark commands and result provenance.

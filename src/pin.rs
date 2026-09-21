@@ -172,6 +172,10 @@ pub fn merge(mut parts: Vec<Dataset>) -> Dataset {
             p.n_feat, n_feat,
             "cannot join files with differing feature columns"
         );
+        assert_eq!(
+            p.feature_names, out.feature_names,
+            "cannot join files with differing feature names or order"
+        );
         let sidx = out.source_names.len() as u32;
         out.source_names.append(&mut p.source_names);
         out.features.append(&mut p.features);

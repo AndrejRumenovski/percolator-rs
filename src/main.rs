@@ -12,6 +12,13 @@ use percolator_rs::{output, percolator, pin, pipeline, rt};
 #[global_allocator]
 static PROFILING_ALLOCATOR: profile::CountingAllocator = profile::CountingAllocator;
 
+fn write_result(path: &str, result: std::io::Result<()>) {
+    if let Err(error) = result {
+        eprintln!("output error ({path}): {error}");
+        std::process::exit(1);
+    }
+}
+
 fn main() {
     if std::env::args().nth(1).as_deref() == Some("pride") {
         if let Err(error) = pride_cli::run() {
@@ -48,6 +55,22 @@ fn main() {
         eprintln!("error: protein inference is unavailable with --ensemble; engine-level duplicate evidence needs a dedicated protein model");
         std::process::exit(2);
     }
+    let ensemble_inputs: Vec<(String, String)> = if args.ensemble {
+        args.pins
+            .iter()
+            .map(|input| ensemble_input(input))
+            .collect::<Result<_, _>>()
+            .unwrap_or_else(|message| {
+                eprintln!("error: {message}");
+                std::process::exit(2);
+            })
+    } else {
+        args.pins
+            .iter()
+            .map(|path| (String::new(), path.clone()))
+            .collect()
+    };
+    cli::validate_output_paths(&args, &ensemble_inputs);
     #[cfg(feature = "profiling")]
     let cli_setup_elapsed = cli_setup_start.elapsed();
     #[cfg(feature = "profiling")]
@@ -102,27 +125,21 @@ fn main() {
     let tp = std::time::Instant::now();
     #[cfg(feature = "profiling")]
     let _input_loading = profile::Scope::new("stage", "input_loading");
-    let ensemble_inputs: Vec<(String, String)> = if args.ensemble {
-        args.pins
-            .iter()
-            .map(|input| ensemble_input(input))
-            .collect::<Result<_, _>>()
-            .unwrap_or_else(|message| {
-                eprintln!("error: {message}");
-                std::process::exit(2);
-            })
-    } else {
-        args.pins
-            .iter()
-            .map(|path| (String::new(), path.clone()))
-            .collect()
-    };
     let mut parts: Vec<pin::Dataset> = Vec::with_capacity(ensemble_inputs.len());
     for (_, path) in &ensemble_inputs {
-        parts.push(pin::parse(path).unwrap_or_else(|e| {
+        let part = pin::parse(path).unwrap_or_else(|e| {
             eprintln!("parse error ({path}): {e}");
             std::process::exit(1);
-        }));
+        });
+        if !args.ensemble
+            && parts
+                .first()
+                .is_some_and(|first| first.feature_names != part.feature_names)
+        {
+            eprintln!("input error ({path}): joined inputs must have identical feature names in the same order");
+            std::process::exit(2);
+        }
+        parts.push(part);
     }
     #[cfg(feature = "profiling")]
     let input_join_start = std::time::Instant::now();
@@ -250,6 +267,7 @@ fn main() {
         peptides,
         target_psms_q01,
         target_peptides_q01,
+        target_psms_q01_by_source,
     } = pipeline::build_reports(&ds, &out, &args.params, args.psm_competition, args.ensemble);
 
     #[cfg(feature = "profiling")]
@@ -257,16 +275,16 @@ fn main() {
     #[cfg(feature = "profiling")]
     let _output = profile::Scope::new("stage", "result_output");
     if let Some(p) = &args.results_psms {
-        output::write_results(p, target_psms).unwrap();
+        write_result(p, output::write_results(p, target_psms));
     }
     if let Some(p) = &args.decoy_psms {
-        output::write_results(p, decoy_psms).unwrap();
+        write_result(p, output::write_results(p, decoy_psms));
     }
     if let Some(p) = &args.results_peptides {
-        output::write_results(p, target_peptides).unwrap();
+        write_result(p, output::write_results(p, target_peptides));
     }
     if let Some(p) = &args.decoy_peptides {
-        output::write_results(p, decoy_peptides).unwrap();
+        write_result(p, output::write_results(p, decoy_peptides));
     }
     #[cfg(feature = "profiling")]
     drop(_output);
@@ -276,16 +294,13 @@ fn main() {
     // Cross-run: per-source yield when pooled (each file's targets scored by the shared model).
     if args.join {
         eprintln!("per-file yield (pooled model, target PSMs q<0.01):");
-        for s in 0..ds.source_names.len() as u32 {
-            let c = (0..ds.n_psm)
-                .filter(|&i| ds.source[i] == s && ds.labels[i] > 0 && out.qval[i] < 0.01)
-                .count();
-            eprintln!("  [{}] {}", ds.source_names[s as usize], c);
+        for (name, count) in ds.source_names.iter().zip(&target_psms_q01_by_source) {
+            eprintln!("  [{name}] {count}");
         }
     }
 
     // Protein inference uses the best score/PEP for each peptide sequence and
-    // the union of its protein mappings across all reported PSM occurrences.
+    // the union of its protein mappings across all input PSM occurrences.
     if args.results_proteins.is_some() || args.decoy_proteins.is_some() {
         #[cfg(feature = "profiling")]
         let _protein_context = profile::context(Some("protein_inference"), None, None, None);
@@ -320,10 +335,10 @@ fn main() {
             .filter(|g| !g.is_decoy && g.picked && g.qval < 0.01)
             .count();
         if let Some(p) = &args.results_proteins {
-            output::write_proteins(p, &groups, false).unwrap();
+            write_result(p, output::write_proteins(p, &groups, false));
         }
         if let Some(p) = &args.decoy_proteins {
-            output::write_proteins(p, &groups, true).unwrap();
+            write_result(p, output::write_proteins(p, &groups, true));
         }
         if args.protein_inference == ProteinInference::Picked {
             eprintln!(

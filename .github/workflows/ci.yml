@@ -25,31 +25,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      - name: Build (release)
-        run: cargo build --release
-
-      - name: Unit tests
-        run: cargo test --release
-
-      - name: Regression gate (fixture — yield ±1%, time & memory budgets)
-        run: bash tests/regression.sh
-
-      - name: Nested-selection regression gate (isolated deterministic outer folds)
-        run: bash tests/selection_regression.sh
-
-      - name: Feature-report regression gate (deterministic linear-SVM explanation)
-        run: bash tests/feature_report.sh
-
-      - name: Ensemble regression gate (deduplicated deterministic engine views)
-        run: bash tests/ensemble_regression.sh
-
-      - name: Protein regression gate (synthetic picked-FDR fixture)
-        run: bash tests/protein_regression.sh
-
-      - name: Benchmark pipeline regression tests
-        run: |
-          python3 -m unittest -v bench/multidataset/test_normalize_sage_pin.py
-          (cd bench/protein_calibration && python3 -m unittest -v test_report.py)
+      - name: Formatting, lint, documentation, tests, and regression gates
+        run: bash scripts/check.sh
 
   # Full-dataset performance smoke test. Requires the PXD032157 data (2.3 GB) and the
   # extracted C++ reference binary, which are not in the repo — so this runs only on a

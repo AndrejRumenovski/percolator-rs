@@ -1,6 +1,6 @@
 //! Spectrum-level target-decoy competition policy.
 
-use crate::{pin, tiebreak};
+use crate::{peptide, pin, tiebreak};
 
 /// Spectrum-level target-decoy competition on the rescored values: keep the
 /// best-scoring candidate of each precursor and drop the rest.
@@ -27,10 +27,10 @@ use crate::{pin, tiebreak};
 /// surviving label a property of the file's layout: a PIN listing the target
 /// candidate first would report every target as a winner, and the same PIN with
 /// the two rows swapped would report none. Ties are therefore drawn with a fair
-/// coin keyed on the precursor's own identity and the run seed
-/// ([`tiebreak`]), which is the resolution the target-decoy literature
-/// prescribes and the only one that keeps the null win probability at the
-/// declared `p`. Permuting the rows of the input cannot move the coin.
+/// draw keyed on the precursor's own identity and the run seed ([`tiebreak`]).
+/// Repeated occurrences of the same `(label, modified core peptide)` count as
+/// one candidate in this draw. Permuting or duplicating tied occurrences cannot
+/// change the winning candidate. Calibration still depends on the search design.
 // The row index intentionally addresses every parallel Dataset column; an
 // iterator over only `score` would weaken that shared-length contract.
 #[allow(clippy::needless_range_loop)]
@@ -72,9 +72,10 @@ pub fn winner_indices(ds: &pin::Dataset, score: &[f64], seed: u64) -> Vec<usize>
     // Exact ties are rare, so only the tied rows are materialized and ordered.
     // `canonical` describes a row by its own content, never by its position, so
     // the sort below is a function of the data alone.
-    let canonical = |row: usize| -> (i8, &str, &str, &str, usize) {
+    let canonical = |row: usize| -> (i8, &str, &str, &str, &str, usize) {
         (
             ds.labels[row],
+            peptide::core(&ds.peptide[row]),
             ds.peptide[row].as_str(),
             ds.proteins[row].as_str(),
             ds.spec_id[row].as_str(),
@@ -104,6 +105,7 @@ pub fn winner_indices(ds: &pin::Dataset, score: &[f64], seed: u64) -> Vec<usize>
         }
     }
     let mut start = 0usize;
+    let mut candidates = Vec::new();
     while start < contested.len() {
         let key = contested[start].0;
         let mut end = start;
@@ -111,12 +113,21 @@ pub fn winner_indices(ds: &pin::Dataset, score: &[f64], seed: u64) -> Vec<usize>
             end += 1;
         }
         let group = &contested[start..=end];
+        candidates.clear();
+        let mut previous = None;
+        for &(_, row) in group {
+            let identity = (ds.labels[row], peptide::core(&ds.peptide[row]));
+            if previous != Some(identity) {
+                candidates.push(row);
+                previous = Some(identity);
+            }
+        }
         let draw = tiebreak::Coin::new(seed)
             .u32(key.0)
             .i64(key.1)
             .u64(key.2)
-            .draw(group.len());
-        winners.push(group[draw].1);
+            .draw(candidates.len());
+        winners.push(candidates[draw]);
         start = end + 1;
     }
     winners.sort_unstable();

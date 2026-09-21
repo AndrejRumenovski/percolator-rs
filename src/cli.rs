@@ -3,6 +3,88 @@
 use percolator_rs::percolator::{self, Params};
 use percolator_rs::protein_bayes;
 
+fn invalid(message: impl std::fmt::Display) -> ! {
+    eprintln!("{message}");
+    std::process::exit(2);
+}
+
+fn number<T: std::str::FromStr>(option: &str, value: String) -> T {
+    value
+        .parse()
+        .unwrap_or_else(|_| invalid(format!("invalid value '{value}' for {option}")))
+}
+
+fn print_help() {
+    println!(
+        "percolator-rs {} — semi-supervised peptide-spectrum match rescoring
+
+Usage: percolator-rs [OPTIONS] input.pin
+       percolator-rs --join [OPTIONS] first.pin second.pin ...
+       percolator-rs --ensemble [OPTIONS] ENGINE=first.pin ENGINE=second.pin ...
+       percolator-rs pride --help
+
+Input: tab-delimited PIN from a concatenated target-decoy search.
+       Required columns: row ID, Label, ScanNr, numeric features, Peptide.
+       The default null model assumes equal target and decoy database sizes.
+
+Output files (written only when requested):
+  -m, --results-psms PATH             Target PSMs
+  -M, --decoy-results-psms PATH       Decoy PSMs
+  -r, --results-peptides PATH         Target peptides
+  -B, --decoy-results-peptides PATH   Decoy peptides
+  -l, --results-proteins PATH         Target protein groups; enables inference
+  -L, --decoy-results-proteins PATH   Decoy protein groups; enables inference
+      --feature-report PATH         Linear-SVM feature importance report
+
+Training:
+      --profile NAME                fast, balanced, or canonical [canonical]
+      --fast                        20,000 training rows per fold, 5 iterations
+      --balanced                    40,000 training rows per fold, 10 iterations
+      --canonical                   All training rows, 10 iterations
+      --seed N                      Fold and tie-breaking seed [1]
+      --maxiter N                   Iteration count; 0 scores initial direction
+  -N, --subset-max-train N           Training-row limit per fold; 0 uses all rows
+      --num-threads N               Positive thread count [1]
+      --cpos F                      Positive-class SVM weight [1]
+      --cneg F                      Negative-class SVM weight [4]
+      --svm-tolerance F             Positive finite solver tolerance [1e-5]
+      --select-c                    Nested class-weight grid search
+      --no-select-c                 Fixed class weights [default]
+      --auto-model, --nested-select Nested SVM parameter and feature selection
+      --no-auto-model               Disable automatic selection [default]
+      --rescore-model, --model NAME Compatibility aliases: svm or linear
+
+Reporting and multiple inputs:
+      --null-target-win-prob P      Null target-win probability in (0,1) [0.5]
+      --psm-competition             One rescored winner per precursor [default]
+      --no-psm-competition          Report all candidates; q-values are not FDR estimates
+      --join                        Pool compatible runs with identical features
+      --ensemble                    Combine at least two named search engines
+      --rt-features                 Experimental retention-time residual features
+
+Protein inference:
+      --protein-inference METHOD    picked or bayesian (alias: fido) [picked]
+      --protein-alpha F             Peptide emission probability [0.1]
+      --protein-beta F              Noise probability [0.01]
+      --protein-gamma F             Protein-presence prior [0.5]
+      --protein-peptide-prior F     Peptide prior [0.1]
+      --protein-max-iter N          Bayesian iteration limit [200]
+
+Profiling (requires a build with --features profiling):
+      --profile-json PATH           Stage timing report
+      --profile-cpu PATH            CPU profile
+      --profile-allocations         Allocation instrumentation
+
+  -h, --help                        Show this help
+  -V, --version                     Show the version
+      --                            Treat remaining arguments as input paths
+
+Explicit training options override profile defaults regardless of argument order.
+See README.md for the statistical assumptions, validation results, and examples.",
+        env!("CARGO_PKG_VERSION")
+    );
+}
+
 pub(crate) struct Args {
     pub(crate) pins: Vec<String>,
     pub(crate) results_psms: Option<String>,
@@ -91,9 +173,26 @@ pub(crate) fn parse_args() -> Args {
         let s = &argv[i];
         let mut take = || {
             i += 1;
-            argv.get(i).cloned().unwrap_or_default()
+            argv.get(i)
+                .filter(|value| {
+                    !value.is_empty() && (!value.starts_with('-') || value.parse::<f64>().is_ok())
+                })
+                .cloned()
+                .unwrap_or_else(|| invalid(format!("missing value for {s}")))
         };
         match s.as_str() {
+            "--help" | "-h" => {
+                print_help();
+                std::process::exit(0);
+            }
+            "--version" | "-V" => {
+                println!("percolator-rs {}", env!("CARGO_PKG_VERSION"));
+                std::process::exit(0);
+            }
+            "--" => {
+                a.pins.extend(argv[i + 1..].iter().cloned());
+                break;
+            }
             "--results-psms" | "-m" => a.results_psms = Some(take()),
             "--decoy-results-psms" | "-M" => a.decoy_psms = Some(take()),
             "--results-peptides" | "-r" => a.results_peptides = Some(take()),
@@ -153,17 +252,17 @@ pub(crate) fn parse_args() -> Args {
                 eprintln!("{s} requires a build with --features profiling");
                 std::process::exit(2);
             }
-            "--seed" => a.params.seed = take().parse().unwrap_or(1),
+            "--seed" => a.params.seed = number(s, take()),
             "--null-target-win-prob" => {
                 a.params.null_target_win_prob = take().parse().unwrap_or(f64::NAN)
             }
-            "--maxiter" => maxiter_opt = take().parse().ok(),
-            "--subset-max-train" | "-N" => subset_opt = take().parse().ok(),
-            "--cpos" => alpha_opt = take().parse().ok(),
-            "--cneg" => beta_opt = take().parse().ok(),
+            "--maxiter" => maxiter_opt = Some(number(s, take())),
+            "--subset-max-train" | "-N" => subset_opt = Some(number(s, take())),
+            "--cpos" => alpha_opt = Some(number(s, take())),
+            "--cneg" => beta_opt = Some(number(s, take())),
             "--select-c" => select_c_opt = Some(true),
             "--no-select-c" => select_c_opt = Some(false),
-            "--num-threads" => a.params.num_threads = take().parse().unwrap_or(1).max(1),
+            "--num-threads" => a.params.num_threads = number(s, take()),
             "--fast" => prof = Some("fast"),
             "--balanced" => prof = Some("balanced"),
             "--canonical" => prof = Some("canonical"),
@@ -180,9 +279,12 @@ pub(crate) fn parse_args() -> Args {
                 };
             }
             other => {
-                if !other.starts_with('-') {
-                    a.pins.push(other.to_string());
+                if other.starts_with('-') {
+                    invalid(format!(
+                        "unknown option '{other}'; use --help for available options"
+                    ));
                 }
+                a.pins.push(other.to_string());
             }
         }
         i += 1;
@@ -209,6 +311,14 @@ pub(crate) fn parse_args() -> Args {
     }
     if let Some(s) = select_c_opt {
         select_c = s;
+    }
+    if a.params.num_threads == 0 {
+        invalid("invalid --num-threads (must be a positive integer)");
+    }
+    for (option, value) in [("--cpos", alpha_opt), ("--cneg", beta_opt)] {
+        if value.is_some_and(|value| !value.is_finite() || value <= 0.0) {
+            invalid(format!("invalid {option} (must be finite and >0)"));
+        }
     }
     if a.ensemble && a.join {
         eprintln!("--ensemble and --join are mutually exclusive");
@@ -261,4 +371,70 @@ pub(crate) fn ensemble_input(value: &str) -> Result<(String, String), String> {
         return Err(format!("invalid ensemble input '{value}'; use ENGINE=PIN"));
     }
     Ok((engine.to_string(), path.to_string()))
+}
+
+/// Check output identities before profiling or analysis can truncate a file.
+pub(crate) fn validate_output_paths(args: &Args, inputs: &[(String, String)]) {
+    use std::path::{Path, PathBuf};
+
+    fn identity(path: &Path) -> std::io::Result<PathBuf> {
+        if path.exists() {
+            path.canonicalize()
+        } else {
+            let parent = path.parent().filter(|p| !p.as_os_str().is_empty());
+            Ok(parent
+                .unwrap_or(Path::new("."))
+                .canonicalize()?
+                .join(path.file_name().ok_or_else(|| {
+                    std::io::Error::new(std::io::ErrorKind::InvalidInput, "missing filename")
+                })?))
+        }
+    }
+
+    fn same_file(left: &Path, right: &Path) -> bool {
+        if left == right {
+            return true;
+        }
+        #[cfg(unix)]
+        if let (Ok(a), Ok(b)) = (left.metadata(), right.metadata()) {
+            use std::os::unix::fs::MetadataExt;
+            return a.dev() == b.dev() && a.ino() == b.ino();
+        }
+        false
+    }
+
+    let outputs = [
+        args.results_psms.as_deref(),
+        args.decoy_psms.as_deref(),
+        args.results_peptides.as_deref(),
+        args.decoy_peptides.as_deref(),
+        args.results_proteins.as_deref(),
+        args.decoy_proteins.as_deref(),
+        args.feature_report.as_deref(),
+        #[cfg(feature = "profiling")]
+        args.profile_json.as_deref(),
+        #[cfg(feature = "profiling")]
+        args.profile_cpu.as_deref(),
+    ];
+    let input_paths: Vec<_> = inputs
+        .iter()
+        .filter_map(|(_, path)| identity(Path::new(path)).ok())
+        .collect();
+    let mut seen = Vec::new();
+    for output in outputs.into_iter().flatten() {
+        let path = identity(Path::new(output))
+            .unwrap_or_else(|error| invalid(format!("invalid output path '{output}': {error}")));
+        if path.is_dir() {
+            invalid(format!("invalid output path '{output}': is a directory"));
+        }
+        if input_paths.iter().any(|input| same_file(input, &path)) {
+            invalid(format!("output path '{output}' refers to an input file"));
+        }
+        if seen.iter().any(|other: &PathBuf| same_file(other, &path)) {
+            invalid(format!(
+                "output path '{output}' is used by more than one output"
+            ));
+        }
+        seen.push(path);
+    }
 }

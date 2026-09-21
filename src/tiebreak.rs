@@ -35,17 +35,17 @@
 //!
 //! * `hash` is a SplitMix64 mixing of the precursor identity (source, scan,
 //!   experimental mass) with the run seed.  It sees no labels and no row indices.
-//! * `canonical_order` sorts the tied candidates by their own content
-//!   (label, peptide, proteins, spectrum id), falling back to the row index only
-//!   between rows that are byte-identical in all of those and therefore
-//!   interchangeable.
+//! * `canonical_order` sorts tied occurrences by label, modified core peptide,
+//!   full peptide, proteins, and spectrum id. Repeated `(label, core peptide)`
+//!   candidates are collapsed before drawing, so duplicate rows do not gain
+//!   extra opportunities to win. Row index only resolves identical occurrences.
 //! * `draw` is uniform over `0..k`, so a `k`-way tie holding `t` targets is won
 //!   by a target with probability `t/k`.  With `k = 2` that is the fair coin;
-//!   under a 1:1 database each tied candidate is a target with probability 1/2,
-//!   so the marginal target-win probability is 1/2 for any `k`.
+//!   calibration for larger groups additionally depends on exchangeability of
+//!   the distinct candidates produced by the search.
 //!
-//! Permuting the rows of a PIN therefore cannot change any winner, any q-value,
-//! or any reported count.  Changing the seed re-flips every coin, which is what
+//! For fixed scores and source identities, permuting input rows cannot change
+//! the winning candidate. Changing the seed re-flips every coin, which is what
 //! makes tie sensitivity measurable across seeds instead of hidden.
 
 /// SplitMix64 finalizer: a bijection with good avalanche, so nearby keys give

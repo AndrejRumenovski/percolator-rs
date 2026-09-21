@@ -21,6 +21,8 @@ pub struct Reports<'a> {
     pub peptides: peptide::Scores,
     pub target_psms_q01: usize,
     pub target_peptides_q01: usize,
+    /// Counts from the competed, reported PSM list using its recomputed q-values.
+    pub target_psms_q01_by_source: Vec<usize>,
 }
 
 fn select_reported_indices(
@@ -101,6 +103,7 @@ pub fn build_reports<'a>(
         .count();
     let mut target_psms = Vec::with_capacity(target_capacity);
     let mut decoy_psms = Vec::with_capacity(reported_indices.len() - target_capacity);
+    let mut target_psms_q01_by_source = vec![0; ds.source_names.len()];
     #[cfg(feature = "profiling")]
     let mut psm_row_string_bytes = 0u64;
     #[cfg(feature = "profiling")]
@@ -126,6 +129,9 @@ pub fn build_reports<'a>(
             psm_row_string_bytes += row.owned_id_capacity();
         }
         if ds.labels[index] > 0 {
+            if reported_qvals[output_index] < 0.01 {
+                target_psms_q01_by_source[ds.source[index] as usize] += 1;
+            }
             target_psms.push(row);
         } else {
             decoy_psms.push(row);
@@ -231,6 +237,7 @@ pub fn build_reports<'a>(
         peptides,
         target_psms_q01,
         target_peptides_q01,
+        target_psms_q01_by_source,
     }
 }
 

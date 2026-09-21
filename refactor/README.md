@@ -1,5 +1,9 @@
 # Behavior-preserving refactor record
 
+This is the historical refactor acceptance record. Later correctness repairs intentionally change
+some outputs and remove counterexamples that this baseline preserves. For current checks, run
+`bash scripts/check.sh` and see [the readiness review](../validation/READINESS_REVIEW.md).
+
 This directory is the durable record for the architecture refactor.  The
 scientific method is a constraint, not a refactor target: a change is accepted
 only when its relevant outputs and adversarial observations match the frozen
@@ -43,7 +47,7 @@ Known adverse scientific observations are baseline behavior too.  A refactor
 must not silently “repair” one of them, because doing so would change the method
 and is outside this task.
 
-The repeatable acceptance command for the current checkout is:
+The repeatable comparison command for the historical refactor is:
 
 ```bash
 python3 refactor/verify_baseline.py

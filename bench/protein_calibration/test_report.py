@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
+import tempfile
 import unittest
 
 import report
@@ -61,6 +63,43 @@ class ReportTests(unittest.TestCase):
         brier, ece = report.probability_metrics(groups)
         self.assertTrue(math.isclose(brier, 0.01))
         self.assertTrue(math.isclose(ece, 0.1))
+
+    def test_current_picked_output_keeps_missing_posteriors_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "picked.tsv"
+            path.write_text(
+                "ProteinGroupId\tq-value\tposterior_error_prob\tscore\tnumPeptides\tproteinIds\n"
+                "group1\t0.01\tNA\t2.0\t1\ta\n"
+                "group2\t0.01\tNA\t1.0\t1\tr1\n"
+            )
+            groups = report.load_groups(path, "A", self.truth)
+        self.assertTrue(all(group.pep is None for group in groups))
+        self.assertEqual(report.threshold_metrics(groups, 0.01, 0.5)["false"], 1)
+        self.assertEqual(report.auc(groups), 1.0)
+        self.assertTrue(all(math.isnan(value) for value in report.probability_metrics(groups)))
+
+    def test_incomplete_posteriors_do_not_select_a_calibration_subset(self) -> None:
+        groups = [
+            report.Group(0.01, None, 2.0, ("a",), 0, "pure_present"),
+            report.Group(0.01, 0.9, 1.0, ("r1",), 1, "pure_random_entrapment"),
+        ]
+        self.assertTrue(all(math.isnan(value) for value in report.probability_metrics(groups)))
+
+    def test_invalid_numeric_output_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.tsv"
+            for q, pep, score in [
+                ("NaN", "0.1", "1"), ("1.1", "0.1", "1"),
+                ("0.1", "inf", "1"), ("0.1", "-0.1", "1"),
+                ("0.1", "0.1", "inf"),
+            ]:
+                with self.subTest(q=q, pep=pep, score=score):
+                    path.write_text(
+                        "q-value\tposterior_error_prob\tscore\tproteinIds\n"
+                        f"{q}\t{pep}\t{score}\ta\n"
+                    )
+                    with self.assertRaises(ValueError):
+                        report.load_groups(path, "A", self.truth)
 
 
 if __name__ == "__main__":

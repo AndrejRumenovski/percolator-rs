@@ -286,11 +286,15 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
         crate::profile::Scope::with_elements("protein_inference", "picked_fdr", groups.len());
     // Pairing key = sorted set of decoy-stripped member names.  It carries no
     // label, which is what lets it seed a label-symmetric coin.
-    let key_of = |g: &ProtGroup| -> String {
-        let mut ks: Vec<&str> = g.proteins.iter().map(|p| strip_decoy(p)).collect();
+    let key_of = |g: &ProtGroup| -> Vec<String> {
+        let mut ks: Vec<String> = g
+            .proteins
+            .iter()
+            .map(|p| strip_decoy(p).to_owned())
+            .collect();
         ks.sort_unstable();
         ks.dedup();
-        ks.join("|")
+        ks
     };
 
     // Bucket group indices by pairing key -> (best target idx, best decoy idx).
@@ -298,7 +302,7 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
     // group, so the choice is a function of content rather than of order.
     #[cfg(feature = "profiling")]
     let pairing_start = std::time::Instant::now();
-    let mut buckets: HashMap<String, (Option<usize>, Option<usize>)> = HashMap::new();
+    let mut buckets: HashMap<Vec<String>, (Option<usize>, Option<usize>)> = HashMap::new();
     for gi in 0..groups.len() {
         let k = key_of(&groups[gi]);
         let e = buckets.entry(k).or_insert((None, None));
@@ -330,7 +334,7 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
 
     // One competition entry per bucket: the higher-scoring of target/decoy, with
     // an exact tie decided by a fair coin on the pairing key.
-    let mut keys: Vec<&String> = buckets.keys().collect();
+    let mut keys: Vec<&Vec<String>> = buckets.keys().collect();
     #[cfg(feature = "profiling")]
     let pairing_sort_start = std::time::Instant::now();
     keys.sort_unstable();
@@ -350,7 +354,11 @@ fn picked_fdr(groups: &mut [ProtGroup], seed: u64) {
         let pick = match (t, d) {
             (Some(ti), Some(di)) => {
                 let target_wins = if groups[ti].score == groups[di].score {
-                    Coin::new(seed).bytes(key.as_bytes()).heads()
+                    key.iter()
+                        .fold(Coin::new(seed).u64(key.len() as u64), |coin, member| {
+                            coin.bytes(member.as_bytes())
+                        })
+                        .heads()
                 } else {
                     groups[ti].score > groups[di].score
                 };

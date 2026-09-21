@@ -1,0 +1,1416 @@
+{
+  "adversarial": {
+    "cv_isolation": {
+      "ensemble": {
+        "attacked_fold": 1,
+        "attacked_spectra": 137,
+        "heldout_label_changed_scores": 0,
+        "heldout_outlier_changed_sentinel_scores": 0,
+        "leakage_detected": false,
+        "reversed_row_changed_scores": 0,
+        "row_permutation_invariant_at_printed_precision": true,
+        "selection_clean": [],
+        "selection_invariant": true,
+        "selection_labels": [],
+        "selection_outliers": [],
+        "sentinels": 11,
+        "shuffled_row_changed_scores": 0
+      },
+      "fixed-c": {
+        "attacked_fold": 1,
+        "attacked_spectra": 137,
+        "heldout_label_changed_scores": 0,
+        "heldout_outlier_changed_sentinel_scores": 0,
+        "leakage_detected": false,
+        "reversed_row_changed_scores": 0,
+        "row_permutation_invariant_at_printed_precision": true,
+        "selection_clean": [],
+        "selection_invariant": true,
+        "selection_labels": [],
+        "selection_outliers": [],
+        "sentinels": 11,
+        "shuffled_row_changed_scores": 0
+      },
+      "select-c": {
+        "attacked_fold": 1,
+        "attacked_spectra": 137,
+        "heldout_label_changed_scores": 0,
+        "heldout_outlier_changed_sentinel_scores": 0,
+        "leakage_detected": false,
+        "reversed_row_changed_scores": 0,
+        "row_permutation_invariant_at_printed_precision": true,
+        "selection_clean": [
+          "1|1.000|0.2|1.0|4|1e-5"
+        ],
+        "selection_invariant": true,
+        "selection_labels": [
+          "1|1.000|0.2|1.0|4|1e-5"
+        ],
+        "selection_outliers": [
+          "1|1.000|0.2|1.0|4|1e-5"
+        ],
+        "sentinels": 11,
+        "shuffled_row_changed_scores": 0
+      }
+    },
+    "false_discoveries_created_by_94_target_copies": 0,
+    "historical_seed_check_note": "The historical seed_changes_protein_mapping flag compares complete protein groups and q-values; seed-dependent picked competition can change that signature. Both complementary LOSS mappings are retained at both seeds.",
+    "joined_alias_changed_psms": 332,
+    "joined_path_alias_invariant": false,
+    "joined_permutation_invariant": true,
+    "protein_mapping": {
+      "competition_seed1": {
+        "loss_a_present": true,
+        "loss_b_present": true,
+        "picked_pep_all_na": true
+      },
+      "competition_seed3": {
+        "loss_a_present": true,
+        "loss_b_present": true,
+        "picked_pep_all_na": true
+      },
+      "mixed_target_decoy_not_co_grouped": true,
+      "reversed_insertion_invariant_for_seed1": true
+    },
+    "single_file_ties": {
+      "decoy_pep_invariant": true,
+      "distinct_complete_results": 1,
+      "score_and_q_invariant": true,
+      "spectra": 233,
+      "target_pep_invariant": true,
+      "winner_and_statistics_invariant": true,
+      "winner_identity_invariant": true
+    }
+  },
+  "base_commit": "a2e606124de58f886cc41eb9ff81905cacbf7966",
+  "binary_sha256": "5ed3dfedb83653d07031511080721dbed7096c67c267fc51ad9287188088509f",
+  "compact_datasets": {
+    "q01_results": [
+      {
+        "dataset": "tide",
+        "q_threshold": 0.01,
+        "target_psms": {
+          "maximum": 27665,
+          "mean": 27633.8,
+          "median": 27624,
+          "minimum": 27616,
+          "n": 5,
+          "sd": 19.498717906570164
+        }
+      },
+      {
+        "dataset": "msfragger",
+        "q_threshold": 0.01,
+        "target_psms": {
+          "maximum": 1377,
+          "mean": 1351.4,
+          "median": 1361,
+          "minimum": 1312,
+          "n": 5,
+          "sd": 25.851498989420325
+        }
+      },
+      {
+        "dataset": "sage",
+        "q_threshold": 0.01,
+        "target_psms": {
+          "maximum": 25806,
+          "mean": 25796.6,
+          "median": 25803,
+          "minimum": 25779,
+          "n": 5,
+          "sd": 11.458621208504974
+        }
+      },
+      {
+        "dataset": "yeast",
+        "q_threshold": 0.01,
+        "target_psms": {
+          "maximum": 1180,
+          "mean": 1151.4,
+          "median": 1150,
+          "minimum": 1124,
+          "n": 5,
+          "sd": 20.513410247932935
+        }
+      }
+    ],
+    "repeated_outputs_byte_identical": true
+  },
+  "date": "2026-09-21",
+  "entrapment": {
+    "datasets": 6,
+    "pep_calibration": {
+      "bins": [
+        {
+          "adjusted_observed_error": null,
+          "decoys_for_fraction": 0,
+          "effective_entrapment_fraction": 0.7830184016258792,
+          "lower_inclusive": 0.0,
+          "mean_reported_pep": null,
+          "observed_minus_reported": null,
+          "pure_entrapment_targets": 0,
+          "targets": 0,
+          "upper_exclusive": 1e-12
+        },
+        {
+          "adjusted_observed_error": null,
+          "decoys_for_fraction": 0,
+          "effective_entrapment_fraction": 0.7830184016258792,
+          "lower_inclusive": 1e-12,
+          "mean_reported_pep": null,
+          "observed_minus_reported": null,
+          "pure_entrapment_targets": 0,
+          "targets": 0,
+          "upper_exclusive": 1e-06
+        },
+        {
+          "adjusted_observed_error": null,
+          "decoys_for_fraction": 0,
+          "effective_entrapment_fraction": 0.7830184016258792,
+          "lower_inclusive": 1e-06,
+          "mean_reported_pep": null,
+          "observed_minus_reported": null,
+          "pure_entrapment_targets": 0,
+          "targets": 0,
+          "upper_exclusive": 0.0001
+        },
+        {
+          "adjusted_observed_error": 0.004929545469296623,
+          "decoys_for_fraction": 21,
+          "effective_entrapment_fraction": 0.8095238095238095,
+          "lower_inclusive": 0.0001,
+          "mean_reported_pep": 0.00038618558976056476,
+          "observed_minus_reported": 0.004543359879536058,
+          "pure_entrapment_targets": 217,
+          "targets": 54378,
+          "upper_exclusive": 0.001
+        },
+        {
+          "adjusted_observed_error": 0.009335462957134765,
+          "decoys_for_fraction": 42,
+          "effective_entrapment_fraction": 0.7619047619047619,
+          "lower_inclusive": 0.001,
+          "mean_reported_pep": 0.0027066154717693687,
+          "observed_minus_reported": 0.006628847485365396,
+          "pure_entrapment_targets": 113,
+          "targets": 15887,
+          "upper_exclusive": 0.005
+        },
+        {
+          "adjusted_observed_error": 0.017739130434782608,
+          "decoys_for_fraction": 34,
+          "effective_entrapment_fraction": 0.8235294117647058,
+          "lower_inclusive": 0.005,
+          "mean_reported_pep": 0.00678260869565217,
+          "observed_minus_reported": 0.010956521739130438,
+          "pure_entrapment_targets": 84,
+          "targets": 5750,
+          "upper_exclusive": 0.01
+        },
+        {
+          "adjusted_observed_error": 0.03127369450898863,
+          "decoys_for_fraction": 106,
+          "effective_entrapment_fraction": 0.8018867924528302,
+          "lower_inclusive": 0.01,
+          "mean_reported_pep": 0.01585239085239085,
+          "observed_minus_reported": 0.015421303656597777,
+          "pure_entrapment_targets": 193,
+          "targets": 7696,
+          "upper_exclusive": 0.02
+        },
+        {
+          "adjusted_observed_error": 0.0566008293405438,
+          "decoys_for_fraction": 299,
+          "effective_entrapment_fraction": 0.7190635451505016,
+          "lower_inclusive": 0.02,
+          "mean_reported_pep": 0.03332966670333297,
+          "observed_minus_reported": 0.02327116263721083,
+          "pure_entrapment_targets": 370,
+          "targets": 9091,
+          "upper_exclusive": 0.05
+        },
+        {
+          "adjusted_observed_error": 0.09065589553567095,
+          "decoys_for_fraction": 399,
+          "effective_entrapment_fraction": 0.6917293233082706,
+          "lower_inclusive": 0.05,
+          "mean_reported_pep": 0.07387420915519166,
+          "observed_minus_reported": 0.01678168638047929,
+          "pure_entrapment_targets": 337,
+          "targets": 5374,
+          "upper_exclusive": 0.1
+        },
+        {
+          "adjusted_observed_error": 0.1660289645859629,
+          "decoys_for_fraction": 1353,
+          "effective_entrapment_fraction": 0.7627494456762749,
+          "lower_inclusive": 0.1,
+          "mean_reported_pep": 0.14570469071606543,
+          "observed_minus_reported": 0.020324273869897463,
+          "pure_entrapment_targets": 1169,
+          "targets": 9231,
+          "upper_exclusive": 0.2
+        },
+        {
+          "adjusted_observed_error": 0.37213243901079507,
+          "decoys_for_fraction": 6654,
+          "effective_entrapment_fraction": 0.755936278929967,
+          "lower_inclusive": 0.2,
+          "mean_reported_pep": 0.34558670820353066,
+          "observed_minus_reported": 0.02654573080726441,
+          "pure_entrapment_targets": 5418,
+          "targets": 19260,
+          "upper_exclusive": 0.5
+        },
+        {
+          "adjusted_observed_error": 0.9340079653370742,
+          "decoys_for_fraction": 335029,
+          "effective_entrapment_fraction": 0.7837948356709419,
+          "lower_inclusive": 0.5,
+          "mean_reported_pep": 0.9130656264216425,
+          "observed_minus_reported": 0.020942338915431735,
+          "pure_entrapment_targets": 268738,
+          "targets": 367093,
+          "upper_exclusive": 1.0000001
+        }
+      ],
+      "exact_zero_peps": 0,
+      "global_effective_entrapment_fraction": 0.7830184016258792,
+      "known_false_pep_lt_0.001": 217,
+      "minimum_known_false_pep": 0.00026171159382360636,
+      "targets": 493760,
+      "weighted_absolute_calibration_error": 0.018678035413029984,
+      "weighted_signed_observed_minus_reported": 0.018678035413029984
+    },
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "threshold_policy": "q < threshold",
+    "threshold_results": [
+      {
+        "accepted_targets": {
+          "maximum": 13174,
+          "mean": 12946.4,
+          "median": 13019,
+          "minimum": 12454,
+          "n": 5,
+          "sd": 284.975963898712
+        },
+        "adjusted_fdp": {
+          "maximum": 0.006452108456870728,
+          "mean": 0.006146332175905635,
+          "median": 0.006264119942493325,
+          "minimum": 0.005781275092339811,
+          "n": 5,
+          "sd": 0.00027203322575514524
+        },
+        "pure_entrapment": {
+          "maximum": 64,
+          "mean": 60.6,
+          "median": 61,
+          "minimum": 54,
+          "n": 5,
+          "sd": 3.9115214431215892
+        },
+        "q_threshold": 0.001
+      },
+      {
+        "accepted_targets": {
+          "maximum": 18240,
+          "mean": 17985.8,
+          "median": 17950,
+          "minimum": 17813,
+          "n": 5,
+          "sd": 170.879197095492
+        },
+        "adjusted_fdp": {
+          "maximum": 0.012916666666666667,
+          "mean": 0.01205242119244183,
+          "median": 0.0116322501957063,
+          "minimum": 0.011460954759389108,
+          "n": 5,
+          "sd": 0.0006824248182321601
+        },
+        "pure_entrapment": {
+          "maximum": 186,
+          "mean": 170.8,
+          "median": 169,
+          "minimum": 157,
+          "n": 5,
+          "sd": 13.349157276772193
+        },
+        "q_threshold": 0.005
+      },
+      {
+        "accepted_targets": {
+          "maximum": 19586,
+          "mean": 19536.4,
+          "median": 19536,
+          "minimum": 19501,
+          "n": 5,
+          "sd": 32.745992121174154
+        },
+        "adjusted_fdp": {
+          "maximum": 0.01883839310755228,
+          "mean": 0.018103981884256583,
+          "median": 0.018150412887254993,
+          "minimum": 0.017287819649882897,
+          "n": 5,
+          "sd": 0.0005787726640993654
+        },
+        "pure_entrapment": {
+          "maximum": 267,
+          "mean": 258.6,
+          "median": 262,
+          "minimum": 244,
+          "n": 5,
+          "sd": 8.763560920082657
+        },
+        "q_threshold": 0.01
+      },
+      {
+        "accepted_targets": {
+          "maximum": 21277,
+          "mean": 21142.0,
+          "median": 21120,
+          "minimum": 21064,
+          "n": 5,
+          "sd": 80.54501846793507
+        },
+        "adjusted_fdp": {
+          "maximum": 0.028358144363573923,
+          "mean": 0.027454629569855504,
+          "median": 0.02758817269686835,
+          "minimum": 0.02644380783425584,
+          "n": 5,
+          "sd": 0.0007003597332068159
+        },
+        "pure_entrapment": {
+          "maximum": 447,
+          "mean": 430.4,
+          "median": 427,
+          "minimum": 420,
+          "n": 5,
+          "sd": 10.85357084097211
+        },
+        "q_threshold": 0.02
+      },
+      {
+        "accepted_targets": {
+          "maximum": 23906,
+          "mean": 23828.4,
+          "median": 23813,
+          "minimum": 23775,
+          "n": 5,
+          "sd": 52.31921253230021
+        },
+        "adjusted_fdp": {
+          "maximum": 0.06066471051100485,
+          "mean": 0.05850883481254589,
+          "median": 0.058323414311576526,
+          "minimum": 0.05686479897703556,
+          "n": 5,
+          "sd": 0.0013654712597900589
+        },
+        "pure_entrapment": {
+          "maximum": 1080,
+          "mean": 1046.6,
+          "median": 1045,
+          "minimum": 1028,
+          "n": 5,
+          "sd": 20.489021450523204
+        },
+        "q_threshold": 0.05
+      },
+      {
+        "accepted_targets": {
+          "maximum": 26914,
+          "mean": 26848.4,
+          "median": 26846,
+          "minimum": 26796,
+          "n": 5,
+          "sd": 42.75862486095642
+        },
+        "adjusted_fdp": {
+          "maximum": 0.11004825339824206,
+          "mean": 0.10872284042239222,
+          "median": 0.10891222666961617,
+          "minimum": 0.10680000279415144,
+          "n": 5,
+          "sd": 0.0011991562286279005
+        },
+        "pure_entrapment": {
+          "maximum": 2223,
+          "mean": 2215.2,
+          "median": 2219,
+          "minimum": 2194,
+          "n": 5,
+          "sd": 12.029131306956458
+        },
+        "q_threshold": 0.1
+      }
+    ]
+  },
+  "environment": {
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+  },
+  "evidence_sha256": {
+    "adversarial-final.json": "7df64f72d23c34c9e20c8878daed6d8f88f89ac29621be7a3d683a9ea323f89f",
+    "checks.log": "eac217f11715dd114c6347a279b693d7a44a81a48b2ce54cab4b69871ec32230",
+    "corpus-comparison.json": "791866183192d4b1f63e3f84116e7083f7efafe9d2efbb982ed3f71ff0d02193",
+    "empirical-final/manifest.json": "8882a9e0d227b712df63515fe17427f0af1f34db3b308ca4f7f1de54b71b8d24",
+    "final-lint.log": "9c2d92bf46e97d6d33b739d99ecf87e1ccf53345272b59fe2cc30e3a6c47636d",
+    "full-benchmark.log": "106ae4f9125d0c5206801d24e4770478075bccaa086ff6cca15022f01522847f",
+    "oracle-final.log": "a60adb84e783e0cbb0e7b69fdbf07c9622fa97692cafd5c2eef323aa29cc0719",
+    "pride-live.log": "73b118921eba8155a09acd771d631dd7a6a6eb040cebb19c3bee44f461d43c1d"
+  },
+  "performance": {
+    "changed_counts_from_previous_build": {
+      "28May2015-QE-HF-Anopheles-38-MAGs-P-3rd-02-comet.pin": {
+        "current": {
+          "peptides": 2350,
+          "psms": 5771
+        },
+        "previous": {
+          "peptides": 2351,
+          "psms": 5771
+        }
+      }
+    },
+    "dataset": "PXD032157",
+    "files": 65,
+    "gate": "passed",
+    "input_psms": 8639746,
+    "measurement": "one warm local gate run; not a cross-version speed comparison",
+    "peak_rss_kb": 606732,
+    "previous_binary_sha256": "cfa96cc9b3c000e9d5ee4dd40348ddd817d5a5068599d1bba30d99162b8791ee",
+    "processes": 4,
+    "target_peptides_q_lt_0_01": 35885,
+    "target_psms_q_lt_0_01": 106823,
+    "wall_seconds": 15.694172082
+  },
+  "protein_calibration": {
+    "bayesian_probability_calibration": {
+      "calibration/bayes-fixed": {
+        "bins": [
+          {
+            "groups": 766,
+            "lower": 0.0,
+            "mean_reported_pep": 0.011888515184809502,
+            "observed_error": 0.0926892950391645,
+            "upper": 0.1
+          },
+          {
+            "groups": 125,
+            "lower": 0.1,
+            "mean_reported_pep": 0.15058572538819978,
+            "observed_error": 0.848,
+            "upper": 0.2
+          },
+          {
+            "groups": 121,
+            "lower": 0.2,
+            "mean_reported_pep": 0.2525037867279258,
+            "observed_error": 0.8842975206611571,
+            "upper": 0.3
+          },
+          {
+            "groups": 114,
+            "lower": 0.3,
+            "mean_reported_pep": 0.3599290017783183,
+            "observed_error": 0.8947368421052632,
+            "upper": 0.4
+          },
+          {
+            "groups": 156,
+            "lower": 0.4,
+            "mean_reported_pep": 0.45752180119366115,
+            "observed_error": 0.967948717948718,
+            "upper": 0.5
+          },
+          {
+            "groups": 1812,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5379472137845873,
+            "observed_error": 0.9928256070640177,
+            "upper": 0.6
+          },
+          {
+            "groups": 84,
+            "lower": 0.6,
+            "mean_reported_pep": 0.6146346333503333,
+            "observed_error": 1.0,
+            "upper": 0.7
+          },
+          {
+            "groups": 0,
+            "lower": 0.7,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.8
+          },
+          {
+            "groups": 0,
+            "lower": 0.8,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.9
+          },
+          {
+            "groups": 0,
+            "lower": 0.9,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.21709984990258321,
+        "ece_10_bin": 0.38474583251503847,
+        "groups": 3178
+      },
+      "calibration/bayes-selected": {
+        "bins": [
+          {
+            "groups": 635,
+            "lower": 0.0,
+            "mean_reported_pep": 0.0013400671376458937,
+            "observed_error": 0.004724409448818898,
+            "upper": 0.1
+          },
+          {
+            "groups": 10,
+            "lower": 0.1,
+            "mean_reported_pep": 0.12689889474396138,
+            "observed_error": 0.1,
+            "upper": 0.2
+          },
+          {
+            "groups": 8,
+            "lower": 0.2,
+            "mean_reported_pep": 0.2345546294190685,
+            "observed_error": 0.0,
+            "upper": 0.3
+          },
+          {
+            "groups": 11,
+            "lower": 0.3,
+            "mean_reported_pep": 0.3358255385573941,
+            "observed_error": 0.09090909090909091,
+            "upper": 0.4
+          },
+          {
+            "groups": 9,
+            "lower": 0.4,
+            "mean_reported_pep": 0.4588561287878519,
+            "observed_error": 0.1111111111111111,
+            "upper": 0.5
+          },
+          {
+            "groups": 11,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5264404377830559,
+            "observed_error": 0.18181818181818182,
+            "upper": 0.6
+          },
+          {
+            "groups": 30,
+            "lower": 0.6,
+            "mean_reported_pep": 0.6706134057668967,
+            "observed_error": 0.4666666666666667,
+            "upper": 0.7
+          },
+          {
+            "groups": 18,
+            "lower": 0.7,
+            "mean_reported_pep": 0.7529551683019801,
+            "observed_error": 0.6111111111111112,
+            "upper": 0.8
+          },
+          {
+            "groups": 7,
+            "lower": 0.8,
+            "mean_reported_pep": 0.8548349727092607,
+            "observed_error": 0.7142857142857143,
+            "upper": 0.9
+          },
+          {
+            "groups": 2439,
+            "lower": 0.9,
+            "mean_reported_pep": 0.9980803305111124,
+            "observed_error": 0.976629766297663,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.025828694138867382,
+        "ece_10_bin": 0.02387743246608977,
+        "groups": 3178
+      },
+      "test/bayes-fixed": {
+        "bins": [
+          {
+            "groups": 775,
+            "lower": 0.0,
+            "mean_reported_pep": 0.012094594241914844,
+            "observed_error": 0.09935483870967741,
+            "upper": 0.1
+          },
+          {
+            "groups": 108,
+            "lower": 0.1,
+            "mean_reported_pep": 0.15010815309616832,
+            "observed_error": 0.8148148148148148,
+            "upper": 0.2
+          },
+          {
+            "groups": 151,
+            "lower": 0.2,
+            "mean_reported_pep": 0.2477857720748766,
+            "observed_error": 0.9006622516556292,
+            "upper": 0.3
+          },
+          {
+            "groups": 116,
+            "lower": 0.3,
+            "mean_reported_pep": 0.36101014855965957,
+            "observed_error": 0.9051724137931034,
+            "upper": 0.4
+          },
+          {
+            "groups": 274,
+            "lower": 0.4,
+            "mean_reported_pep": 0.4649985239683759,
+            "observed_error": 0.9854014598540146,
+            "upper": 0.5
+          },
+          {
+            "groups": 1748,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5325690600065144,
+            "observed_error": 0.9948512585812357,
+            "upper": 0.6
+          },
+          {
+            "groups": 62,
+            "lower": 0.6,
+            "mean_reported_pep": 0.615159743719587,
+            "observed_error": 1.0,
+            "upper": 0.7
+          },
+          {
+            "groups": 0,
+            "lower": 0.7,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.8
+          },
+          {
+            "groups": 0,
+            "lower": 0.8,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.9
+          },
+          {
+            "groups": 0,
+            "lower": 0.9,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.22444234794105947,
+        "ece_10_bin": 0.3944471130310966,
+        "groups": 3234
+      },
+      "test/bayes-selected": {
+        "bins": [
+          {
+            "groups": 634,
+            "lower": 0.0,
+            "mean_reported_pep": 0.001536352101066869,
+            "observed_error": 0.0031545741324921135,
+            "upper": 0.1
+          },
+          {
+            "groups": 9,
+            "lower": 0.1,
+            "mean_reported_pep": 0.15050165959263773,
+            "observed_error": 0.0,
+            "upper": 0.2
+          },
+          {
+            "groups": 11,
+            "lower": 0.2,
+            "mean_reported_pep": 0.22379729145366528,
+            "observed_error": 0.09090909090909091,
+            "upper": 0.3
+          },
+          {
+            "groups": 7,
+            "lower": 0.3,
+            "mean_reported_pep": 0.33398496507871733,
+            "observed_error": 0.0,
+            "upper": 0.4
+          },
+          {
+            "groups": 12,
+            "lower": 0.4,
+            "mean_reported_pep": 0.4447318714741641,
+            "observed_error": 0.16666666666666666,
+            "upper": 0.5
+          },
+          {
+            "groups": 10,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5234203694173317,
+            "observed_error": 0.1,
+            "upper": 0.6
+          },
+          {
+            "groups": 31,
+            "lower": 0.6,
+            "mean_reported_pep": 0.6630967156602575,
+            "observed_error": 0.4838709677419355,
+            "upper": 0.7
+          },
+          {
+            "groups": 13,
+            "lower": 0.7,
+            "mean_reported_pep": 0.7596328441903163,
+            "observed_error": 0.5384615384615384,
+            "upper": 0.8
+          },
+          {
+            "groups": 13,
+            "lower": 0.8,
+            "mean_reported_pep": 0.8494712186843559,
+            "observed_error": 0.6923076923076923,
+            "upper": 0.9
+          },
+          {
+            "groups": 2494,
+            "lower": 0.9,
+            "mean_reported_pep": 0.9979873901092785,
+            "observed_error": 0.9783480352846833,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.024224456054070153,
+        "ece_10_bin": 0.02263637005350686,
+        "groups": 3234
+      },
+      "validation/bayes-fixed": {
+        "bins": [
+          {
+            "groups": 777,
+            "lower": 0.0,
+            "mean_reported_pep": 0.011770468000480027,
+            "observed_error": 0.10682110682110682,
+            "upper": 0.1
+          },
+          {
+            "groups": 129,
+            "lower": 0.1,
+            "mean_reported_pep": 0.14573245448855157,
+            "observed_error": 0.8217054263565892,
+            "upper": 0.2
+          },
+          {
+            "groups": 149,
+            "lower": 0.2,
+            "mean_reported_pep": 0.24877018065869397,
+            "observed_error": 0.87248322147651,
+            "upper": 0.3
+          },
+          {
+            "groups": 109,
+            "lower": 0.3,
+            "mean_reported_pep": 0.36184979496300873,
+            "observed_error": 0.908256880733945,
+            "upper": 0.4
+          },
+          {
+            "groups": 296,
+            "lower": 0.4,
+            "mean_reported_pep": 0.475196625985302,
+            "observed_error": 0.9966216216216216,
+            "upper": 0.5
+          },
+          {
+            "groups": 1704,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5383103432620585,
+            "observed_error": 0.9923708920187794,
+            "upper": 0.6
+          },
+          {
+            "groups": 109,
+            "lower": 0.6,
+            "mean_reported_pep": 0.6156136301739898,
+            "observed_error": 0.9908256880733946,
+            "upper": 0.7
+          },
+          {
+            "groups": 0,
+            "lower": 0.7,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.8
+          },
+          {
+            "groups": 0,
+            "lower": 0.8,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 0.9
+          },
+          {
+            "groups": 0,
+            "lower": 0.9,
+            "mean_reported_pep": null,
+            "observed_error": null,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.2233443673791871,
+        "ece_10_bin": 0.3918440462164157,
+        "groups": 3273
+      },
+      "validation/bayes-selected": {
+        "bins": [
+          {
+            "groups": 636,
+            "lower": 0.0,
+            "mean_reported_pep": 0.001754268474787902,
+            "observed_error": 0.0047169811320754715,
+            "upper": 0.1
+          },
+          {
+            "groups": 9,
+            "lower": 0.1,
+            "mean_reported_pep": 0.1578702319706019,
+            "observed_error": 0.1111111111111111,
+            "upper": 0.2
+          },
+          {
+            "groups": 9,
+            "lower": 0.2,
+            "mean_reported_pep": 0.23706688719351993,
+            "observed_error": 0.0,
+            "upper": 0.3
+          },
+          {
+            "groups": 18,
+            "lower": 0.3,
+            "mean_reported_pep": 0.340772110628849,
+            "observed_error": 0.05555555555555555,
+            "upper": 0.4
+          },
+          {
+            "groups": 7,
+            "lower": 0.4,
+            "mean_reported_pep": 0.4591327679983394,
+            "observed_error": 0.0,
+            "upper": 0.5
+          },
+          {
+            "groups": 8,
+            "lower": 0.5,
+            "mean_reported_pep": 0.5327481047512493,
+            "observed_error": 0.0,
+            "upper": 0.6
+          },
+          {
+            "groups": 22,
+            "lower": 0.6,
+            "mean_reported_pep": 0.6692792079546096,
+            "observed_error": 0.5454545454545454,
+            "upper": 0.7
+          },
+          {
+            "groups": 22,
+            "lower": 0.7,
+            "mean_reported_pep": 0.7510008392990006,
+            "observed_error": 0.5,
+            "upper": 0.8
+          },
+          {
+            "groups": 11,
+            "lower": 0.8,
+            "mean_reported_pep": 0.8534172973933374,
+            "observed_error": 0.7272727272727273,
+            "upper": 0.9
+          },
+          {
+            "groups": 2531,
+            "lower": 0.9,
+            "mean_reported_pep": 0.9974734593333072,
+            "observed_error": 0.9782694587119716,
+            "upper": 1.0
+          }
+        ],
+        "brier": 0.024460400020450714,
+        "ece_10_bin": 0.02300263012873092,
+        "groups": 3273
+      }
+    },
+    "current_na_schema_accepted": true,
+    "runs": [
+      {
+        "accepted_q_le_0.01": 325,
+        "adjusted_fdp": 0.5180778918814184,
+        "groups": 684,
+        "known_absent_q_le_0.01": 145,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.4461538461538462,
+        "sample": "mixtureArep1",
+        "split": "calibration",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 199,
+        "adjusted_fdp": 0.12837487184030988,
+        "groups": 877,
+        "known_absent_q_le_0.01": 22,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.11055276381909548,
+        "sample": "mixtureArep1",
+        "split": "calibration",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 177,
+        "adjusted_fdp": 0.03280251604548236,
+        "groups": 877,
+        "known_absent_q_le_0.01": 5,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.02824858757062147,
+        "sample": "mixtureArep1",
+        "split": "calibration",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 331,
+        "adjusted_fdp": 0.5332440433158051,
+        "groups": 699,
+        "known_absent_q_le_0.01": 152,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.459214501510574,
+        "sample": "mixtureArep2",
+        "split": "validation",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 196,
+        "adjusted_fdp": 0.14218886547062148,
+        "groups": 891,
+        "known_absent_q_le_0.01": 24,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.12244897959183673,
+        "sample": "mixtureArep2",
+        "split": "validation",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 174,
+        "adjusted_fdp": 0.026694461333564956,
+        "groups": 891,
+        "known_absent_q_le_0.01": 4,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.022988505747126436,
+        "sample": "mixtureArep2",
+        "split": "validation",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 331,
+        "adjusted_fdp": 0.5332440433158051,
+        "groups": 699,
+        "known_absent_q_le_0.01": 152,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.459214501510574,
+        "sample": "mixtureArep3",
+        "split": "test",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 197,
+        "adjusted_fdp": 0.12967817003158205,
+        "groups": 900,
+        "known_absent_q_le_0.01": 22,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.1116751269035533,
+        "sample": "mixtureArep3",
+        "split": "test",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 173,
+        "adjusted_fdp": 0.02013657343370073,
+        "groups": 900,
+        "known_absent_q_le_0.01": 3,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.017341040462427744,
+        "sample": "mixtureArep3",
+        "split": "test",
+        "vial": "A"
+      },
+      {
+        "accepted_q_le_0.01": 362,
+        "adjusted_fdp": 0.5576819681856946,
+        "groups": 753,
+        "known_absent_q_le_0.01": 174,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.48066298342541436,
+        "sample": "mixtureBrep1",
+        "split": "calibration",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 202,
+        "adjusted_fdp": 0.15508090238554056,
+        "groups": 955,
+        "known_absent_q_le_0.01": 27,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.13366336633663367,
+        "sample": "mixtureBrep1",
+        "split": "calibration",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 180,
+        "adjusted_fdp": 0.012891498881431767,
+        "groups": 955,
+        "known_absent_q_le_0.01": 2,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.011111111111111112,
+        "sample": "mixtureBrep1",
+        "split": "calibration",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 370,
+        "adjusted_fdp": 0.5675743696716851,
+        "groups": 747,
+        "known_absent_q_le_0.01": 181,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.4891891891891892,
+        "sample": "mixtureBrep2",
+        "split": "validation",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 204,
+        "adjusted_fdp": 0.15356050138176075,
+        "groups": 958,
+        "known_absent_q_le_0.01": 27,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.1323529411764706,
+        "sample": "mixtureBrep2",
+        "split": "validation",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 181,
+        "adjusted_fdp": 0.006410137565352812,
+        "groups": 958,
+        "known_absent_q_le_0.01": 1,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0055248618784530384,
+        "sample": "mixtureBrep2",
+        "split": "validation",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 364,
+        "adjusted_fdp": 0.5578052400619514,
+        "groups": 730,
+        "known_absent_q_le_0.01": 175,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.4807692307692308,
+        "sample": "mixtureBrep3",
+        "split": "test",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 203,
+        "adjusted_fdp": 0.15431695705359208,
+        "groups": 951,
+        "known_absent_q_le_0.01": 27,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.1330049261083744,
+        "sample": "mixtureBrep3",
+        "split": "test",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 179,
+        "adjusted_fdp": 0.006481759214127704,
+        "groups": 951,
+        "known_absent_q_le_0.01": 1,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.00558659217877095,
+        "sample": "mixtureBrep3",
+        "split": "test",
+        "vial": "B"
+      },
+      {
+        "accepted_q_le_0.01": 392,
+        "adjusted_fdp": 0.07056122448979592,
+        "groups": 773,
+        "known_absent_q_le_0.01": 20,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.05102040816326531,
+        "sample": "mixtureABrep1",
+        "split": "calibration",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 345,
+        "adjusted_fdp": 0.02405217391304348,
+        "groups": 987,
+        "known_absent_q_le_0.01": 6,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.017391304347826087,
+        "sample": "mixtureABrep1",
+        "split": "calibration",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 299,
+        "adjusted_fdp": 0.0,
+        "groups": 987,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "mixtureABrep1",
+        "split": "calibration",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 392,
+        "adjusted_fdp": 0.056448979591836736,
+        "groups": 771,
+        "known_absent_q_le_0.01": 16,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.04081632653061224,
+        "sample": "mixtureABrep2",
+        "split": "validation",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 350,
+        "adjusted_fdp": 0.02766,
+        "groups": 968,
+        "known_absent_q_le_0.01": 7,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.02,
+        "sample": "mixtureABrep2",
+        "split": "validation",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 301,
+        "adjusted_fdp": 0.0,
+        "groups": 968,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "mixtureABrep2",
+        "split": "validation",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 389,
+        "adjusted_fdp": 0.04977377892030849,
+        "groups": 767,
+        "known_absent_q_le_0.01": 14,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.03598971722365039,
+        "sample": "mixtureABrep3",
+        "split": "test",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 350,
+        "adjusted_fdp": 0.01975714285714286,
+        "groups": 966,
+        "known_absent_q_le_0.01": 5,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.014285714285714285,
+        "sample": "mixtureABrep3",
+        "split": "test",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 302,
+        "adjusted_fdp": 0.0,
+        "groups": 966,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "mixtureABrep3",
+        "split": "test",
+        "vial": "AB"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 293,
+        "known_absent_q_le_0.01": 0,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep1",
+        "split": "calibration",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 359,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep1",
+        "split": "calibration",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 359,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep1",
+        "split": "calibration",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 347,
+        "known_absent_q_le_0.01": 0,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep2",
+        "split": "validation",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 456,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep2",
+        "split": "validation",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 456,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep2",
+        "split": "validation",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 349,
+        "known_absent_q_le_0.01": 0,
+        "method": "picked",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep3",
+        "split": "test",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 417,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-fixed",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep3",
+        "split": "test",
+        "vial": "BLANK"
+      },
+      {
+        "accepted_q_le_0.01": 0,
+        "adjusted_fdp": 0.0,
+        "groups": 417,
+        "known_absent_q_le_0.01": 0,
+        "method": "bayes-selected",
+        "raw_known_absent_fdp": 0.0,
+        "sample": "blankrep3",
+        "split": "test",
+        "vial": "BLANK"
+      }
+    ],
+    "threshold_policy": "q <= 0.01"
+  },
+  "schema_version": 1,
+  "software_checks": {
+    "builds": [
+      "default",
+      "profiling"
+    ],
+    "clippy_all_features": "passed",
+    "formatting": "passed",
+    "live_pride_metadata": "passed",
+    "offline_ignored_per_build": 1,
+    "python_tests": 10,
+    "qvalue_count_mask_comparisons": 327424,
+    "qvalue_oracle_cases": 40928,
+    "rust_tests_per_build": 212,
+    "rustdoc_all_features": "passed",
+    "shell_gates": 5
+  },
+  "source_sha256": {
+    "src/benchmark_comparison.rs": "ea75286f32414bdbf9c6e31a0c7d0256aeb22d4efb4b0c1f692c1cdfdbb99fbf",
+    "src/benchmark_manifest.rs": "a49ded9cc12dc121d9c74cc09a1b8cf690f3039aec1c2528a0b56253ab406031",
+    "src/benchmark_result.rs": "8dd0c444d4dd544ed8c673e178d6850a1dfe72e6302614db44913be3598c861b",
+    "src/bin/benchmark-dataset.rs": "dcfd22a4e308d114d3daf115813a596df1531f97e06f2b265bfa906cd7a11b04",
+    "src/bin/compare-benchmark-results.rs": "317ce53c361de7f0e089e0c69cd2364ceb197f3b6ed01d7e9a26d07d5b99deca",
+    "src/bin/validate-benchmark-manifests.rs": "89644c6795db5e9f502d8d57beadcc969cdefcb3306070793032078bf3b13243",
+    "src/cli.rs": "2765060ad0208ccba9b286ed06441f5d6f8e6414b3af666d1c9bac738264a3ac",
+    "src/competition.rs": "2cfb88f143af9ee823cbb11b8a6d3f3b6eac61bf72aa1fce6ff728b32bb10edc",
+    "src/lib.rs": "46a554966ba78d8fcffd67131eae107ddf22ff7722bb72c683d6a16267462255",
+    "src/main.rs": "8ef7bd4fa51fe25796b87d1f1bd33ddb13844597883eb5c84ee2846db517573b",
+    "src/output.rs": "ef70f78a5282729113a0b257cdb1bd4e5e9d5543ffd04bb00df518b22e55b318",
+    "src/peptide.rs": "3ef1883e11823953547aa544065bc0f1b436c66000cca30c98232688a5de5ea8",
+    "src/percolator.rs": "71ef5b869b67d1e5d94455a5c7b398d940396b033b0d1e7e78270b227029aa20",
+    "src/pin.rs": "54e84eb07e98fcefc78db9088a5ad8c35cff8a781586a81114ab562d863aa8c4",
+    "src/pipeline.rs": "0dad5461fdf269facff1fa4086d8553e4eea848ddf3857731424515cb760acca",
+    "src/preprocessing.rs": "0fc2de1382fcabc655b2400ee8f814b04a4ac56c4d7d9c9cbe20096d37e40a19",
+    "src/pride/cache.rs": "7776d1bd470209c34d47eb3d9344fe7c39837d8e0c4f4164149beb8810e27eb9",
+    "src/pride/client.rs": "fee6286bae34ea2662708c05b450057e03c65d6b4c6bc0cc2be73fb4274d1029",
+    "src/pride/download.rs": "27e019b6c4aca4cc05667f93bcbdd2dd343cdc89423699dc36b31f6a4ed7d04f",
+    "src/pride/mod.rs": "58c3d4fc4bf0415cdcba073bc51d31db1ede01e051616801b1644ad8d0825b3a",
+    "src/pride/model.rs": "2cb37877ede458b87d7916470874ca95be2ed4e83bcb73162b05ef1a058cb6ef",
+    "src/pride/prepare.rs": "27f64282e7d17e7b75f9b7da49ca604e5cea0ae100c5bb4a718a27fce0146bb0",
+    "src/pride/workflow.rs": "529722cca0ef20cfc95cd117d729a2c55ca955d0d04e555017c6e14a690b02c7",
+    "src/pride_cli.rs": "2647aebf227ce54dd9a38d0cd2be7c5875b33a2dca6b7febe045a51a06f52558",
+    "src/profile.rs": "917262ca77f704b1f25fa57afbf3ad99f36e8de1d2831203a1c46be21fc91d1b",
+    "src/protein.rs": "1457f78cce95c81b3a70918873d517923b9413473c0ba08700669d6b390eaee6",
+    "src/protein_bayes.rs": "aee38228f05d67d5a52431c3a4791e2b38b0c47c3bd3b726e796474c32442bf0",
+    "src/rt.rs": "208ff30ce1f7f8259a8a7cf10771234439672f8c6461b47bfdbf5ca4de634396",
+    "src/simd.rs": "7cb66616d1693071f3c299667d3c0148755667a207580fa633fb09554ba6cc2e",
+    "src/stats.rs": "d0b4eb653773086cf17cd989e519e5d8e2e02debc48f46a31fffd8ef80880e78",
+    "src/svm.rs": "1d940c9acbd2e1df451c796bd6697f6af73e239e0cf66c4932ff1fb4b0ae78fd",
+    "src/tiebreak.rs": "377a5ecc68ea6e5c462d549d5c49627d69c9ba3cd1f548700edc0cafb3b983e4"
+  },
+  "worktree_note": "Includes pre-existing uncommitted numerical optimizations and the readiness repairs; source hashes identify the reviewed implementation."
+}

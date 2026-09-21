@@ -191,19 +191,19 @@ pub fn write_results(path: &str, mut rows: Vec<Row<'_>>) -> std::io::Result<()> 
         w.write_all(b"\t")?;
         write_fixed_6(&mut w, r.score)?;
         w.write_all(b"\t")?;
-        write_fixed_6(&mut w, r.q)?;
+        write!(w, "{}", r.q)?;
         w.write_all(b"\t")?;
-        write_fixed_6(&mut w, r.pep)?;
+        write!(w, "{}", r.pep)?;
         w.write_all(b"\t")?;
         w.write_all(r.peptide.as_bytes())?;
         w.write_all(b"\t")?;
         w.write_all(r.proteins.as_bytes())?;
         w.write_all(b"\n")?;
     }
+    w.flush()?;
     #[cfg(feature = "profiling")]
     {
         use std::sync::atomic::Ordering;
-        w.flush()?;
         drop(w);
         let total = serialization_start.elapsed();
         let write_ns = counters.duration_ns.load(Ordering::Relaxed);
@@ -264,7 +264,7 @@ pub fn write_feature_report(path: &str, report: &percolator::FeatureReport) -> s
             feature.permuted_q01,
         )?;
     }
-    Ok(())
+    writer.flush()
 }
 
 pub fn write_proteins(
@@ -308,11 +308,11 @@ pub fn write_proteins(
         // report, and the best peptide's PEP is not one.
         let mut pep = String::from("NA");
         if let Some(value) = g.pep {
-            pep = format!("{value:.6}");
+            pep = value.to_string();
         }
         writeln!(
             w,
-            "{}\t{:.6}\t{}\t{:.6}\t{}\t{}",
+            "{}\t{}\t{}\t{:.6}\t{}\t{}",
             g.proteins.first().map(|s| s.as_str()).unwrap_or(""),
             g.qval,
             pep,
@@ -321,10 +321,10 @@ pub fn write_proteins(
             g.proteins.join(",")
         )?;
     }
+    w.flush()?;
     #[cfg(feature = "profiling")]
     {
         use std::sync::atomic::Ordering;
-        w.flush()?;
         drop(w);
         let total = serialization_start.elapsed();
         let write_ns = counters.duration_ns.load(Ordering::Relaxed);
